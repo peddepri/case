@@ -3,6 +3,9 @@
 
 set -e
 
+# Ir para o diretório raiz do projeto
+cd "$(dirname "$0")/.."
+
 echo "🚀 Iniciando ambiente LocalStack AWS..."
 echo ""
 

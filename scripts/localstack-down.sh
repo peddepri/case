@@ -3,6 +3,9 @@
 
 set -e
 
+# Ir para o diretório raiz do projeto
+cd "$(dirname "$0")/.."
+
 echo "🛑 Parando ambiente LocalStack..."
 
 docker compose -f docker-compose.localstack.yml down

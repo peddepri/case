@@ -3,6 +3,9 @@
 
 set -e
 
+# Ir para o diretório raiz do projeto
+cd "$(dirname "$0")/.."
+
 export AWS_ENDPOINT_URL=http://localhost:4566
 export AWS_REGION=us-east-1
 export AWS_ACCESS_KEY_ID=test
