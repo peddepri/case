@@ -1,5 +1,5 @@
 import request from 'supertest';
-import app from '../src/index.js';
+import app from '../src/index';
 
 describe('Orders API', () => {
   it('GET /api/orders returns 200', async () => {

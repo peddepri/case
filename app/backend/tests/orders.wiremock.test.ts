@@ -1,5 +1,5 @@
 import { GenericContainer, StartedTestContainer, Wait } from 'testcontainers'
-import app from '../src/index.js'
+import app from '../src/index'
 import request from 'supertest'
 
 let container: StartedTestContainer
