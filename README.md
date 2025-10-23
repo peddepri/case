@@ -1,9 +1,3 @@
-# Case: Cloud-Native AWS on EKS Fargate with Datadog, DynamoDB, Blue/Green CI/CD
-
-Este repositório implementa uma referência de ponta a ponta para um aplicativo nativo da nuvem, seguro, observável e com consciência de custos na AWS:
-- Frontend (React + Vite), Mobile (Expo/React Native minimal)
-- Backend (Node.js + TypeScript, Express)
-- Persistence: DynamoDB (serverless, pay-per-request)
 # Case: Aplicação Cloud-Native na AWS (EKS Fargate) com Datadog, DynamoDB e CI/CD Blue/Green
 
 Este repositório entrega uma solução ponta a ponta, observável e com custos sob controle, totalmente em contêineres e pronta para AWS:
