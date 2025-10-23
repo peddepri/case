@@ -2,6 +2,29 @@ name: CD
 
 on:
   workflow_dispatch:
+    inputs:
+      aws_region:
+        description: "AWS region (fallback: repo variable AWS_REGION)"
+        required: false
+        type: string
+      aws_account_id:
+        description: "AWS account id (fallback: repo variable AWS_ACCOUNT_ID)"
+        required: false
+        type: string
+      eks_cluster_name:
+        description: "EKS cluster name (fallback: repo variable EKS_CLUSTER_NAME)"
+        required: false
+        type: string
+      dd_site:
+        description: "Datadog site (fallback: repo variable DD_SITE)"
+        required: false
+        type: string
+        default: "datadoghq.com"
+      ddb_table:
+        description: "DynamoDB table name (fallback: repo variable DDB_TABLE)"
+        required: false
+        type: string
+        default: "orders"
   push:
     branches: [ main ]
     paths:
@@ -9,11 +32,13 @@ on:
       - 'k8s/**'
 
 env:
-  AWS_REGION: ${{ vars.AWS_REGION }}
-  AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
-  EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME }}
+  AWS_REGION: ${{ inputs.aws_region || vars.AWS_REGION }}
+  AWS_ACCOUNT_ID: ${{ inputs.aws_account_id || vars.AWS_ACCOUNT_ID }}
+  EKS_CLUSTER_NAME: ${{ inputs.eks_cluster_name || vars.EKS_CLUSTER_NAME }}
   ECR_REPO_BACKEND: ${{ vars.ECR_REPO_BACKEND }}
   ECR_REPO_FRONTEND: ${{ vars.ECR_REPO_FRONTEND }}
+  DD_SITE: ${{ inputs.dd_site || vars.DD_SITE || 'datadoghq.com' }}
+  DDB_TABLE: ${{ inputs.ddb_table || vars.DDB_TABLE || 'orders' }}
 
 jobs:
   build-and-deploy:
@@ -23,6 +48,24 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
+
+      - name: Validate required variables
+        run: |
+          echo "Using variables:" \
+            && echo "AWS_REGION=$AWS_REGION" \
+            && echo "AWS_ACCOUNT_ID=$AWS_ACCOUNT_ID" \
+            && echo "EKS_CLUSTER_NAME=$EKS_CLUSTER_NAME" \
+            && echo "ECR_REPO_BACKEND=${ECR_REPO_BACKEND:-unset}" \
+            && echo "ECR_REPO_FRONTEND=${ECR_REPO_FRONTEND:-unset}" \
+            && echo "DD_SITE=$DD_SITE" \
+            && echo "DDB_TABLE=$DDB_TABLE"
+          missing=0
+          [ -n "$AWS_REGION" ] || { echo "ERROR: AWS_REGION não definido (defina em repo variables ou passe em workflow_dispatch)."; missing=1; }
+          [ -n "$EKS_CLUSTER_NAME" ] || { echo "ERROR: EKS_CLUSTER_NAME não definido."; missing=1; }
+          [ -n "${{ vars.OIDC_IAM_ROLE_ARN }}" ] || { echo "ERROR: OIDC_IAM_ROLE_ARN não definido em repo variables."; missing=1; }
+          [ -n "$ECR_REPO_BACKEND" ] || { echo "WARN: ECR_REPO_BACKEND não definido; build poderá falhar."; }
+          [ -n "$ECR_REPO_FRONTEND" ] || { echo "WARN: ECR_REPO_FRONTEND não definido; build poderá falhar."; }
+          if [ "$missing" -ne 0 ]; then exit 1; fi
 
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
@@ -71,8 +114,8 @@ jobs:
             echo "env-config exists"
           else
             sed -e "s/<AWS_REGION>/${AWS_REGION}/g" \
-                -e "s/orders/${{ vars.DDB_TABLE || 'orders' }}/g" \
-                -e "s/datadoghq.com/${{ vars.DD_SITE || 'datadoghq.com' }}/g" k8s/env-config.yaml | kubectl apply -f -
+                -e "s/orders/${DDB_TABLE}/g" \
+                -e "s/datadoghq.com/${DD_SITE}/g" k8s/env-config.yaml | kubectl apply -f -
           fi
           # Datadog API key secret
           if [ -n "${{ secrets.DD_API_KEY }}" ]; then
