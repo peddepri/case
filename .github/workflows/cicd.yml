@@ -20,9 +20,24 @@ permissions:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Validate required variables
+        run: |
+          echo "Using variables:" \
+            && echo "AWS_REGION=${{ env.AWS_REGION }}" \
+            && echo "AWS_ACCOUNT_ID=${{ env.AWS_ACCOUNT_ID }}" \
+            && echo "EKS_CLUSTER_NAME=${{ env.EKS_CLUSTER_NAME }}" \
+            && echo "DD_SITE=${{ env.DD_SITE }}" \
+            && echo "DDB_TABLE=${{ env.DDB_TABLE }}"
+          missing=0
+          [ -n "${{ env.AWS_REGION }}" ] || { echo "ERROR: AWS_REGION não definido (repo variables)."; missing=1; }
+          [ -n "${{ env.EKS_CLUSTER_NAME }}" ] || { echo "ERROR: EKS_CLUSTER_NAME não definido (repo variables)."; missing=1; }
+          [ -n "${{ secrets.AWS_ROLE_TO_ASSUME }}" ] || { echo "ERROR: secrets.AWS_ROLE_TO_ASSUME não definido."; missing=1; }
+          if [ "$missing" -ne 0 ]; then exit 1; fi
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -49,7 +64,7 @@ jobs:
         run: |
           FRONTEND_REPO=${{ steps.ecr.outputs.registry }}/frontend
           IMAGE_TAG=${{ github.sha }}
-          docker build -t $FRONTEND_REPO:$IMAGE_TAG -t $FRONTEND_REPO:latest .
+          docker build --build-arg VITE_BACKEND_URL=/api -t $FRONTEND_REPO:$IMAGE_TAG -t $FRONTEND_REPO:latest .
           docker push $FRONTEND_REPO:$IMAGE_TAG
           docker push $FRONTEND_REPO:latest
           echo "FRONTEND_IMAGE=$FRONTEND_REPO:$IMAGE_TAG" >> $GITHUB_ENV

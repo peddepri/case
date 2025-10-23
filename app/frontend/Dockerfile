@@ -1,6 +1,8 @@
 # Frontend Dockerfile
 FROM node:20-alpine AS build
 WORKDIR /app
+ARG VITE_BACKEND_URL=/api
+ENV VITE_BACKEND_URL=${VITE_BACKEND_URL}
 COPY package.json package-lock.json* pnpm-lock.yaml* yarn.lock* ./
 RUN npm ci || npm install
 COPY tsconfig*.json ./
