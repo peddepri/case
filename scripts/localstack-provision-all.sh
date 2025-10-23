@@ -61,10 +61,11 @@ EOF
 echo "   📦 Executando Terraform via Docker..."
 
 # Terraform init
+WORKSPACE_PATH="$(cd "$(pwd)/$TF_DIR" && pwd)"
 docker run --rm \
   --network case_localstack-network \
-  -v "$(pwd)/$TF_DIR:/workspace" \
-  -w /workspace \
+  -v "$WORKSPACE_PATH:/workspace" \
+  -w //workspace \
   -e AWS_ACCESS_KEY_ID=test \
   -e AWS_SECRET_ACCESS_KEY=test \
   -e AWS_DEFAULT_REGION=us-east-1 \
@@ -74,8 +75,8 @@ docker run --rm \
 # Terraform apply
 docker run --rm \
   --network case_localstack-network \
-  -v "$(pwd)/$TF_DIR:/workspace" \
-  -w /workspace \
+  -v "$WORKSPACE_PATH:/workspace" \
+  -w //workspace \
   -e AWS_ACCESS_KEY_ID=test \
   -e AWS_SECRET_ACCESS_KEY=test \
   -e AWS_DEFAULT_REGION=us-east-1 \
@@ -87,15 +88,15 @@ echo ""
 echo "   📊 Outputs do Terraform:"
 docker run --rm \
   --network case_localstack-network \
-  -v "$(pwd)/$TF_DIR:/workspace" \
-  -w /workspace \
+  -v "$WORKSPACE_PATH:/workspace" \
+  -w //workspace \
   hashicorp/terraform:1.9 output
 
 # Salvar outputs em arquivo
 docker run --rm \
   --network case_localstack-network \
-  -v "$(pwd)/$TF_DIR:/workspace" \
-  -w /workspace \
+  -v "$WORKSPACE_PATH:/workspace" \
+  -w //workspace \
   hashicorp/terraform:1.9 output -json > "$TF_DIR/outputs.json"
 
 echo "   ✅ Recursos AWS provisionados"
