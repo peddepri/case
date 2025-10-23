@@ -222,6 +222,8 @@ FinOps
 - Docker com recursos suficientes (CPU/RAM)
 - Sem dados no Datadog? Verifique `DD_API_KEY` + `DD_SITE` e logs do Agent
 - Em K8s, confira eventos, permissões e image pulls
+
+Nota de manutenção: este arquivo foi atualizado para acionar o pipeline de CI/CD em 2025-10-23.
 - Backups/exports: enable PITR or scheduled exports if needed
 
 FinOps
