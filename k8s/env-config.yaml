@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: env-config
+  namespace: case
+data:
+  AWS_REGION: "<AWS_REGION>"
+  DDB_TABLE: "orders"
+  DD_SITE: "datadoghq.com"

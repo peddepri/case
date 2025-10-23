@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: case
+  labels:
+    app: backend
+    color: blue
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+      color: blue
+  template:
+    metadata:
+      labels:
+        app: backend
+        color: blue
+      annotations:
+        ad.datadoghq.com/backend.logs: '[{"source":"nodejs","service":"backend"}]'
+        ad.datadoghq.com/backend.checks: '{"openmetrics":{"instances":[{"openmetrics_endpoint":"http://%%host%%:3000/metrics","namespace":"backend"}]}}'
+    spec:
+      serviceAccountName: backend-sa
+      containers:
+        - name: backend
+          image: <AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com/backend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          env:
+            - name: PORT
+              value: "3000"
+            - name: AWS_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: env-config
+                  key: AWS_REGION
+            - name: DDB_TABLE
+              valueFrom:
+                configMapKeyRef:
+                  name: env-config
+                  key: DDB_TABLE
+            - name: DD_ENV
+              value: "prod"
+            - name: DD_SERVICE
+              value: "backend"
+            - name: DD_VERSION
+              value: "0.1.0"
+            - name: DD_LOGS_INJECTION
+              value: "true"
+            - name: DD_TRACE_ENABLED
+              value: "true"
+            - name: DD_TRACE_AGENTLESS
+              value: "true"
+            - name: DD_SITE
+              valueFrom:
+                configMapKeyRef:
+                  name: env-config
+                  key: DD_SITE
+            - name: DD_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: datadog
+                  key: api-key
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: case
+spec:
+  selector:
+    app: backend
+    color: blue
+  ports:
+    - port: 3000
+      targetPort: 3000
+      protocol: TCP
+      name: http

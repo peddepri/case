@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: case
+  labels:
+    app: frontend
+    color: blue
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+      color: blue
+  template:
+    metadata:
+      labels:
+        app: frontend
+        color: blue
+      annotations:
+        ad.datadoghq.com/frontend.logs: '[{"source":"nginx","service":"frontend"}]'
+    spec:
+      containers:
+        - name: frontend
+          image: <AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com/frontend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          env:
+            - name: VITE_BACKEND_URL
+              value: "http://backend.case.svc.cluster.local:3000"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: case
+spec:
+  selector:
+    app: frontend
+    color: blue
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+      name: http

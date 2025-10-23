@@ -1,0 +1,18 @@
+version: "3.9"
+services:
+  tools:
+    build:
+      context: ./tools
+      dockerfile: Dockerfile
+    image: case-tools:latest
+    working_dir: /workspace
+    environment:
+      - AWS_REGION=${AWS_REGION}
+      - AWS_PROFILE=${AWS_PROFILE}
+      - KUBECONFIG=/root/.kube/config
+    volumes:
+      - ./:/workspace
+      - ${USERPROFILE}/.aws:/root/.aws:ro
+      - ${USERPROFILE}/.kube:/root/.kube
+    entrypoint: ["bash","-lc"]
+    command: ["bash"]
