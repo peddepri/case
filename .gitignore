@@ -82,3 +82,8 @@ logs/
 
 # Misc
 *.pid
+
+# LocalStack
+localstack-data/
+localstack-kubeconfig/
+.env.localstack
