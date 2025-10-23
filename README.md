@@ -1,6 +1,6 @@
 # Case: Cloud-Native AWS on EKS Fargate with Datadog, DynamoDB, Blue/Green CI/CD
 
-This repo implements an end-to-end reference for a cost-aware, secure, observable, cloud-native app on AWS:
+Este repositório implementa uma referência de ponta a ponta para um aplicativo nativo da nuvem, seguro, observável e com consciência de custos na AWS:
 - Frontend (React + Vite), Mobile (Expo/React Native minimal)
 - Backend (Node.js + TypeScript, Express)
 - Persistence: DynamoDB (serverless, pay-per-request)
@@ -60,6 +60,43 @@ docker compose --profile mobile up -d --build mobile
 - `infra/terraform`: Terraform para AWS (VPC, EKS, ECR, OIDC/IRSA, Helm: Datadog)
 - `observabilidade/datadog`: Dashboards de 4 Golden Signals e métricas de negócio, e monitores exemplo
 - `.github/workflows`: CI (testes) e CD (build/push/deploy)
+
+## Arquitetura
+
+Esta solução segue um desenho cloud-native priorizando serviços gerenciados na AWS e usando contêineres como fallback local para desenvolvimento e validação.
+
+Componentes principais
+- Compute: Amazon EKS em Fargate (sem nós EC2). Há Fargate Profiles para o namespace `case` e para o CoreDNS. Isso elimina o gerenciamento de nós, reduz a superfície de ataque e cobra por pod/segundo.
+- Entrega: Kubernetes com Deployments, Services e Ingress. O padrão de deploy é Blue/Green por rótulos (`color: blue|green`) e troca do selector no Service.
+- Dados: Amazon DynamoDB (tabela `orders`, PAY_PER_REQUEST) para escala automática e zero manutenção de servidor.
+- Identidade: IRSA (IAM Roles for Service Accounts) com OIDC habilitado no cluster. O backend acessa a tabela sem chaves estáticas.
+- Observabilidade: Datadog via Cluster Agent para telemetria de cluster e APM “agentless” nos pods do Fargate. Métricas de aplicação em `/metrics` (Prometheus) e logs por stdout/stderr (integração Datadog-AWS via CloudWatch Logs).
+- Pipeline: GitHub Actions com OIDC para assumir um role na AWS (sem secrets de longo prazo). Pipelines separados de CI (testes) e CD (build/push/deploy Blue/Green).
+- Fallback local (containers): Docker Compose sobe backend, frontend, dynamodb-local e Datadog Agent para desenvolvimento sem instalar ferramentas na máquina. A toolbox (Terraform/AWS/kubectl/Helm) também roda em contêiner.
+
+Por que esta arquitetura
+- Operação simplificada: Fargate remove o gerenciamento de nós, otimiza custos de ambientes variáveis e reduz toil de SRE.
+- Segurança por design: IRSA evita credenciais estáticas; OIDC no GitHub Actions elimina chaves long-lived; menor superfície por não ter DaemonSets no Fargate.
+- Observabilidade completa: APM agentless viabiliza traces no Fargate; métricas Prometheus e dashboards/monitores Datadog prontos aceleram MTTR.
+- Confiabilidade nas entregas: Blue/Green permite rollback instantâneo trocando o selector do Service; testes automatizados e smoke tests pós-deploy.
+- Produtividade: Toolbox e Compose padronizam o ambiente e evitam “works on my machine”.
+
+Trade-offs conhecidos
+- Fargate não suporta DaemonSets: agentes de logs/sidecars precisam de alternativas (CloudWatch, agentless, sidecars limitados). O APM é agentless por esse motivo.
+- Blue/Green consome recursos temporariamente em dobro durante a troca de tráfego.
+- DynamoDB oferece alta escala com baixo esforço, porém traz lock-in e limites de transação por partição.
+
+O que pode ser evoluído no futuro
+- GitOps e Progressive Delivery: Argo CD + Argo Rollouts/Flagger para canários, experimentos e automação de rollback.
+- Service Mesh: App Mesh/Istio para mTLS, retries, timeouts e circuit breaking gerenciados por políticas.
+- Observabilidade aberta: OpenTelemetry Collector como gateway unificado para métricas, logs e traces com destino opcional ao Datadog ou outros backends.
+- Segurança e Compliance: Policies OPA/Gatekeeper/Kyverno; admission control; image signing (Cosign), SBOM (Syft), scanning (Trivy) e cadeia de suprimentos (SLSA).
+- FinOps: KEDA para scale-to-zero em horários ociosos; rightsizing automático; endpoints VPC para ingestos Datadog reduzindo egress; otimização de NAT e cache de imagens (ECR pull-through cache).
+- Dados: TTL e PITR na tabela `orders`; streams para analytics/event-driven; catálogos de dados.
+- Plataforma: Multi-conta/ambiente com AWS Organizations, account vending, guardrails e níveis de segurança por ambiente.
+
+Papel do Docker (fallback)
+- Em produção, a recomendação é EKS Fargate e serviços gerenciados. Localmente, Docker é o fallback para desenvolvimento, testes e validação rápida sem dependências externas. Todos os scripts (Terraform/AWS/kubectl/Helm e Node/NPM) possuem variantes que executam 100% em contêiner.
 
 ## Testes
 Execute localmente nos diretórios de cada app; o CI executa em PRs e pushes:
