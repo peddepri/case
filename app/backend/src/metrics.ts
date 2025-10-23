@@ -3,7 +3,18 @@ import { StatsD } from 'hot-shots';
 
 // Prometheus metrics (4 golden signals)
 export const registry = new client.Registry();
-client.collectDefaultMetrics({ register: registry, prefix: 'backend_' });
+// Em testes, evite iniciar timers do prom-client (open handles)
+let defaultMetricsInterval: NodeJS.Timeout | undefined;
+if (process.env.NODE_ENV !== 'test') {
+  // Nota: versões mais novas do prom-client podem não retornar o intervalo; o clear é opcional
+  defaultMetricsInterval = client.collectDefaultMetrics({ register: registry, prefix: 'backend_' }) as unknown as NodeJS.Timeout;
+}
+
+export function stopDefaultMetrics() {
+  if (defaultMetricsInterval) {
+    clearInterval(defaultMetricsInterval);
+  }
+}
 
 export const httpRequestDuration = new client.Histogram({
   name: 'http_request_duration_seconds',
