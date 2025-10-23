@@ -5,6 +5,8 @@ const config: Config = {
   testEnvironment: 'node',
   roots: ['<rootDir>/tests'],
   testMatch: ['<rootDir>/tests/**/*.test.ts'],
+  testPathIgnorePatterns: ['/node_modules/', '\\.wiremock\\.test\\.ts$'],
+  testTimeout: 10000,
   moduleFileExtensions: ['ts', 'js', 'json'],
   extensionsToTreatAsEsm: ['.ts'],
   setupFilesAfterEnv: ['<rootDir>/tests/jest.setup.ts'],

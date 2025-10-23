@@ -269,13 +269,22 @@ FinOps
 - Terraform tags (`local.tags`) applied across resources for cost allocation
 - NAT gateway is a fixed cost – consider VPC endpoints for Datadog intake to reduce egress (advanced)
 
-## How to use Datadog trial
-1) Sign up for a free trial at datadoghq.com and copy your API key
-2) Set repository secret `DD_API_KEY`
-3) Set `DD_SITE` repository variable (e.g., `datadoghq.com` or `datadoghq.eu`)
-4) Merge to `main` to trigger CI/CD and view APM traces, cluster telemetry, and dashboards
+## Como usar o teste do Datadog
 
-## Troubleshooting
-- Ensure Docker has enough resources (CPU/RAM)
-- If Datadog data doesn’t show up, confirm `DD_API_KEY` + `DD_SITE` and Agent logs
-- Check Kubernetes events and pod logs for image pulls and permissions
+1. **Inscreva-se** para um teste gratuito em [datadoghq.com](https://www.datadoghq.com) e copie sua chave de API.  
+2. **Defina o segredo do repositório** `DD_API_KEY`.  
+3. **Defina a variável do repositório** `DD_SITE` (por exemplo, `datadoghq.com` ou `datadoghq.eu`).  
+4. **Mescle com o repositório principal** para acionar o **CI/CD** e visualizar:
+   - Rastreamentos de **APM**
+   - **Telemetria** do cluster
+   - **Painéis** do Datadog
+
+---
+
+### Solução de problemas
+
+- Certifique-se de que o **Docker** tenha recursos suficientes (CPU/RAM).  
+- Se os dados do **Datadog** não forem exibidos:
+  - Confirme as variáveis `DD_API_KEY` e `DD_SITE`.  
+  - Verifique os **logs do Agente Datadog**.  
+- Verifique os **eventos do Kubernetes** e **logs dos pods** para identificar problemas de permissões ou falhas no pull de imagens.

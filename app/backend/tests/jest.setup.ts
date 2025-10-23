@@ -6,7 +6,7 @@ process.env.DD_TRACE_ENABLED = 'false';
 process.env.DD_ENABLE_DOGSTATSD = 'false';
 
 // Encerrar coleta de métricas default do prom-client ao final para não deixar timers abertos
-import { stopDefaultMetrics } from '../src/metrics';
+import { stopDefaultMetrics } from '../src/metrics.js';
 
 afterAll(async () => {
   try { stopDefaultMetrics(); } catch { /* no-op */ }
