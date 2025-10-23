@@ -129,3 +129,29 @@ jobs:
           helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
           helm repo update
           helm upgrade --install kps prometheus-community/kube-prometheus-stack -n monitoring --create-namespace
+
+      - name: Apply Datadog dashboards (optional)
+        env:
+          DD_API_KEY: ${{ secrets.DD_API_KEY }}
+          DD_APP_KEY: ${{ secrets.DD_APP_KEY }}
+          DD_SITE: ${{ vars.DD_SITE || 'datadoghq.com' }}
+        run: |
+          if [ -z "${DD_API_KEY}" ] || [ -z "${DD_APP_KEY}" ]; then
+            echo "Skipping Datadog dashboards apply: missing DD_API_KEY or DD_APP_KEY";
+            exit 0;
+          fi
+          sudo apt-get update && sudo apt-get install -y jq
+          bash scripts/datadog-apply-dashboards.sh
+
+      - name: Apply Datadog monitors (optional)
+        env:
+          DD_API_KEY: ${{ secrets.DD_API_KEY }}
+          DD_APP_KEY: ${{ secrets.DD_APP_KEY }}
+          DD_SITE: ${{ vars.DD_SITE || 'datadoghq.com' }}
+        run: |
+          if [ -z "${DD_API_KEY}" ] || [ -z "${DD_APP_KEY}" ]; then
+            echo "Skipping Datadog monitors apply: missing DD_API_KEY or DD_APP_KEY";
+            exit 0;
+          fi
+          sudo apt-get update && sudo apt-get install -y jq
+          bash scripts/datadog-apply-monitors.sh
