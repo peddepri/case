@@ -20,7 +20,7 @@ echo "🔐 Fazendo login no ECR..."
 aws ecr get-login-password --endpoint-url $AWS_ENDPOINT_URL | \
   docker login --username AWS --password-stdin \
   $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.localhost.localstack.cloud:4566 \
-  2>/dev/null || echo "⚠️  ECR login pode não funcionar totalmente no Community"
+  2>/dev/null || echo "  ECR login pode não funcionar totalmente no Community"
 
 # Build backend
 echo ""
@@ -34,7 +34,7 @@ docker tag backend:latest \
 echo "⬆️  Pushing backend to LocalStack ECR..."
 docker push \
   $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.localhost.localstack.cloud:4566/backend:latest \
-  2>/dev/null || echo "⚠️  Push pode não funcionar totalmente (ECR mock básico)"
+  2>/dev/null || echo "  Push pode não funcionar totalmente (ECR mock básico)"
 
 # Build frontend
 echo ""
@@ -48,7 +48,7 @@ docker tag frontend:latest \
 echo "⬆️  Pushing frontend to LocalStack ECR..."
 docker push \
   $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.localhost.localstack.cloud:4566/frontend:latest \
-  2>/dev/null || echo "⚠️  Push pode não funcionar totalmente (ECR mock básico)"
+  2>/dev/null || echo "  Push pode não funcionar totalmente (ECR mock básico)"
 
 echo ""
 echo "📦 Verificando imagens no ECR:"
@@ -63,7 +63,7 @@ aws ecr list-images \
   2>/dev/null || echo "Nenhuma imagem encontrada"
 
 echo ""
-echo "✅ Build concluído!"
+echo " Build concluído!"
 echo ""
 echo "💡 Nota: ECR no LocalStack Community tem limitações."
 echo "   Para ECR completo, considere LocalStack Pro ou use Docker Hub."

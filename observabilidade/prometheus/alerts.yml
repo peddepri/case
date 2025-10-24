@@ -1,0 +1,72 @@
+groups:
+  - name: golden_signals
+    interval: 30s
+    rules:
+      # Latencia - P99 acima de 2 segundos
+      - alert: HighLatencyP99
+        expr: histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          signal: latency
+        annotations:
+          summary: "Alta latencia P99 detectada"
+          description: "O P99 de latencia esta em {{ $value }}s, acima do limite de 2s"
+
+      # Trafego - Quedas bruscas
+      - alert: TrafficDropped
+        expr: rate(http_requests_total[5m]) < 0.1
+        for: 10m
+        labels:
+          severity: warning
+          signal: traffic
+        annotations:
+          summary: "Queda brusca no trafego"
+          description: "Taxa de requisicoes caiu para {{ $value }} req/s"
+
+      # Erros - Taxa acima de 5%
+      - alert: HighErrorRate
+        expr: (rate(http_errors_total[5m]) / rate(http_requests_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          signal: errors
+        annotations:
+          summary: "Taxa de erro elevada"
+          description: "Taxa de erro em {{ $value | humanizePercentage }}"
+
+      # Saturacao - CPU acima de 80%
+      - alert: HighCPUUsage
+        expr: rate(backend_process_cpu_user_seconds_total[5m]) > 0.8
+        for: 10m
+        labels:
+          severity: warning
+          signal: saturation
+        annotations:
+          summary: "Uso de CPU elevado"
+          description: "CPU em {{ $value | humanizePercentage }}"
+
+  - name: business_metrics
+    interval: 30s
+    rules:
+      # Business - Alta taxa de falha em pedidos
+      - alert: HighOrderFailureRate
+        expr: (rate(orders_failed_total[10m]) / (rate(orders_created_total[10m]) + rate(orders_failed_total[10m]))) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+          signal: business
+        annotations:
+          summary: "Taxa de falha em pedidos elevada"
+          description: "Taxa de falha em {{ $value | humanizePercentage }}"
+
+      # Business - Sem pedidos criados
+      - alert: NoOrdersCreated
+        expr: rate(orders_created_total[15m]) == 0
+        for: 15m
+        labels:
+          severity: warning
+          signal: business
+        annotations:
+          summary: "Nenhum pedido criado"
+          description: "Sem pedidos criados nos ultimos 15 minutos"

@@ -126,38 +126,46 @@ services:
       - localstack-network
     restart: unless-stopped
 
-  # AWS CLI helper para interagir com LocalStack
-  awscli-localstack:
-    image: amazon/aws-cli:2.17.33
-    container_name: case-awscli-localstack
+  # Kubernetes local (kind) - Simula EKS
+  kind-cluster:
+    image: kindest/node:v1.28.0
+    container_name: case-kind-cluster
+    privileged: true
     environment:
-      - AWS_REGION=us-east-1
-      - AWS_ACCESS_KEY_ID=test
-      - AWS_SECRET_ACCESS_KEY=test
-      - AWS_ENDPOINT_URL=http://localstack:4566
-    entrypoint: /bin/bash
-    command: -c "tail -f /dev/null"
-    depends_on:
-      localstack:
-        condition: service_healthy
+      - KIND_EXPERIMENTAL_DOCKER_NETWORK=localstack-network
+    ports:
+      - "6443:6443"  # Kubernetes API
+      - "8080:80"    # Ingress HTTP
+      - "8443:443"   # Ingress HTTPS
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - "./k8s:/k8s:ro"
     networks:
       - localstack-network
-    profiles: ["tools"]
+    healthcheck:
+      test: ["CMD", "kubectl", "get", "nodes"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    profiles: ["eks"]
 
-  # K8s tools para interagir com EKS local
-  kubectl-localstack:
-    image: bitnami/kubectl:1.28
-    container_name: case-kubectl-localstack
+  # AWS CLI + kubectl + helm toolbox
+  aws-k8s-toolbox:
+    image: alpine:3.19
+    container_name: case-aws-k8s-toolbox
     environment:
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
       - AWS_ENDPOINT_URL=http://localstack:4566
-    entrypoint: /bin/bash
-    command: -c "tail -f /dev/null"
+      - KUBECONFIG=/root/.kube/config
+    entrypoint: /bin/sh
+    command: -c "apk add --no-cache aws-cli kubectl helm curl bash && tail -f /dev/null"
     volumes:
       - "./k8s:/k8s:ro"
       - "./localstack-kubeconfig:/root/.kube"
+      - "./scripts:/scripts:ro"
     depends_on:
       localstack:
         condition: service_healthy

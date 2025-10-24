@@ -10,7 +10,7 @@ echo ""
 if [ ! -f .env ]; then
     echo "📋 Criando arquivo .env..."
     cp .env.example .env
-    echo "✅ Arquivo .env criado"
+    echo " Arquivo .env criado"
 fi
 
 # Verificar se DD_API_KEY está configurado
@@ -18,7 +18,7 @@ DD_API_KEY=$(grep "^DD_API_KEY=" .env | cut -d'=' -f2)
 
 if [ -z "$DD_API_KEY" ]; then
     echo ""
-    echo "⚠️  DD_API_KEY não configurado no arquivo .env"
+    echo "  DD_API_KEY não configurado no arquivo .env"
     echo ""
     echo "📝 Para configurar:"
     echo "   1. Acesse: https://app.us5.datadoghq.com/organization-settings/api-keys"
@@ -31,7 +31,7 @@ if [ -z "$DD_API_KEY" ]; then
         # Atualizar .env com a nova key
         sed -i.bak "s/^DD_API_KEY=.*/DD_API_KEY=$NEW_KEY/" .env
         rm -f .env.bak
-        echo "✅ API key configurada!"
+        echo " API key configurada!"
     else
         echo "⏭️  Pulando configuração. Edite .env manualmente."
         exit 0
@@ -52,7 +52,7 @@ echo "📊 Status do Datadog Agent:"
 docker compose logs datadog-agent --tail=20 | grep -i "datadog agent" || true
 
 echo ""
-echo "✅ Configuração concluída!"
+echo " Configuração concluída!"
 echo ""
 echo "📍 Próximos passos:"
 echo "   1. Aguarde 1-2 minutos para dados aparecerem"

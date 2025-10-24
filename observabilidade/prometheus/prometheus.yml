@@ -1,0 +1,62 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'case-local'
+    environment: 'development'
+
+# Alertmanager (opcional)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets: ['alertmanager:9093']
+
+rule_files:
+  - 'alerts.yml'
+
+scrape_configs:
+  # Backend LocalStack (Docker Compose)
+  - job_name: 'backend-localstack'
+    static_configs:
+      - targets: ['host.docker.internal:3001']
+        labels:
+          service: 'backend'
+          environment: 'localstack'
+          platform: 'docker-compose'
+
+  # Backend Kubernetes (via host)
+  - job_name: 'backend-kubernetes'
+    static_configs:
+      - targets: ['host.docker.internal:3002']
+        labels:
+          service: 'backend'
+          environment: 'kubernetes'
+          platform: 'kind'
+
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+
+  # Grafana monitoring
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['grafana:3000']
+        labels:
+          service: 'grafana'
+
+  # Loki monitoring
+  - job_name: 'loki'
+    static_configs:
+      - targets: ['loki:3100']
+        labels:
+          service: 'loki'
+
+  # Tempo monitoring
+  - job_name: 'tempo'
+    static_configs:
+      - targets: ['tempo:3100']
+        labels:
+          service: 'tempo'

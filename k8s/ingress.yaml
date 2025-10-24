@@ -11,13 +11,13 @@ spec:
     - host: case.local
       http:
         paths:
-          - path: /(.*)
+          - path: /mobile(/|$)(.*)
             pathType: Prefix
             backend:
               service:
-                name: frontend
+                name: mobile
                 port:
-                  number: 80
+                  number: 19006
           - path: /api(/|$)(.*)
             pathType: Prefix
             backend:
@@ -25,3 +25,10 @@ spec:
                 name: backend
                 port:
                   number: 3000
+          - path: /(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80

@@ -29,6 +29,8 @@ spec:
           env:
             - name: VITE_BACKEND_URL
               value: "http://backend.case.svc.cluster.local:3000"
+            - name: VITE_OTLP_ENDPOINT
+              value: "http://tempo:4318/v1/traces"
           resources:
             requests:
               cpu: 50m

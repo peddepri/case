@@ -34,7 +34,7 @@ echo "☁️  5. S3 Buckets:"
 aws s3 ls --endpoint-url $AWS_ENDPOINT_URL || echo "Nenhum bucket encontrado"
 
 echo ""
-echo "☸️  6. EKS Clusters:"
+echo "  6. EKS Clusters:"
 aws eks list-clusters --endpoint-url $AWS_ENDPOINT_URL 2>/dev/null || echo "EKS não disponível (requer LocalStack Pro)"
 
 echo ""
@@ -49,7 +49,7 @@ aws dynamodb put-item \
     --table-name orders \
     --item "{\"id\": {\"S\": \"$ITEM_ID\"}, \"item\": {\"S\": \"test-item\"}, \"price\": {\"N\": \"999\"}}"
 
-echo "✅ Item inserido com ID: $ITEM_ID"
+echo " Item inserido com ID: $ITEM_ID"
 
 echo ""
 echo "🔍 9. Verificando item inserido:"
@@ -60,11 +60,11 @@ aws dynamodb scan \
 
 echo ""
 echo "🌐 10. Testando Backend (LocalStack):"
-curl -s http://localhost:3001/healthz && echo "" || echo "❌ Backend não está respondendo"
+curl -s http://localhost:3001/healthz && echo "" || echo " Backend não está respondendo"
 
 echo ""
 echo "📊 11. Testando métricas:"
 curl -s http://localhost:3001/metrics | head -n 10
 
 echo ""
-echo "✅ Testes concluídos!"
+echo " Testes concluídos!"

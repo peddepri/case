@@ -75,16 +75,12 @@ aws_local secretsmanager create-secret \
     --secret-string "{\"api-key\":\"${DD_API_KEY:-dummy-key-for-localstack}\"}" \
     2>/dev/null || echo "Secret 'datadog/api-key' já existe"
 
-echo "☸️  Criando EKS cluster 'case-eks'..."
-aws_local eks create-cluster \
-    --name case-eks \
-    --role-arn arn:aws:iam::000000000000:role/eks-service-role \
-    --resources-vpc-config subnetIds=subnet-12345,subnet-67890 \
-    --kubernetes-version 1.28 \
-    --tags Environment=localstack,Project=case \
-    2>/dev/null || echo "Cluster 'case-eks' já existe ou EKS não totalmente suportado"
+# EKS NÃO SUPORTADO em LocalStack Community (requer Pro)
+# Use kind (Kubernetes in Docker) para desenvolvimento local
+echo "  AVISO: EKS não disponível em LocalStack Community (Pro feature)"
+echo "   Para Kubernetes local, use: kind (já configurado no projeto)"
 
-echo "📊 Criando CloudWatch Log Group..."
+echo "Criando CloudWatch Log Group..."
 aws_local logs create-log-group \
     --log-group-name /aws/eks/case-eks/cluster \
     2>/dev/null || echo "Log group já existe"
@@ -92,16 +88,16 @@ aws_local logs create-log-group \
 echo "🎯 Criando S3 bucket para Terraform state (simulado)..."
 aws_local s3 mb s3://case-terraform-state 2>/dev/null || echo "Bucket já existe"
 
-echo "✅ Inicialização do LocalStack concluída!"
+echo " Inicialização do LocalStack concluída!"
 echo ""
 echo "📋 Recursos criados:"
 echo "   - DynamoDB table: orders"
 echo "   - IAM role: backend-sa-role"
 echo "   - ECR repos: backend, frontend"
 echo "   - Secrets: datadog/api-key"
-echo "   - EKS cluster: case-eks (se suportado)"
 echo "   - CloudWatch Log Group: /aws/eks/case-eks/cluster"
 echo "   - S3 bucket: case-terraform-state"
+echo "   - EKS: NÃO DISPONÍVEL (use kind para K8s local)"
 echo ""
-echo "🔗 Acesse LocalStack em: http://localhost:4566"
-echo "📊 Dashboard (se Pro): https://app.localstack.cloud"
+echo "Acesse LocalStack em: http://localhost:4566"
+echo "Dashboard (se Pro): https://app.localstack.cloud"

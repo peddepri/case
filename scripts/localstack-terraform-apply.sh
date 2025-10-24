@@ -10,12 +10,12 @@ echo ""
 
 # Verificar se LocalStack está rodando
 if ! curl -s http://localhost:4566/_localstack/health > /dev/null 2>&1; then
-    echo "❌ LocalStack não está rodando!"
+    echo " LocalStack não está rodando!"
     echo "   Execute primeiro: ./scripts/localstack-up.sh"
     exit 1
 fi
 
-echo "✅ LocalStack está rodando"
+echo " LocalStack está rodando"
 echo ""
 
 # Criar diretório para Terraform no LocalStack
@@ -38,7 +38,7 @@ dd_site             = "us5.datadoghq.com"
 dynamodb_table_name = "orders"
 EOF
 
-echo "✅ Configuração preparada"
+echo " Configuração preparada"
 echo ""
 
 # Rodar Terraform via Docker (toolbox)
@@ -74,7 +74,7 @@ read -p "🚀 Aplicar infraestrutura no LocalStack? (s/N): " APPLY
 
 if [[ "$APPLY" =~ ^[Ss]$ ]]; then
     echo ""
-    echo "⚙️  Aplicando Terraform..."
+    echo "  Aplicando Terraform..."
     docker compose -f docker-compose.localstack.yml run --rm \
       -v "$(pwd)/$TERRAFORM_DIR:/workspace" \
       -w /workspace \
@@ -99,7 +99,7 @@ if [[ "$APPLY" =~ ^[Ss]$ ]]; then
       "
     
     echo ""
-    echo "✅ Infraestrutura provisionada no LocalStack!"
+    echo " Infraestrutura provisionada no LocalStack!"
 else
     echo "⏭️  Pulando apply"
 fi

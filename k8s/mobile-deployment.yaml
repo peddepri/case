@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mobile
+  namespace: case
+  labels:
+    app: mobile
+    version: blue
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mobile
+      version: blue
+  template:
+    metadata:
+      labels:
+        app: mobile
+        version: blue
+        tags.datadoghq.com/env: "dev"
+        tags.datadoghq.com/service: "mobile"
+        tags.datadoghq.com/version: "0.1.0"
+    spec:
+      containers:
+      - name: mobile
+        image: case-mobile:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 19006
+          name: http
+        env:
+        - name: EXPO_PUBLIC_BACKEND_URL
+          value: "http://backend:3000"
+        - name: EXPO_NO_TELEMETRY
+          value: "1"
+        - name: DD_ENV
+          value: "dev"
+        - name: DD_SERVICE
+          value: "mobile"
+        - name: DD_VERSION
+          value: "0.1.0"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 19006
+          initialDelaySeconds: 90
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 5
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 19006
+          initialDelaySeconds: 60
+          periodSeconds: 15
+          timeoutSeconds: 10
+          failureThreshold: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mobile
+  namespace: case
+  labels:
+    app: mobile
+spec:
+  type: ClusterIP
+  ports:
+  - port: 19006
+    targetPort: 19006
+    protocol: TCP
+    name: http
+  selector:
+    app: mobile

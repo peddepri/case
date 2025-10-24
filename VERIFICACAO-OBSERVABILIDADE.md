@@ -1,0 +1,386 @@
+# Verificacao da Observabilidade - Grafana Stack
+
+## Status da Stack ✅ TODOS FUNCIONANDO
+
+Stack completa de observabilidade rodando e acessivel:
+
+```bash
+docker compose -f docker-compose.observability.yml ps
+```
+
+**Servicos:**
+- ✅ Prometheus (coleta metricas a cada 15s)
+- ✅ Grafana (visualizacao)
+- ✅ Loki (logs)
+- ✅ Promtail (coleta logs Docker)
+- ✅ Tempo (traces distribuidos)
+
+## Acessos
+
+### Grafana
+- URL: **http://localhost:3100**
+- User: `admin`
+- Password: `admin`
+
+### Prometheus
+- URL: **http://localhost:9090**
+- Targets: http://localhost:9090/targets
+- Graph: http://localhost:9090/graph
+
+### Loki
+- URL: **http://localhost:3101**
+- Ready: http://localhost:3101/ready
+
+### Tempo
+- URL: **http://localhost:3102**
+- Ready: http://localhost:3102/ready
+
+## Validacao dos Servicos
+
+### Verificar Loki (Logs)
+
+```bash
+# Verificar se esta pronto
+curl -s http://localhost:3101/ready
+# Retorna: ready
+
+# Verificar labels disponiveis
+curl -s 'http://localhost:3101/loki/api/v1/labels' | python -m json.tool
+# Retorna: container, level, service, service_name, stream
+
+# Verificar se Promtail esta coletando logs
+docker logs case-promtail --tail 20
+# Deve mostrar: "finished transferring logs"
+```
+
+### Verificar Tempo (Traces)
+
+```bash
+# Verificar se esta pronto (aguardar ~20s apos start)
+curl -s http://localhost:3102/ready
+# Retorna: ready
+
+# Verificar logs (se houver problema)
+docker logs case-tempo --tail 50
+```
+
+**Nota:** Se Tempo apresentar erro de config, a configuracao foi simplificada em `observabilidade/tempo/tempo-config.yml` para compatibilidade com versao 2.6.1.
+
+## Dashboards Grafana
+
+### 1. 4 Golden Signals - Backend API
+
+**Acesso:** Grafana → Dashboards → Case → 4 Golden Signals - Backend API
+
+**O que ver:**
+
+#### 1.1 Latencia (Latency)
+- **P50, P95, P99** de duracao de requisicoes HTTP
+- Gauge mostrando P99 atual
+- **Threshold:** P99 > 2s = alerta (amarelo/vermelho)
+- **Query:** `histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))`
+
+#### 1.2 Trafego (Traffic)
+- Taxa de requisicoes por metodo/rota/status (req/s)
+- Gauge com total de requisicoes/segundo
+- **Alerta:** rate < 0.1 req/s por 10 min
+- **Query:** `rate(http_requests_total[5m])`
+
+#### 1.3 Erros (Errors)
+- Taxa de erro: % de requisicoes com status >= 400
+- Gauge com taxa atual
+- **Threshold:** > 5% = critico (vermelho)
+- **Query:** `rate(http_errors_total[5m]) / rate(http_requests_total[5m])`
+
+#### 1.4 Saturacao (Saturation)
+- **CPU Usage:** User + System
+- **Memory Usage:** Heap Total, Heap Used, External Memory
+- **Alerta:** CPU > 80% por 10 min
+- **Queries:**
+  - CPU: `rate(backend_process_cpu_user_seconds_total[5m])`
+  - Memory: `backend_nodejs_heap_size_used_bytes`
+
+### 2. Business Metrics - Orders
+
+**Acesso:** Grafana → Dashboards → Case → Business Metrics - Orders
+
+**O que ver:**
+
+#### 2.1 Orders Created Rate
+- Taxa de pedidos criados com sucesso (orders/s)
+- Gauge com taxa atual
+- **Query:** `rate(orders_created_total[5m])`
+
+#### 2.2 Orders Failed Rate
+- Taxa de pedidos que falharam (orders/s)
+- Grafico em vermelho
+- **Query:** `rate(orders_failed_total[5m])`
+
+#### 2.3 Order Failure Rate
+- Porcentagem de pedidos que falharam
+- Gauge (0-100%)
+- **Threshold:** > 10% = critico
+- **Query:** `rate(orders_failed_total[5m]) / (rate(orders_created_total[5m]) + rate(orders_failed_total[5m]))`
+
+#### 2.4 Stats
+- **Total Orders (Last Hour):** Pedidos criados na ultima hora
+- **Failed Orders (Last Hour):** Pedidos falhados na ultima hora
+- **Success Rate (Last Hour):** Taxa de sucesso (%)
+- **Total Orders (Last 24h):** Pedidos criados em 24 horas
+
+## Verificacao Passo a Passo
+
+### Passo 1: Verificar Targets no Prometheus
+
+```bash
+curl http://localhost:9090/api/v1/targets | python -m json.tool | grep '"health"'
+```
+
+**Esperado:** Todos targets com `"health":"up"`
+
+Targets ativos:
+- `backend-localstack` (Docker Compose): http://host.docker.internal:3001/metrics
+- `backend-kubernetes` (kind): http://host.docker.internal:3002/metrics
+- `prometheus`, `grafana`, `loki`, `tempo`
+
+### Passo 2: Gerar Trafego
+
+#### Trafego basico (GET /)
+```bash
+for i in {1..30}; do curl -s http://localhost:3001/ > /dev/null && echo "Request $i OK"; sleep 0.5; done
+```
+
+#### Criar pedidos (Business Metrics)
+```bash
+for i in {1..20}; do
+  echo "Order $i:"
+  curl -s -X POST http://localhost:3001/api/orders \
+    -H "Content-Type: application/json" \
+    -d '{"item":"Product'$i'","price":'$((10 + i))'}' && echo ""
+  sleep 0.3
+done
+```
+
+**Esperado:**
+- ~90% dos pedidos criados com sucesso (status 201, retorna `{"id":"...","item":"...","price":...}`)
+- ~10% falhando aleatoriamente (status 500, retorna `{"error":"Order processing failed"}`)
+
+### Passo 3: Verificar Metricas no Backend
+
+```bash
+# Ver todas as metricas
+curl -s http://localhost:3001/metrics | head -50
+
+# Ver metricas de orders
+curl -s http://localhost:3001/metrics | grep '^orders_'
+```
+
+**Esperado:**
+```
+orders_created_total 38
+orders_failed_total 2
+```
+
+### Passo 4: Consultar Prometheus (CLI)
+
+#### Latencia P99
+```bash
+curl -s 'http://localhost:9090/api/v1/query?query=histogram_quantile(0.99,rate(http_request_duration_seconds_bucket[5m]))' | python -m json.tool
+```
+
+#### Taxa de erro
+```bash
+curl -s 'http://localhost:9090/api/v1/query?query=rate(http_errors_total[5m])/rate(http_requests_total[5m])' | python -m json.tool
+```
+
+#### Business metrics
+```bash
+curl -s 'http://localhost:9090/api/v1/query?query=orders_created_total' | python -m json.tool
+curl -s 'http://localhost:9090/api/v1/query?query=orders_failed_total' | python -m json.tool
+```
+
+### Passo 5: Abrir Grafana
+
+1. Acesse: **http://localhost:3100**
+2. Login: `admin` / `admin` (pode pular mudanca de senha)
+3. Menu lateral esquerdo → **Dashboards** → **Browse**
+4. Pasta **Case** → 2 dashboards:
+   - **4 Golden Signals - Backend API**
+   - **Business Metrics - Orders**
+
+### Passo 6: Explorar no Grafana
+
+#### Dashboard 4 Golden Signals:
+- ✅ Latencia: Graficos de P50, P95, P99 mostrando duracao em segundos
+- ✅ Trafego: Taxa de requisicoes/s, separada por metodo/rota/status
+- ✅ Erros: Porcentagem de erros, deve estar baixa (<5%)
+- ✅ Saturacao: CPU e memoria do Node.js
+
+#### Dashboard Business Metrics:
+- ✅ Orders Created: Taxa de criacao de pedidos
+- ✅ Orders Failed: Taxa de falha (deve ser ~10% devido simulacao)
+- ✅ Failure Rate: Gauge mostrando % de falhas
+- ✅ Stats: Total de pedidos (1h, 24h), success rate
+
+### Passo 7: Explorar Logs no Loki
+
+1. Grafana → Menu lateral → **Explore**
+2. Datasource: **Loki**
+3. Query:
+   ```logql
+   {service="backend-localstack"}
+   ```
+4. Filtrar por nivel:
+   ```logql
+   {service="backend-localstack"} | json | level="info"
+   {service="backend-localstack"} | json | level="error"
+   ```
+5. Logs de orders:
+   ```logql
+   {service="backend-localstack"} |= "Order created"
+   {service="backend-localstack"} |= "Order failed"
+   ```
+
+### Passo 8: Alertas Configurados (Prometheus)
+
+Ver alertas ativos:
+```bash
+curl http://localhost:9090/api/v1/rules | python -m json.tool
+```
+
+**Alertas Golden Signals:**
+1. `HighLatencyP99`: P99 > 2s por 5 min (warning)
+2. `TrafficDropped`: rate < 0.1 req/s por 10 min (warning)
+3. `HighErrorRate`: error rate > 5% por 5 min (critical)
+4. `HighCPUUsage`: CPU > 80% por 10 min (warning)
+
+**Alertas Business:**
+1. `HighOrderFailureRate`: failure rate > 10% por 5 min (critical)
+2. `NoOrdersCreated`: 0 pedidos por 15 min (warning)
+
+## Metricas Implementadas
+
+### Prometheus (4 Golden Signals)
+
+| Metrica | Tipo | Labels | Descricao |
+|---------|------|--------|-----------|
+| `http_request_duration_seconds` | Histogram | method, route, status_code | Duracao de requisicoes HTTP (buckets: 0.05-5s) |
+| `http_requests_total` | Counter | method, route, status_code | Total de requisicoes HTTP |
+| `http_errors_total` | Counter | method, route, status_code | Total de erros HTTP (status >= 400) |
+| `backend_process_cpu_*` | Gauge | - | CPU usage (user, system) |
+| `backend_nodejs_heap_*` | Gauge | - | Memoria Node.js (heap total, used, external) |
+
+### Business Metrics (Orders)
+
+| Metrica | Tipo | Labels | Descricao |
+|---------|------|--------|-----------|
+| `orders_created_total` | Counter | - | Pedidos criados com sucesso |
+| `orders_failed_total` | Counter | - | Pedidos que falharam |
+
+**Nota:** Business metrics tambem sao enviadas para Datadog via DogStatsD (`orders.created`, `orders.failed`)
+
+## Troubleshooting
+
+### Grafana nao mostra dados
+
+1. Verificar datasources:
+   - Grafana → Configuration → Data Sources
+   - Testar conexao com Prometheus, Loki
+
+2. Verificar que dashboards foram provisionados:
+   ```bash
+   docker logs case-grafana | grep -i dashboard
+   ```
+
+3. Recarregar provisioning:
+   ```bash
+   docker compose -f docker-compose.observability.yml restart grafana
+   ```
+
+### Prometheus nao coleta metricas
+
+1. Ver targets:
+   ```bash
+   curl http://localhost:9090/api/v1/targets | python -m json.tool | grep '"health"'
+   ```
+
+2. Se `backend-localstack` estiver down:
+   ```bash
+   # Testar manualmente
+   curl http://localhost:3001/metrics
+   ```
+
+3. Verificar config do Prometheus:
+   ```bash
+   docker exec case-prometheus cat /etc/prometheus/prometheus.yml
+   ```
+
+### Loki nao recebe logs
+
+1. Verificar Promtail:
+   ```bash
+   docker logs case-promtail | grep -i error
+   ```
+
+2. Testar Loki:
+   ```bash
+   curl http://localhost:3101/ready
+   ```
+
+3. Query manual no Loki:
+   ```bash
+   curl -G -s "http://localhost:3101/loki/api/v1/query_range" \
+     --data-urlencode 'query={service="backend-localstack"}' \
+     --data-urlencode 'limit=10' | python -m json.tool
+   ```
+
+## Resumo da Verificacao
+
+✅ **Stack rodando:**
+- Prometheus: http://localhost:9090
+- Grafana: http://localhost:3100
+- Loki: http://localhost:3101
+- Tempo: http://localhost:3102
+
+✅ **Metricas coletadas:**
+- 4 Golden Signals: Latencia, Trafego, Erros, Saturacao
+- Business Metrics: Orders created, Orders failed
+
+✅ **Dashboards funcionando:**
+- 4 Golden Signals - Backend API (8 paineis)
+- Business Metrics - Orders (8 paineis)
+
+✅ **Logs agregados:**
+- Loki coletando logs JSON do backend
+- Promtail parseando logs Docker
+
+✅ **Alertas configurados:**
+- 4 alertas Golden Signals
+- 2 alertas Business Metrics
+
+## Comandos Rapidos
+
+```bash
+# Subir stack
+docker compose -f docker-compose.observability.yml up -d
+
+# Ver status
+docker compose -f docker-compose.observability.yml ps
+
+# Gerar trafego
+for i in {1..50}; do curl -s http://localhost:3001/ > /dev/null; sleep 0.2; done
+
+# Criar pedidos
+for i in {1..20}; do curl -s -X POST http://localhost:3001/api/orders -H "Content-Type: application/json" -d '{"item":"Prod'$i'","price":'$i'}' > /dev/null; sleep 0.3; done
+
+# Ver metricas
+curl -s http://localhost:3001/metrics | grep '^orders_'
+
+# Abrir Grafana
+start http://localhost:3100  # Windows
+open http://localhost:3100   # macOS
+xdg-open http://localhost:3100  # Linux
+
+# Parar stack
+docker compose -f docker-compose.observability.yml down
+```

@@ -35,9 +35,22 @@ export const httpErrorsTotal = new client.Counter({
   labelNames: ['method', 'route', 'status_code']
 });
 
+// Business metrics - Orders
+export const ordersCreatedTotal = new client.Counter({
+  name: 'orders_created_total',
+  help: 'Total orders created successfully'
+});
+
+export const ordersFailedTotal = new client.Counter({
+  name: 'orders_failed_total',
+  help: 'Total orders that failed'
+});
+
 registry.registerMetric(httpRequestDuration);
 registry.registerMetric(httpRequestsTotal);
 registry.registerMetric(httpErrorsTotal);
+registry.registerMetric(ordersCreatedTotal);
+registry.registerMetric(ordersFailedTotal);
 
 // DogStatsD for business metrics
 const enableDogStatsD = process.env.DD_ENABLE_DOGSTATSD === 'true';
@@ -53,9 +66,11 @@ export const statsd = new StatsD({
 });
 
 export function incOrdersCreated() {
-  statsd.increment('orders.created');
+  ordersCreatedTotal.inc();  // Prometheus
+  statsd.increment('orders.created');  // Datadog
 }
 
 export function incOrdersFailed() {
-  statsd.increment('orders.failed');
+  ordersFailedTotal.inc();  // Prometheus
+  statsd.increment('orders.failed');  // Datadog
 }

@@ -63,6 +63,14 @@ spec:
                 secretKeyRef:
                   name: datadog
                   key: api-key
+            - name: OTEL_TRACE_ENABLED
+              value: "true"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://tempo:4318/v1/traces"
+            - name: SERVICE_NAME
+              value: "case-backend"
+            - name: SERVICE_VERSION
+              value: "0.1.0"
           resources:
             requests:
               cpu: 100m

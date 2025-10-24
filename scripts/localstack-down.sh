@@ -17,9 +17,9 @@ if [[ "$REMOVE_DATA" =~ ^[Ss]$ ]]; then
     echo "🗑️  Removendo dados do LocalStack..."
     rm -rf localstack-data
     rm -rf localstack-kubeconfig
-    echo "✅ Dados removidos"
+    echo " Dados removidos"
 else
     echo "📦 Dados preservados em ./localstack-data"
 fi
 
-echo "✅ LocalStack parado"
+echo " LocalStack parado"

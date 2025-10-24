@@ -10,6 +10,7 @@ import pinoHttp from 'pino-http';
 import { logger } from './logger.js';
 import { registry, httpRequestsTotal, httpRequestDuration, httpErrorsTotal } from './metrics.js';
 import { ordersRouter } from './routes/orders.js';
+import { metricsRouter } from './routes/metrics.js';
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
@@ -34,6 +35,28 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
+app.get('/', (_req, res) => {
+  res.status(200).json({
+    name: 'Case Backend API',
+    version: '0.1.0',
+    environment: process.env.NODE_ENV || 'development',
+    endpoints: {
+      health: '/healthz',
+      metrics: '/metrics',
+      orders: {
+        list: 'GET /api/orders',
+        create: 'POST /api/orders',
+        getById: 'GET /api/orders/:id'
+      }
+    },
+    aws: {
+      region: process.env.AWS_REGION,
+      dynamodbEndpoint: process.env.DYNAMODB_ENDPOINT,
+      table: process.env.DDB_TABLE
+    }
+  });
+});
+
 app.get('/healthz', (_req, res) => res.status(200).json({ status: 'ok' }));
 app.get('/metrics', async (_req, res) => {
   res.set('Content-Type', registry.contentType);
@@ -41,6 +64,7 @@ app.get('/metrics', async (_req, res) => {
 });
 
 app.use('/api/orders', ordersRouter);
+app.use('/api/metrics', metricsRouter);
 
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   logger.error({ err }, 'Unhandled error');

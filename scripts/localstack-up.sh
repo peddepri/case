@@ -11,7 +11,7 @@ echo ""
 
 # Verificar se .env.localstack existe
 if [ ! -f .env.localstack ]; then
-    echo "⚠️  Arquivo .env.localstack não encontrado!"
+    echo "  Arquivo .env.localstack não encontrado!"
     echo "   Criando a partir do template..."
     cat > .env.localstack << 'EOF'
 # LocalStack Configuration
@@ -49,7 +49,7 @@ until curl -s http://localhost:4566/_localstack/health | grep -q '"dynamodb": "a
     sleep 2
 done
 echo ""
-echo "✅ LocalStack pronto!"
+echo " LocalStack pronto!"
 
 echo ""
 echo "📊 Status dos serviços:"

@@ -10,24 +10,52 @@ export default function App() {
 
   async function load() {
     const t0 = performance.now();
+    const route = '/api/orders';
     try {
       const list = await fetchOrders();
       setOrders(list);
-      setLatencyMs(performance.now() - t0);
+      const duration = performance.now() - t0;
+      setLatencyMs(duration);
+      
+      // Send metrics to backend
+      sendMetric(route, duration, false);
     } catch (e) {
       setErrorCount((x) => x + 1);
+      const duration = performance.now() - t0;
+      sendMetric(route, duration, true);
     }
   }
 
   async function onCreate() {
     const t0 = performance.now();
+    const route = '/api/orders';
     try {
       await createOrder(item, price);
       await load();
-      setLatencyMs(performance.now() - t0);
+      const duration = performance.now() - t0;
+      setLatencyMs(duration);
+      
+      // Send metrics to backend
+      sendMetric(route, duration, false);
     } catch (e) {
       setErrorCount((x) => x + 1);
+      const duration = performance.now() - t0;
+      sendMetric(route, duration, true);
     }
+  }
+
+  function sendMetric(route: string, duration: number, error: boolean) {
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+    fetch(`${backendUrl}/api/metrics/frontend`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ route, duration, error }),
+      keepalive: true,
+    }).catch((err) => {
+      console.warn('[Metrics] Failed to send metric:', err);
+    });
   }
 
   useEffect(() => {

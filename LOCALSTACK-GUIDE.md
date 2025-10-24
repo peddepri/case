@@ -18,21 +18,26 @@ LocalStack é um emulador de serviços AWS que roda localmente, permitindo:
 
 ## Serviços Suportados
 
-### ✅ Gratuitos (Community)
-- DynamoDB
-- S3
-- ECR (básico)
-- IAM
-- Secrets Manager
-- CloudWatch Logs
-- STS
+### Gratuitos (Community Edition)
+- DynamoDB ✓
+- S3 ✓
+- ECR (básico) ✓
+- IAM ✓
+- Secrets Manager ✓
+- CloudWatch Logs ✓
+- STS ✓
 
-### 🔒 Pro (requer licença)
-- EKS completo
+### Pro (requer licença - NÃO DISPONÍVEL na Community)
+- **EKS** - ERRO: "API for service 'eks' not yet implemented or pro feature"
 - ECR avançado
 - RDS
 - Lambda layers
 - Etc.
+
+**IMPORTANTE:** Este projeto usa **LocalStack Community**, que NÃO inclui EKS. Para desenvolvimento local:
+1. Use **kind** (Kubernetes in Docker) para simular cluster Kubernetes - JÁ CONFIGURADO
+2. LocalStack provê apenas DynamoDB, S3, IAM e outros serviços básicos
+3. Para EKS real, use AWS diretamente (via Terraform)
 
 ## Início Rápido
 
@@ -110,8 +115,37 @@ O script `scripts/localstack-init/ready.d/01-init-resources.sh` cria:
 6. **CloudWatch Log Group**:
    - `/aws/eks/case-eks/cluster`
 
-7. **EKS Cluster** (se Pro):
-   - `case-eks`
+**NÃO CRIADO (Pro feature):**
+- **EKS Cluster** - Erro: "API for service 'eks' not yet implemented or pro feature"
+- Para Kubernetes local, use **kind** (Kubernetes in Docker) que JÁ ESTÁ configurado neste projeto
+
+## Alternativa ao EKS: kind (Kubernetes in Docker)
+
+Como EKS não está disponível no LocalStack Community, este projeto usa **kind** para simular um cluster Kubernetes local:
+
+```bash
+# Verificar se kind está instalado
+kind version
+
+# Cluster já configurado no projeto
+kind get clusters
+# Output esperado: case-local
+
+# Verificar pods no namespace case
+kubectl get pods -n case
+
+# Port-forward para acessar serviços
+kubectl port-forward -n case svc/backend 3002:3000
+kubectl port-forward -n case svc/frontend 5173:80
+kubectl port-forward -n case svc/mobile 19007:19006
+```
+
+**Vantagens do kind:**
+- Gratuito e open-source
+- Cluster Kubernetes real (não emulado)
+- Suporta todos os recursos K8s (deployments, services, ingress, etc.)
+- Usa apenas Docker (sem VMs)
+- Rápido de criar e destruir
 
 ## Comandos AWS CLI
 

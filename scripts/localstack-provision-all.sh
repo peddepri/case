@@ -13,7 +13,7 @@ echo ""
 echo "📋 Verificando pré-requisitos..."
 
 if ! docker info > /dev/null 2>&1; then
-    echo "❌ Docker não está rodando"
+    echo " Docker não está rodando"
     exit 1
 fi
 
@@ -24,7 +24,7 @@ if ! curl -s http://localhost:4566/_localstack/health > /dev/null 2>&1; then
     echo "   LocalStack não está rodando. Subindo..."
     bash scripts/localstack-up.sh
 else
-    echo "   ✅ LocalStack já está rodando"
+    echo "    LocalStack já está rodando"
 fi
 
 # Aguardar LocalStack ficar pronto
@@ -33,7 +33,7 @@ until curl -s http://localhost:4566/_localstack/health | grep -q '"dynamodb": "r
     echo -n "."
     sleep 2
 done
-echo " ✅"
+echo " "
 
 # Passo 2: Provisionar recursos AWS via Terraform
 echo ""
@@ -99,7 +99,7 @@ docker run --rm \
   -w //workspace \
   hashicorp/terraform:1.9 output -json > "$TF_DIR/outputs.json"
 
-echo "   ✅ Recursos AWS provisionados"
+echo "    Recursos AWS provisionados"
 
 # Passo 3: Verificar recursos criados
 echo ""
@@ -130,7 +130,7 @@ docker build -t case-backend:latest -t 000000000000.dkr.ecr.us-east-1.localhost.
 echo "   🏗️  Frontend image..."
 docker build -t case-frontend:latest -t 000000000000.dkr.ecr.us-east-1.localhost.localstack.cloud:4566/frontend:latest app/frontend -q
 
-echo "   ✅ Imagens construídas"
+echo "    Imagens construídas"
 
 # Passo 5: Restart containers para usar novos recursos
 echo ""
@@ -139,7 +139,7 @@ echo "5️⃣  Reiniciando containers para usar recursos provisionados..."
 docker compose -f docker-compose.localstack.yml restart backend-localstack
 docker compose -f docker-compose.localstack.yml restart frontend-localstack
 
-echo "   ✅ Containers reiniciados"
+echo "    Containers reiniciados"
 
 # Passo 6: Validação
 echo ""
@@ -149,9 +149,9 @@ sleep 3
 
 echo "   🧪 Testando backend..."
 if curl -sf http://localhost:3001/healthz > /dev/null; then
-    echo "   ✅ Backend respondendo"
+    echo "    Backend respondendo"
 else
-    echo "   ⚠️  Backend não está respondendo"
+    echo "     Backend não está respondendo"
 fi
 
 echo "   🧪 Testando API..."
@@ -160,15 +160,15 @@ TEST_ORDER=$(curl -sf -X POST http://localhost:3001/api/orders \
   -d '{"item":"test-infra","price":100}' 2>/dev/null || echo "")
 
 if [ -n "$TEST_ORDER" ]; then
-    echo "   ✅ API funcionando (order criada)"
+    echo "    API funcionando (order criada)"
 else
-    echo "   ⚠️  API não respondeu"
+    echo "     API não respondeu"
 fi
 
 # Resumo final
 echo ""
 echo "=========================================================="
-echo "✅ Provisionamento Completo!"
+echo " Provisionamento Completo!"
 echo "=========================================================="
 echo ""
 echo "📊 Recursos Provisionados:"

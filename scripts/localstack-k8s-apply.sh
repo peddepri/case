@@ -5,7 +5,7 @@ set -e
 
 cd "$(dirname "$0")/.."
 
-echo "☸️  Configurando Kubernetes local com kind"
+echo "  Configurando Kubernetes local com kind"
 echo ""
 
 # Verificar se kind está instalado
@@ -15,7 +15,7 @@ if ! command -v kind &> /dev/null; then
     # kind via container
     KIND_CMD="docker run --rm -it --network=host -v $(pwd):/workspace -v /var/run/docker.sock:/var/run/docker.sock kindest/node:v1.28.0"
     
-    echo "⚠️  Para simplificar, vamos usar apenas docker compose"
+    echo "  Para simplificar, vamos usar apenas docker compose"
     echo "   O LocalStack Community não suporta EKS completo"
     echo ""
     echo "📝 Alternativa: Aplicar manifests simulados via docker compose"
@@ -45,7 +45,7 @@ nodes:
     protocol: TCP
 EOF
 else
-    echo "✅ Cluster kind 'case-local' já existe"
+    echo " Cluster kind 'case-local' já existe"
 fi
 
 # Configurar kubectl context
@@ -103,7 +103,7 @@ echo "📊 Status dos recursos:"
 kubectl get all -n case
 
 echo ""
-echo "✅ Manifests K8s aplicados!"
+echo " Manifests K8s aplicados!"
 echo ""
 echo "🌐 Para acessar a aplicação:"
 echo "   kubectl port-forward -n case svc/frontend 8080:80"
