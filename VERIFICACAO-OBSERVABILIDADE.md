@@ -1,6 +1,6 @@
 # Verificacao da Observabilidade - Grafana Stack
 
-## Status da Stack ✅ TODOS FUNCIONANDO
+## Status da Stack  TODOS FUNCIONANDO
 
 Stack completa de observabilidade rodando e acessivel:
 
@@ -9,11 +9,11 @@ docker compose -f docker-compose.observability.yml ps
 ```
 
 **Servicos:**
-- ✅ Prometheus (coleta metricas a cada 15s)
-- ✅ Grafana (visualizacao)
-- ✅ Loki (logs)
-- ✅ Promtail (coleta logs Docker)
-- ✅ Tempo (traces distribuidos)
+-  Prometheus (coleta metricas a cada 15s)
+-  Grafana (visualizacao)
+-  Loki (logs)
+-  Promtail (coleta logs Docker)
+-  Tempo (traces distribuidos)
 
 ## Acessos
 
@@ -336,25 +336,25 @@ curl http://localhost:9090/api/v1/rules | python -m json.tool
 
 ## Resumo da Verificacao
 
-✅ **Stack rodando:**
+ **Stack rodando:**
 - Prometheus: http://localhost:9090
 - Grafana: http://localhost:3100
 - Loki: http://localhost:3101
 - Tempo: http://localhost:3102
 
-✅ **Metricas coletadas:**
+ **Metricas coletadas:**
 - 4 Golden Signals: Latencia, Trafego, Erros, Saturacao
 - Business Metrics: Orders created, Orders failed
 
-✅ **Dashboards funcionando:**
+ **Dashboards funcionando:**
 - 4 Golden Signals - Backend API (8 paineis)
 - Business Metrics - Orders (8 paineis)
 
-✅ **Logs agregados:**
+ **Logs agregados:**
 - Loki coletando logs JSON do backend
 - Promtail parseando logs Docker
 
-✅ **Alertas configurados:**
+ **Alertas configurados:**
 - 4 alertas Golden Signals
 - 2 alertas Business Metrics
 

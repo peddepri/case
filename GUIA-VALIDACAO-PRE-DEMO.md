@@ -458,4 +458,3 @@ Verificar: image pull, IRSA annotation, Fargate profile
 
 ---
 
-**Boa sorte na apresentação! 🚀**
