@@ -1,0 +1,36 @@
+{
+  "mcpServers": {
+    "fetch": {
+      "command": "uvx",
+      "args": ["mcp-server-fetch"],
+      "env": {},
+      "disabled": false,
+      "autoApprove": ["fetch"]
+    },
+    "aws-docs": {
+      "command": "uvx",
+      "args": ["awslabs.aws-documentation-mcp-server@latest"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": false,
+      "autoApprove": ["search_aws_documentation", "get_aws_documentation"]
+    },
+    "kubernetes": {
+      "command": "uvx", 
+      "args": ["mcp-k8s"],
+      "env": {
+        "KUBECONFIG": "~/.kube/config"
+      },
+      "disabled": false,
+      "autoApprove": ["kubectl_get", "kubectl_describe", "kubectl_logs"]
+    },
+    "docker": {
+      "command": "uvx",
+      "args": ["mcp-docker"],
+      "env": {},
+      "disabled": false,
+      "autoApprove": ["docker_ps", "docker_logs", "docker_stats"]
+    }
+  }
+}

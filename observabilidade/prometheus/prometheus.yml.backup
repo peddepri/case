@@ -12,14 +12,7 @@ global:
 #         - targets: ['alertmanager:9093']
 
 rule_files:
-  - "alerts-complete.yml"
-
-# Configuração do Alertmanager (se disponível)
-alerting:
-  alertmanagers:
-    - static_configs:
-        - targets:
-          - alertmanager:9093
+  - 'alerts.yml'
 
 scrape_configs:
   # Backend LocalStack (Docker Compose)

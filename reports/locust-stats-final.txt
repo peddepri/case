@@ -1,0 +1,124 @@
+{
+  "current_response_time_percentiles": {
+    "response_time_percentile_0.5": 27,
+    "response_time_percentile_0.95": 230.0
+  },
+  "errors": [
+    {
+      "error": "CatchResponseError('Create order failed with status 500')",
+      "method": "POST",
+      "name": "create_order",
+      "occurrences": 12
+    },
+    {
+      "error": "CatchResponseError('Health check failed with status 0')",
+      "method": "GET",
+      "name": "health_check",
+      "occurrences": 312
+    },
+    {
+      "error": "CatchResponseError('Get orders failed with status 0')",
+      "method": "GET",
+      "name": "get_orders",
+      "occurrences": 190
+    },
+    {
+      "error": "CatchResponseError('Create order failed with status 0')",
+      "method": "POST",
+      "name": "create_order",
+      "occurrences": 134
+    }
+  ],
+  "fail_ratio": 0.96,
+  "state": "running",
+  "stats": [
+    {
+      "avg_content_length": 2.3493150684931505,
+      "avg_response_time": 572.2027258699038,
+      "current_fail_per_sec": 5.0,
+      "current_rps": 5.0,
+      "max_response_time": 22176.0,
+      "median_response_time": 24,
+      "method": "POST",
+      "min_response_time": 5.0,
+      "name": "create_order",
+      "num_failures": 146,
+      "num_requests": 146,
+      "response_time_percentile_0.95": 3100.0,
+      "response_time_percentile_0.99": 13000.0,
+      "total_fail_per_sec": 2.3801350235890397,
+      "total_rps": 2.3801350235890397
+    },
+    {
+      "avg_content_length": 0.0,
+      "avg_response_time": 634.5508405368156,
+      "current_fail_per_sec": 6.1,
+      "current_rps": 6.1,
+      "max_response_time": 12238.0,
+      "median_response_time": 33,
+      "method": "GET",
+      "min_response_time": 4.0,
+      "name": "get_orders",
+      "num_failures": 190,
+      "num_requests": 190,
+      "response_time_percentile_0.95": 4500.0,
+      "response_time_percentile_0.99": 12000.0,
+      "total_fail_per_sec": 3.0974359896021753,
+      "total_rps": 3.0974359896021753
+    },
+    {
+      "avg_content_length": 1.1946902654867257,
+      "avg_response_time": 300.48904144840134,
+      "current_fail_per_sec": 10.1,
+      "current_rps": 10.1,
+      "max_response_time": 22221.0,
+      "median_response_time": 33,
+      "method": "GET",
+      "min_response_time": 3.0,
+      "name": "health_check",
+      "num_failures": 312,
+      "num_requests": 339,
+      "response_time_percentile_0.95": 1100.0,
+      "response_time_percentile_0.99": 3200.0,
+      "total_fail_per_sec": 5.086315940820414,
+      "total_rps": 5.526477897237565
+    },
+    {
+      "avg_content_length": 1.108148148148148,
+      "avg_response_time": 453.2919151555688,
+      "current_fail_per_sec": 21.2,
+      "current_rps": 21.2,
+      "max_response_time": 22221.0,
+      "median_response_time": 32,
+      "method": "",
+      "min_response_time": 3.0,
+      "name": "Aggregated",
+      "num_failures": 648,
+      "num_requests": 675,
+      "response_time_percentile_0.95": 1600.0,
+      "response_time_percentile_0.99": 11000.0,
+      "total_fail_per_sec": 10.563886954011629,
+      "total_rps": 11.00404891042878
+    }
+  ],
+  "total_fail_per_sec": 21.2,
+  "total_rps": 21.2,
+  "user_count": 30,
+  "worker_count": 2,
+  "workers": [
+    {
+      "cpu_usage": 23.8,
+      "id": "locust-worker-89b9f55d6-frq2s_dedab88fe7d441f59b7e3500ef8f94e2",
+      "memory_usage": 68882432,
+      "state": "running",
+      "user_count": 30
+    },
+    {
+      "cpu_usage": 0.7,
+      "id": "locust-worker-89b9f55d6-w44s4_a3425f627e53488a959841cd741ba825",
+      "memory_usage": 65314816,
+      "state": "ready",
+      "user_count": 0
+    }
+  ]
+}

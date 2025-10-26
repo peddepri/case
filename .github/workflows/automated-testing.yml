@@ -1,0 +1,266 @@
+name: Automated Testing Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Executar testes de performance a cada 6 horas
+    - cron: '0 */6 * * *'
+
+env:
+  KUBECTL_VERSION: v1.28.0
+  KIND_VERSION: v0.20.0
+
+jobs:
+  setup:
+    name: Setup Test Environment
+    runs-on: ubuntu-latest
+    outputs:
+      cluster-ready: ${{ steps.cluster.outputs.ready }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Kind Cluster
+      uses: helm/kind-action@v1.8.0
+      with:
+        version: ${{ env.KIND_VERSION }}
+        kubectl_version: ${{ env.KUBECTL_VERSION }}
+        cluster_name: test-cluster
+
+    - name: Load Docker images
+      run: |
+        # Build and load images into Kind
+        docker build -t case-backend:latest ./app/backend
+        docker build -t case-frontend:latest ./app/frontend  
+        docker build -t case-mobile:latest ./app/mobile
+        
+        kind load docker-image case-backend:latest --name test-cluster
+        kind load docker-image case-frontend:latest --name test-cluster
+        kind load docker-image case-mobile:latest --name test-cluster
+
+    - name: Deploy applications
+      run: |
+        kubectl apply -f k8s/namespace.yaml
+        kubectl apply -f k8s/
+        kubectl wait --for=condition=ready pod --all -n case --timeout=300s
+
+    - name: Verify cluster readiness
+      id: cluster
+      run: |
+        if kubectl get pods -n case | grep -q "Running"; then
+          echo "ready=true" >> $GITHUB_OUTPUT
+        else
+          echo "ready=false" >> $GITHUB_OUTPUT
+        fi
+
+  functional-tests:
+    name: Functional Tests
+    runs-on: ubuntu-latest
+    needs: setup
+    if: needs.setup.outputs.cluster-ready == 'true'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: ${{ env.KUBECTL_VERSION }}
+
+    - name: Run functional tests
+      run: |
+        chmod +x scripts/test-functional.sh
+        bash scripts/test-functional.sh
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: functional-test-results
+        path: reports/functional-*.xml
+
+  performance-tests:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    needs: setup
+    if: needs.setup.outputs.cluster-ready == 'true'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: ${{ env.KUBECTL_VERSION }}
+
+    - name: Deploy Locust
+      run: |
+        kubectl apply -f k8s/locust-deployment.yaml
+        kubectl wait --for=condition=ready pod -l app=locust-master -n case --timeout=180s
+
+    - name: Run performance tests
+      run: |
+        # Port forward para acessar Locust UI
+        kubectl port-forward svc/locust-master 8089:8089 -n case &
+        PF_PID=$!
+        
+        sleep 10
+        
+        # Executar testes automatizados via API
+        curl -X POST http://localhost:8089/swarm \
+          -H "Content-Type: application/x-www-form-urlencoded" \
+          -d "user_count=50&spawn_rate=5&host=http://backend:3000"
+        
+        # Aguardar teste completar (2 minutos)
+        sleep 120
+        
+        # Parar teste
+        curl -X GET http://localhost:8089/stop
+        
+        # Baixar relatórios
+        curl -X GET http://localhost:8089/stats/requests/csv > reports/performance-stats.csv
+        
+        # Cleanup
+        kill $PF_PID
+
+    - name: Analyze performance results
+      run: |
+        python3 << 'EOF'
+        import csv
+        import sys
+        
+        with open('reports/performance-stats.csv', 'r') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                if row['Name'] == 'Aggregated':
+                    error_rate = float(row['Failure Count']) / float(row['Request Count']) * 100
+                    avg_response = float(row['Average Response Time'])
+                    
+                    print(f"Performance Results:")
+                    print(f"  - Error Rate: {error_rate:.2f}%")
+                    print(f"  - Avg Response Time: {avg_response:.2f}ms")
+                    
+                    # Critérios de falha
+                    if error_rate > 5.0:
+                        print("❌ FAIL: Error rate too high (>5%)")
+                        sys.exit(1)
+                    if avg_response > 1000:
+                        print("❌ FAIL: Response time too slow (>1000ms)")
+                        sys.exit(1)
+                    
+                    print("✅ PASS: Performance criteria met")
+        EOF
+
+    - name: Upload performance results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-test-results
+        path: reports/performance-*.csv
+
+  chaos-engineering:
+    name: Chaos Engineering Tests
+    runs-on: ubuntu-latest
+    needs: setup
+    if: needs.setup.outputs.cluster-ready == 'true'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: ${{ env.KUBECTL_VERSION }}
+
+    - name: Run chaos tests
+      run: |
+        chmod +x scripts/test-chaos.sh
+        bash scripts/test-chaos.sh
+
+    - name: Verify system recovery
+      run: |
+        # Aguardar alguns segundos para estabilização
+        sleep 30
+        
+        # Verificar se todos os pods estão rodando
+        RUNNING_PODS=$(kubectl get pods -n case --no-headers | grep Running | wc -l)
+        EXPECTED_PODS=5  # backend(2) + frontend(2) + mobile(1)
+        
+        if [ $RUNNING_PODS -ge $EXPECTED_PODS ]; then
+          echo "✅ System recovered successfully ($RUNNING_PODS/$EXPECTED_PODS pods running)"
+        else
+          echo "❌ System recovery failed ($RUNNING_PODS/$EXPECTED_PODS pods running)"
+          kubectl get pods -n case
+          exit 1
+        fi
+
+    - name: Upload chaos test results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: chaos-test-results
+        path: reports/chaos-*.log
+
+  report:
+    name: Generate Test Report
+    runs-on: ubuntu-latest
+    needs: [functional-tests, performance-tests, chaos-engineering]
+    if: always()
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+
+    - name: Generate comprehensive report
+      run: |
+        cat > reports/test-summary.md << 'EOF'
+        # 🧪 Automated Test Results
+        
+        **Date:** $(date)
+        **Commit:** ${{ github.sha }}
+        **Branch:** ${{ github.ref_name }}
+        
+        ## Test Summary
+        
+        | Test Suite | Status |
+        |------------|--------|
+        | Functional | ${{ needs.functional-tests.result }} |
+        | Performance | ${{ needs.performance-tests.result }} |
+        | Chaos Engineering | ${{ needs.chaos-engineering.result }} |
+        
+        ## Performance Metrics
+        - Response Time: Available in artifacts
+        - Error Rate: Available in artifacts  
+        - Throughput: Available in artifacts
+        
+        ## Recommendations
+        - [ ] Review failed tests
+        - [ ] Check performance regressions
+        - [ ] Validate system resilience
+        EOF
+
+    - name: Upload final report
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-report
+        path: reports/test-summary.md
+
+    - name: Comment on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          const report = fs.readFileSync('reports/test-summary.md', 'utf8');
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: report
+          });

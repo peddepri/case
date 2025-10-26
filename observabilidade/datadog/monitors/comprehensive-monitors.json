@@ -1,0 +1,151 @@
+[
+  {
+    "name": "🚨 [Golden Signal] High P99 Latency - Backend",
+    "type": "metric alert",
+    "query": "avg(last_5m):p99:http.request.duration{service:backend} > 2",
+    "message": "@slack-alerts @pagerduty-backend\n\n**Alert**: High P99 latency detected in backend service\n**Current Value**: {{value}}s\n**Threshold**: 2s\n**Impact**: User experience degradation\n\n**Runbook**: https://wiki.company.com/runbooks/high-latency\n**Dashboard**: https://app.datadoghq.com/dashboard/golden-signals",
+    "tags": ["service:backend", "golden-signal:latency", "team:backend"],
+    "options": {
+      "thresholds": {
+        "critical": 2.0,
+        "warning": 1.5
+      },
+      "notify_audit": false,
+      "require_full_window": false,
+      "notify_no_data": false,
+      "renotify_interval": 60,
+      "evaluation_delay": 60,
+      "new_group_delay": 300,
+      "include_tags": true
+    }
+  },
+  
+  {
+    "name": "❌ [Golden Signal] High Error Rate - All Services",
+    "type": "metric alert", 
+    "query": "avg(last_5m):(sum:http.requests{status_code:4* OR status_code:5*}.as_rate() / sum:http.requests.as_rate()) by {service} > 0.05",
+    "message": "@slack-alerts @on-call-backend\n\n**Alert**: High error rate detected\n**Service**: {{service.name}}\n**Current Error Rate**: {{value}}%\n**Threshold**: 5%\n\n**Immediate Actions**:\n1. Check recent deployments\n2. Review error logs in service dashboard\n3. Verify dependencies health\n\n**Dashboard**: [Service Overview](https://app.datadoghq.com/dashboard/service-overview)",
+    "tags": ["golden-signal:errors", "severity:high"],
+    "options": {
+      "thresholds": {
+        "critical": 0.1,
+        "warning": 0.05
+      },
+      "notify_audit": true,
+      "require_full_window": true,
+      "notify_no_data": false,
+      "renotify_interval": 30
+    }
+  },
+  
+  {
+    "name": "💼 [Business] High Order Failure Rate",
+    "type": "metric alert",
+    "query": "avg(last_10m):(sum:orders.failed.as_rate() / (sum:orders.created.as_rate() + sum:orders.failed.as_rate())) > 0.1",
+    "message": "@slack-business-alerts @product-team @exec-team\n\n**🚨 BUSINESS CRITICAL ALERT 🚨**\n\n**Alert**: High order failure rate affecting revenue\n**Current Failure Rate**: {{value}}%\n**Threshold**: 10%\n**Estimated Revenue Impact**: ${{value}} * avg_order_value * hourly_volume\n\n**Immediate Actions Required**:\n1. 🔍 Check payment gateway status\n2. 📊 Review order processing pipeline\n3. 👥 Notify customer support team\n4. 📈 Monitor customer impact metrics\n\n**Links**:\n- [Order Processing Dashboard](https://app.datadoghq.com/dashboard/orders)\n- [Payment Systems Status](https://status.payments.com)\n- [Customer Support Queue](https://support.company.com)",
+    "tags": ["business-critical", "team:product", "impact:revenue"],
+    "options": {
+      "thresholds": {
+        "critical": 0.1,
+        "warning": 0.05
+      },
+      "notify_audit": true,
+      "require_full_window": false,
+      "notify_no_data": true,
+      "no_data_timeframe": 30,
+      "renotify_interval": 15
+    }
+  },
+  
+  {
+    "name": "📱 [Mobile] High App Crash Rate",
+    "type": "metric alert",
+    "query": "avg(last_5m):(sum:mobile.crashes.as_rate() / sum:mobile.app.launches.as_rate()) > 0.02",
+    "message": "@slack-mobile-team @mobile-on-call\n\n**Alert**: High mobile app crash rate detected\n**Current Crash Rate**: {{value}}%\n**Threshold**: 2%\n**Platform**: {{platform.name}}\n**App Version**: {{app_version.name}}\n\n**Impact Assessment**:\n- User retention risk: HIGH\n- App store rating risk: HIGH  \n- User experience: SEVERELY DEGRADED\n\n**Actions**:\n1. Check crash reporting dashboard\n2. Review recent app releases\n3. Analyze crash logs by device/OS\n4. Consider hotfix deployment\n\n**Links**:\n- [Crash Analytics](https://crashlytics.com/dashboard)\n- [Mobile Performance](https://app.datadoghq.com/dashboard/mobile)",
+    "tags": ["service:mobile", "platform:mobile", "team:mobile"],
+    "options": {
+      "thresholds": {
+        "critical": 0.02,
+        "warning": 0.01
+      },
+      "notify_audit": true,
+      "require_full_window": true
+    }
+  },
+  
+  {
+    "name": "🌐 [Frontend] Core Web Vitals Degradation",
+    "type": "metric alert",
+    "query": "avg(last_10m):avg:browser.core_web_vitals.lcp{*} > 2500",
+    "message": "@slack-frontend-team @seo-team\n\n**Alert**: Core Web Vitals performance degradation\n**Metric**: Largest Contentful Paint (LCP)\n**Current Value**: {{value}}ms\n**Threshold**: 2500ms (Good: <2500ms)\n**Page**: {{page.name}}\n\n**SEO & Business Impact**:\n- Google Search ranking impact: LIKELY\n- User bounce rate increase: EXPECTED\n- Conversion rate decrease: POSSIBLE\n\n**Checklist**:\n- [ ] Check CDN performance\n- [ ] Review recent frontend deployments  \n- [ ] Analyze resource loading times\n- [ ] Verify third-party script performance\n\n**Tools**:\n- [PageSpeed Insights](https://pagespeed.web.dev)\n- [Frontend Performance Dashboard](https://app.datadoghq.com/dashboard/frontend)",
+    "tags": ["service:frontend", "team:frontend", "impact:seo"],
+    "options": {
+      "thresholds": {
+        "critical": 2500,
+        "warning": 2000
+      }
+    }
+  },
+  
+  {
+    "name": "💾 [Saturation] High Memory Usage - Backend",
+    "type": "metric alert",
+    "query": "avg(last_10m):(avg:system.mem.used{service:backend} / avg:system.mem.total{service:backend}) * 100 > 85",
+    "message": "@slack-infrastructure @backend-on-call\n\n**Alert**: High memory usage detected\n**Service**: Backend\n**Current Usage**: {{value}}%\n**Threshold**: 85%\n\n**Risk Assessment**:\n- OOM kill risk: HIGH (if >95%)\n- Performance degradation: ACTIVE\n- Garbage collection pressure: HIGH\n\n**Immediate Actions**:\n1. 📊 Check memory leak patterns\n2. 🔄 Consider service restart if critical\n3. 📈 Review memory allocation trends\n4. 🚀 Plan horizontal scaling if needed\n\n**Monitoring**:\n- [Memory Usage Dashboard](https://app.datadoghq.com/dashboard/memory)\n- [GC Performance](https://app.datadoghq.com/dashboard/nodejs-gc)",
+    "tags": ["golden-signal:saturation", "service:backend", "team:backend"],
+    "options": {
+      "thresholds": {
+        "critical": 95,
+        "warning": 85
+      },
+      "notify_no_data": true,
+      "no_data_timeframe": 20
+    }
+  },
+  
+  {
+    "name": "🔍 [SLO] Error Budget Burn Rate - Fast",
+    "type": "slo alert",
+    "query": "burn_rate(availability_slo) > 14.4",
+    "message": "@pagerduty-sre @slack-sre-critical\n\n**🚨 SLO CRITICAL ALERT 🚨**\n\n**Alert**: Fast error budget burn rate detected\n**SLO**: 99.9% Availability (Monthly)\n**Current Burn Rate**: {{value}}x\n**Time to Budget Exhaustion**: ~6 hours\n\n**This is a CRITICAL incident requiring immediate attention**\n\n**SRE Response Protocol**:\n1. 🆘 Page primary on-call engineer\n2. 🔍 Start incident response process  \n3. 📞 Engage war room if needed\n4. 📊 Prioritize error budget preservation\n\n**SLO Dashboard**: [Error Budget Tracking](https://app.datadoghq.com/dashboard/slo)",
+    "tags": ["slo:critical", "team:sre", "escalation:immediate"],
+    "options": {
+      "thresholds": {
+        "critical": 14.4,
+        "warning": 6.0
+      },
+      "notify_audit": true,
+      "renotify_interval": 10
+    }
+  },
+  
+  {
+    "name": "🛑 [Infrastructure] Pod Restart Loop",
+    "type": "metric alert",
+    "query": "avg(last_10m):diff(kubernetes.containers.restarts{*}) > 3",
+    "message": "@slack-infrastructure @kubernetes-on-call\n\n**Alert**: Kubernetes pod in restart loop\n**Pod**: {{pod_name.name}}\n**Namespace**: {{kube_namespace.name}}\n**Restarts**: {{value}} in last 10 minutes\n\n**Probable Causes**:\n- Application crash on startup\n- Resource limits exceeded  \n- Health check failures\n- Configuration errors\n\n**Investigation Steps**:\n1. Check pod logs: `kubectl logs {{pod_name.name}}`\n2. Describe pod: `kubectl describe pod {{pod_name.name}}`\n3. Check resource usage and limits\n4. Verify configuration and secrets\n\n**Dashboard**: [Kubernetes Overview](https://app.datadoghq.com/dashboard/kubernetes)",
+    "tags": ["infrastructure:kubernetes", "team:sre"],
+    "options": {
+      "thresholds": {
+        "critical": 5,
+        "warning": 3
+      }
+    }
+  },
+  
+  {
+    "name": "💰 [Business] Revenue Drop Alert",
+    "type": "metric alert", 
+    "query": "avg(last_30m):sum:orders.revenue.as_rate(){*} < 100",
+    "message": "@exec-team @finance-team @product-team\n\n**🚨 REVENUE IMPACT ALERT 🚨**\n\n**Alert**: Significant revenue drop detected\n**Current Revenue Rate**: ${{value}}/minute\n**Expected Rate**: >$100/minute\n**Estimated Hourly Loss**: ${{(100-value)*60}}\n\n**Business Impact**:\n- Revenue velocity: DECREASED\n- Daily revenue target: AT RISK\n- Customer acquisition: POTENTIALLY IMPACTED\n\n**Executive Action Items**:\n1. 📊 Review sales funnel metrics\n2. 🔍 Check payment processing systems\n3. 📈 Analyze customer behavior changes\n4. 📞 Coordinate with marketing team\n\n**Dashboards**:\n- [Executive Revenue Dashboard](https://app.datadoghq.com/dashboard/revenue)\n- [Sales Funnel Analytics](https://app.datadoghq.com/dashboard/funnel)",
+    "tags": ["business-critical", "impact:revenue", "escalation:executive"],
+    "options": {
+      "thresholds": {
+        "critical": 100,
+        "warning": 150
+      },
+      "notify_audit": true,
+      "renotify_interval": 30
+    }
+  }
+]

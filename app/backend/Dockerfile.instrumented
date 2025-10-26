@@ -1,0 +1,40 @@
+FROM node:18-alpine
+
+# Install dependencies for instrumentation
+RUN apk add --no-cache \
+    curl \
+    wget \
+    netcat-openbsd
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install \
+    express \
+    prom-client \
+    hot-shots \
+    @opentelemetry/sdk-node \
+    @opentelemetry/semantic-conventions \
+    @opentelemetry/exporter-prometheus \
+    && npm cache clean --force
+
+# Copy instrumented server
+COPY server-instrumented.js ./server.js
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:3000/healthz || exit 1
+
+# Expose ports
+EXPOSE 3000
+
+# Environment variables for instrumentation
+ENV NODE_ENV=production
+ENV PROMETHEUS_METRICS=true
+ENV DATADOG_ENABLED=true
+
+# Start server with instrumentation
+CMD ["node", "server.js"]

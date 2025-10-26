@@ -211,16 +211,16 @@ curl -s 'http://localhost:9090/api/v1/query?query=orders_failed_total' | python 
 ### Passo 6: Explorar no Grafana
 
 #### Dashboard 4 Golden Signals:
-- [OK] Latencia: Graficos de P50, P95, P99 mostrando duracao em segundos
-- [OK] Trafego: Taxa de requisicoes/s, separada por metodo/rota/status
-- [OK] Erros: Porcentagem de erros, deve estar baixa (<5%)
-- [OK] Saturacao: CPU e memoria do Node.js
+- ✅ Latencia: Graficos de P50, P95, P99 mostrando duracao em segundos
+- ✅ Trafego: Taxa de requisicoes/s, separada por metodo/rota/status
+- ✅ Erros: Porcentagem de erros, deve estar baixa (<5%)
+- ✅ Saturacao: CPU e memoria do Node.js
 
 #### Dashboard Business Metrics:
-- [OK] Orders Created: Taxa de criacao de pedidos
-- [OK] Orders Failed: Taxa de falha (deve ser ~10% devido simulacao)
-- [OK] Failure Rate: Gauge mostrando % de falhas
-- [OK] Stats: Total de pedidos (1h, 24h), success rate
+- ✅ Orders Created: Taxa de criacao de pedidos
+- ✅ Orders Failed: Taxa de falha (deve ser ~10% devido simulacao)
+- ✅ Failure Rate: Gauge mostrando % de falhas
+- ✅ Stats: Total de pedidos (1h, 24h), success rate
 
 ### Passo 7: Explorar Logs no Loki
 

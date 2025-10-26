@@ -1,0 +1,159 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: locust-master
+  namespace: case
+  labels:
+    app: locust-master
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: locust-master
+  template:
+    metadata:
+      labels:
+        app: locust-master
+    spec:
+      containers:
+      - name: locust
+        image: locustio/locust:latest
+        ports:
+        - containerPort: 8089
+        - containerPort: 5557
+        env:
+        - name: LOCUST_HOST
+          value: "http://backend:3000"
+        - name: LOCUST_MODE
+          value: "master"
+        command: ["locust"]
+        args: 
+        - "--master"
+        - "--host=http://backend:3000"
+        - "--web-host=0.0.0.0"
+        - "--web-port=8089"
+        volumeMounts:
+        - name: locust-config
+          mountPath: /home/locust
+      volumes:
+      - name: locust-config
+        configMap:
+          name: locust-config
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: locust-worker
+  namespace: case
+  labels:
+    app: locust-worker
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: locust-worker
+  template:
+    metadata:
+      labels:
+        app: locust-worker
+    spec:
+      containers:
+      - name: locust
+        image: locustio/locust:latest
+        env:
+        - name: LOCUST_HOST
+          value: "http://backend:3000"
+        - name: LOCUST_MODE
+          value: "worker"
+        - name: LOCUST_MASTER_HOST
+          value: "locust-master"
+        command: ["locust"]
+        args: 
+        - "--worker"
+        - "--master-host=locust-master"
+        - "--host=http://backend:3000"
+        volumeMounts:
+        - name: locust-config
+          mountPath: /home/locust
+      volumes:
+      - name: locust-config
+        configMap:
+          name: locust-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: locust-master
+  namespace: case
+spec:
+  selector:
+    app: locust-master
+  ports:
+  - name: web
+    port: 8089
+    targetPort: 8089
+  - name: master
+    port: 5557
+    targetPort: 5557
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: locust-config
+  namespace: case
+data:
+  locustfile.py: |
+    from locust import HttpUser, task, between
+    import json
+    import random
+    import time
+
+    class PerformanceUser(HttpUser):
+        wait_time = between(0.5, 2.0)
+        
+        def on_start(self):
+            time.sleep(random.uniform(0.1, 1.0))
+            response = self.client.get("/healthz", catch_response=True, name="startup_health_check")
+            if response.status_code != 200:
+                response.failure("Initial health check failed")
+        
+        @task(5)
+        def health_check(self):
+            with self.client.get("/healthz", catch_response=True, name="health_check") as response:
+                if response.status_code == 200:
+                    try:
+                        data = response.json()
+                        if data.get("status") == "ok":
+                            response.success()
+                        else:
+                            response.failure("Health check returned unexpected status")
+                    except json.JSONDecodeError:
+                        response.failure("Invalid JSON in health check")
+                else:
+                    response.failure(f"Health check failed with status {response.status_code}")
+        
+        @task(3)
+        def get_orders(self):
+            with self.client.get("/api/orders", catch_response=True, name="get_orders") as response:
+                if response.status_code == 200:
+                    response.success()
+                else:
+                    response.failure(f"Get orders failed with status {response.status_code}")
+        
+        @task(2)
+        def create_order(self):
+            order_data = {
+                "item": f"product-{random.randint(1, 1000)}",
+                "price": round(random.uniform(10.99, 999.99), 2),
+                "customer": f"user-{random.randint(1, 500)}",
+                "timestamp": int(time.time())
+            }
+            
+            with self.client.post("/api/orders", 
+                                 json=order_data, 
+                                 catch_response=True,
+                                 name="create_order") as response:
+                if response.status_code in [200, 201]:
+                    response.success()
+                else:
+                    response.failure(f"Create order failed with status {response.status_code}")

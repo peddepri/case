@@ -1,0 +1,299 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "logs-metrics-traces",
+    "title": "🔍 Logs, Metrics & Traces - Unified Observability",
+    "description": "Dashboard unificado integrando Logs (Loki), Métricas (Prometheus) e Traces (Tempo) para Frontend, Backend e Mobile",
+    "tags": ["observability", "logs", "metrics", "traces", "integration"],
+    "style": "dark",
+    "timezone": "browser",
+    "schemaVersion": 30,
+    "version": 1,
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "📊 SERVICE HEALTH OVERVIEW",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 24, "x": 0, "y": 0},
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 0.9},
+                {"color": "green", "value": 0.95}
+              ]
+            },
+            "unit": "short"
+          }
+        },
+        "targets": [
+          {
+            "expr": "up{job=\"backend-kubernetes\"}",
+            "legendFormat": "Backend Status"
+          },
+          {
+            "expr": "up{job=\"frontend-kubernetes\"}",
+            "legendFormat": "Frontend Status"  
+          },
+          {
+            "expr": "up{job=\"mobile-kubernetes\"}",
+            "legendFormat": "Mobile Status"
+          },
+          {
+            "expr": "sum(rate(http_requests_total[5m]))",
+            "legendFormat": "Total RPS"
+          },
+          {
+            "expr": "1 - (rate(http_errors_total[5m]) / rate(http_requests_total[5m]))",
+            "legendFormat": "Success Rate"
+          }
+        ]
+      },
+      
+      {
+        "id": 2,
+        "title": "🚀 BACKEND - Request Flow",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 6},
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "unit": "reqps"
+          }
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total{service=\"backend\"}[5m])) by (route)",
+            "legendFormat": "{{route}}"
+          }
+        ]
+      },
+      
+      {
+        "id": 3,
+        "title": "🌐 FRONTEND - Page Views",
+        "type": "timeseries", 
+        "gridPos": {"h": 8, "w": 8, "x": 8, "y": 6},
+        "targets": [
+          {
+            "expr": "rate(nginx_http_requests_total[5m])",
+            "legendFormat": "Page Views/sec"
+          },
+          {
+            "expr": "nginx_connections_active",
+            "legendFormat": "Active Connections"
+          }
+        ]
+      },
+      
+      {
+        "id": 4,
+        "title": "📱 MOBILE - App Metrics",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 8, "x": 16, "y": 6},
+        "targets": [
+          {
+            "expr": "rate(mobile_screen_views_total[5m])",
+            "legendFormat": "Screen Views/sec"
+          },
+          {
+            "expr": "rate(mobile_api_calls_total[5m])",
+            "legendFormat": "API Calls/sec"
+          },
+          {
+            "expr": "rate(mobile_crashes_total[5m])",
+            "legendFormat": "Crashes/sec"
+          }
+        ]
+      },
+      
+      {
+        "id": 5,
+        "title": "📈 METRICS - Response Times by Service",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 14},
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ms"
+          }
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{service=\"backend\"}[5m])) * 1000",
+            "legendFormat": "Backend P95"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{service=\"frontend\"}[5m])) * 1000",
+            "legendFormat": "Frontend P95"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(mobile_request_duration_seconds_bucket[5m])) * 1000",
+            "legendFormat": "Mobile P95"
+          }
+        ]
+      },
+      
+      {
+        "id": 6,
+        "title": "📊 METRICS - Error Rates",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 14},
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "max": 1
+          }
+        },
+        "targets": [
+          {
+            "expr": "rate(http_errors_total{service=\"backend\"}[5m]) / rate(http_requests_total{service=\"backend\"}[5m])",
+            "legendFormat": "Backend Error Rate"
+          },
+          {
+            "expr": "rate(nginx_http_requests_total{status=~\"4..|5..\"}[5m]) / rate(nginx_http_requests_total[5m])",
+            "legendFormat": "Frontend Error Rate"
+          },
+          {
+            "expr": "rate(mobile_errors_total[5m]) / rate(mobile_api_calls_total[5m])",
+            "legendFormat": "Mobile Error Rate"
+          }
+        ]
+      },
+      
+      {
+        "id": 7,
+        "title": "📋 LOGS - Backend Errors (Last 1h)",
+        "type": "logs",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 22},
+        "targets": [
+          {
+            "expr": "{service=\"backend-localstack\"} | json | level=\"error\"",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showTime": true,
+          "showLabels": true,
+          "wrapLogMessage": true,
+          "prettifyLogMessage": true
+        }
+      },
+      
+      {
+        "id": 8,
+        "title": "📋 LOGS - Frontend Access Logs",
+        "type": "logs",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 22},
+        "targets": [
+          {
+            "expr": "{service=\"frontend\"} |= \"ERROR\" or \"404\" or \"500\"",
+            "refId": "A"
+          }
+        ]
+      },
+      
+      {
+        "id": 9,
+        "title": "📋 LOGS - Mobile App Logs",
+        "type": "logs",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 30},
+        "targets": [
+          {
+            "expr": "{service=\"mobile\"} | json | level=~\"error|warn\"",
+            "refId": "A"
+          }
+        ]
+      },
+      
+      {
+        "id": 10,
+        "title": "🔍 TRACES - Request Duration Distribution",
+        "type": "histogram",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 38},
+        "targets": [
+          {
+            "expr": "tempo_request_duration_seconds_bucket",
+            "legendFormat": "Request Duration"
+          }
+        ]
+      },
+      
+      {
+        "id": 11,
+        "title": "🔍 TRACES - Error Traces (Tempo)",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 38},
+        "targets": [
+          {
+            "expr": "{ status = error }",
+            "refId": "A",
+            "datasource": "Tempo"
+          }
+        ]
+      },
+      
+      {
+        "id": 12,
+        "title": "💼 BUSINESS METRICS - Revenue Impact",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 46},
+        "targets": [
+          {
+            "expr": "rate(orders_completed_total[5m]) * avg(order_value_dollars)",
+            "legendFormat": "Revenue/sec"
+          },
+          {
+            "expr": "rate(orders_failed_total[5m]) * avg(order_value_dollars)",
+            "legendFormat": "Lost Revenue/sec"
+          },
+          {
+            "expr": "rate(user_signups_total[5m])",
+            "legendFormat": "New Users/sec"
+          },
+          {
+            "expr": "rate(user_churn_total[5m])",
+            "legendFormat": "User Churn/sec"
+          }
+        ]
+      },
+      
+      {
+        "id": 13,
+        "title": "🔗 CORRELATION - Logs ↔ Metrics ↔ Traces",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 54},
+        "transformations": [
+          {
+            "id": "merge",
+            "options": {}
+          }
+        ],
+        "targets": [
+          {
+            "expr": "increase(http_requests_total[5m])",
+            "legendFormat": "Requests (Metrics)",
+            "refId": "A"
+          },
+          {
+            "expr": "count_over_time({service=\"backend-localstack\"}[5m])",
+            "legendFormat": "Log Lines (Logs)",
+            "refId": "B"
+          },
+          {
+            "expr": "count_over_time({service.name=\"backend\"}[5m])",
+            "legendFormat": "Traces (Tempo)",
+            "refId": "C",
+            "datasource": "Tempo"
+          }
+        ]
+      }
+    ]
+  }
+}

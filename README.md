@@ -145,10 +145,16 @@ CI/CD usa OIDC do GitHub para assumir um role na AWS. Configure no repositório:
 - Repository Variables: `AWS_REGION`, `AWS_ACCOUNT_ID`, `EKS_CLUSTER_NAME`, `DD_SITE`, `DDB_TABLE`
 - Repository Secrets: `AWS_ROLE_TO_ASSUME`, `DD_API_KEY`, `BACKEND_IRSA_ROLE_ARN` (saída do Terraform)
 
-## Observabilidade (Datadog)
+## Observabilidade
+
+### Estratégia Híbrida: Datadog + Grafana Stack
+- **Datadog SaaS (Principal):** APM agentless, alertas críticos, dashboards executivos
+- **Grafana Stack (Alternativa):** Cost-effective, customizável, compliance, análises profundas
 - 4 Golden Signals (latência, tráfego, erros, saturação) via métricas Prometheus e APM spans
-- Métricas de negócio (`orders.created`, `orders.failed`) via DogStatsD (desativado por padrão no Fargate; habilite com `DD_ENABLE_DOGSTATSD=true` se tiver endpoint)
-- Dashboards e monitores prontos em `observabilidade/datadog/`
+- Métricas de negócio (`orders.created`, `orders.failed`) via DogStatsD + Prometheus custom metrics
+- Dashboards prontos em `observabilidade/datadog/` e `observabilidade/grafana/`
+
+**Comparar stacks:** `./scripts/comparar-observabilidade.sh [datadog|grafana|hibrido|custos]`
 
 No EKS Fargate:
 - Sem DaemonSet do Agent; usamos Cluster Agent para telemetria do cluster

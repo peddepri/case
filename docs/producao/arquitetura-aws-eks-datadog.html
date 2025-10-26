@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arquitetura AWS EKS + Datadog - Case Production</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .architecture-diagram {
+            width: 100%;
+            height: 900px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            background: #f8f9fa;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
+        }
+        
+        /* Animações para as setas */
+        .animated-arrow {
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        .data-flow {
+            animation: dataFlow 3s linear infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+        
+        @keyframes dataFlow {
+            0% { stroke-dashoffset: 20; }
+            100% { stroke-dashoffset: 0; }
+        }
+        
+        /* Estilos para os componentes */
+        .aws-region { fill: #ff9900; opacity: 0.1; }
+        .vpc { fill: #146eb4; opacity: 0.15; }
+        .subnet-public { fill: #4caf50; opacity: 0.2; }
+        .subnet-private { fill: #ff5722; opacity: 0.2; }
+        .eks-cluster { fill: #ff6b35; opacity: 0.15; }
+        
+        .component-text {
+            font-family: 'Arial', sans-serif;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .service-text {
+            font-family: 'Arial', sans-serif;
+            font-size: 10px;
+            fill: #34495e;
+        }
+        
+        .legend {
+            margin-top: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border-radius: 3px;
+        }
+        
+        .metrics-panel {
+            margin-top: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+        
+        .metric-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Arquitetura AWS EKS + Datadog Stack</h1>
+        
+        <svg class="architecture-diagram" viewBox="0 0 1400 900" xmlns="http://www.w3.org/2000/svg">
+            <!-- Definições de gradientes e padrões -->
+            <defs>
+                <!-- Gradientes AWS -->
+                <linearGradient id="awsGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#ff9900;stop-opacity:0.8" />
+                    <stop offset="100%" style="stop-color:#ff6600;stop-opacity:1" />
+                </linearGradient>
+                
+                <linearGradient id="vpcGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#146eb4;stop-opacity:0.3" />
+                    <stop offset="100%" style="stop-color:#0d47a1;stop-opacity:0.2" />
+                </linearGradient>
+                
+                <!-- Padrão de seta animada -->
+                <marker id="arrowhead" markerWidth="10" markerHeight="7" 
+                        refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#e74c3c" />
+                </marker>
+                
+                <!-- Padrão para linhas de dados -->
+                <pattern id="dataPattern" x="0" y="0" width="4" height="4" patternUnits="userSpaceOnUse">
+                    <rect width="4" height="4" fill="#3498db" opacity="0.1"/>
+                    <circle cx="2" cy="2" r="1" fill="#3498db"/>
+                </pattern>
+            </defs>
+            
+            <!-- Background AWS Cloud -->
+            <rect x="50" y="50" width="1300" height="800" 
+                  fill="url(#awsGradient)" 
+                  stroke="#ff9900" 
+                  stroke-width="3" 
+                  rx="20" ry="20"/>
+            <text x="70" y="80" class="component-text" fill="#ffffff" font-size="18">
+                🏠 AWS CLOUD (us-east-1)
+            </text>
+            
+            <!-- VPC Principal -->
+            <rect x="100" y="120" width="1200" height="700" 
+                  fill="url(#vpcGradient)" 
+                  stroke="#146eb4" 
+                  stroke-width="2" 
+                  stroke-dasharray="5,5" 
+                  rx="15" ry="15"/>
+            <text x="120" y="150" class="component-text" fill="#146eb4" font-size="16">
+                VPC (10.0.0.0/16) - Multi-AZ
+            </text>
+            
+            <!-- Availability Zone A -->
+            <rect x="150" y="180" width="550" height="320" 
+                  fill="none" 
+                  stroke="#34495e" 
+                  stroke-width="2" 
+                  stroke-dasharray="3,3" 
+                  rx="10" ry="10"/>
+            <text x="160" y="200" class="component-text" fill="#34495e">
+                📍 Availability Zone A (us-east-1a)
+            </text>
+            
+            <!-- Subnet Pública AZ-A -->
+            <rect x="170" y="220" width="240" height="120" 
+                  fill="#4caf50" 
+                  fill-opacity="0.2" 
+                  stroke="#4caf50" 
+                  stroke-width="2" 
+                  rx="8" ry="8"/>
+            <text x="180" y="240" class="component-text" fill="#2e7d32">
+                🌍 Public Subnet (10.0.101.0/24)
+            </text>
+            
+            <!-- Internet Gateway -->
+            <rect x="190" y="260" width="80" height="40" 
+                  fill="#ff5722" 
+                  stroke="#d84315" 
+                  stroke-width="2" 
+                  rx="5" ry="5"/>
+            <text x="195" y="275" class="service-text" fill="white">
+                Internet
+            </text>
+            <text x="195" y="290" class="service-text" fill="white">
+                Gateway
+            </text>
+            
+            <!-- NAT Gateway -->
+            <rect x="300" y="260" width="80" height="40" 
+                  fill="#ff9800" 
+                  stroke="#f57c00" 
+                  stroke-width="2" 
+                  rx="5" ry="5"/>
+            <text x="315" y="275" class="service-text" fill="white">
+                NAT
+            </text>
+            <text x="310" y="290" class="service-text" fill="white">
+                Gateway
+            </text>
+            
+            <!-- Subnet Privada AZ-A -->
+            <rect x="170" y="360" width="240" height="120" 
+                  fill="#ff5722" 
+                  fill-opacity="0.2" 
+                  stroke="#ff5722" 
+                  stroke-width="2" 
+                  rx="8" ry="8"/>
+            <text x="180" y="380" class="component-text" fill="#d84315">
+                🔒 Private Subnet (10.0.1.0/24)
+            </text>
+            
+            <!-- EKS Fargate Pods AZ-A -->
+            <ellipse cx="290" cy="440" rx="60" ry="25" 
+                     fill="#ff6b35" 
+                     fill-opacity="0.3" 
+                     stroke="#e64a19" 
+                     stroke-width="2"/>
+            <text x="255" y="435" class="service-text" fill="#bf360c">
+                EKS Fargate
+            </text>
+            <text x="270" y="450" class="service-text" fill="#bf360c">
+                Pods
+            </text>
+            
+            <!-- Availability Zone B -->
+            <rect x="720" y="180" width="550" height="320" 
+                  fill="none" 
+                  stroke="#34495e" 
+                  stroke-width="2" 
+                  stroke-dasharray="3,3" 
+                  rx="10" ry="10"/>
+            <text x="730" y="200" class="component-text" fill="#34495e">
+                📍 Availability Zone B (us-east-1b)
+            </text>
+            
+            <!-- Subnet Pública AZ-B -->
+            <rect x="740" y="220" width="240" height="120" 
+                  fill="#4caf50" 
+                  fill-opacity="0.2" 
+                  stroke="#4caf50" 
+                  stroke-width="2" 
+                  rx="8" ry="8"/>
+            <text x="750" y="240" class="component-text" fill="#2e7d32">
+                🌍 Public Subnet (10.0.102.0/24)
+            </text>
+            
+            <!-- Load Balancer -->
+            <rect x="760" y="260" width="80" height="40" 
+                  fill="#3f51b5" 
+                  stroke="#303f9f" 
+                  stroke-width="2" 
+                  rx="5" ry="5"/>
+            <text x="785" y="275" class="service-text" fill="white">
+                ALB
+            </text>
+            <text x="770" y="290" class="service-text" fill="white">
+                (Ingress)
+            </text>
+            
+            <!-- Subnet Privada AZ-B -->
+            <rect x="740" y="360" width="240" height="120" 
+                  fill="#ff5722" 
+                  fill-opacity="0.2" 
+                  stroke="#ff5722" 
+                  stroke-width="2" 
+                  rx="8" ry="8"/>
+            <text x="750" y="380" class="component-text" fill="#d84315">
+                🔒 Private Subnet (10.0.2.0/24)
+            </text>
+            
+            <!-- EKS Fargate Pods AZ-B -->
+            <ellipse cx="860" cy="440" rx="60" ry="25" 
+                     fill="#ff6b35" 
+                     fill-opacity="0.3" 
+                     stroke="#e64a19" 
+                     stroke-width="2"/>
+            <text x="825" y="435" class="service-text" fill="#bf360c">
+                EKS Fargate
+            </text>
+            <text x="840" y="450" class="service-text" fill="#bf360c">
+                Pods
+            </text>
+            
+            <!-- EKS Control Plane -->
+            <rect x="450" y="300" width="200" height="100" 
+                  fill="#ff6b35" 
+                  fill-opacity="0.8" 
+                  stroke="#e64a19" 
+                  stroke-width="3" 
+                  rx="10" ry="10"/>
+            <text x="510" y="325" class="component-text" fill="white" font-size="14">
+                [GEAR] EKS Control Plane
+            </text>
+            <text x="470" y="345" class="service-text" fill="white">
+                • Kubernetes API Server
+            </text>
+            <text x="470" y="360" class="service-text" fill="white">
+                • CoreDNS (Fargate Profile)
+            </text>
+            <text x="470" y="375" class="service-text" fill="white">
+                • Managed Etcd
+            </text>
+            <text x="470" y="390" class="service-text" fill="white">
+                • Multi-AZ HA
+            </text>
+            
+            <!-- Aplicações no EKS -->
+            <g id="applications">
+                <!-- Backend -->
+                <rect x="200" y="520" width="150" height="80" 
+                      fill="#2196f3" 
+                      fill-opacity="0.8" 
+                      stroke="#1976d2" 
+                      stroke-width="2" 
+                      rx="8" ry="8"/>
+                <text x="210" y="540" class="component-text" fill="white">
+                    🚀 Backend Service
+                </text>
+                <text x="210" y="555" class="service-text" fill="white">
+                    • Node.js + Express
+                </text>
+                <text x="210" y="570" class="service-text" fill="white">
+                    • dd-trace APM
+                </text>
+                <text x="210" y="585" class="service-text" fill="white">
+                    • Blue/Green Deploy
+                </text>
+                
+                <!-- Frontend -->
+                <rect x="380" y="520" width="150" height="80" 
+                      fill="#4caf50" 
+                      fill-opacity="0.8" 
+                      stroke="#388e3c" 
+                      stroke-width="2" 
+                      rx="8" ry="8"/>
+                <text x="390" y="540" class="component-text" fill="white">
+                    🎨 Frontend Service
+                </text>
+                <text x="390" y="555" class="service-text" fill="white">
+                    • React + Vite
+                </text>
+                <text x="390" y="570" class="service-text" fill="white">
+                    • Nginx Proxy
+                </text>
+                <text x="390" y="585" class="service-text" fill="white">
+                    • Blue/Green Deploy
+                </text>
+                
+                <!-- Mobile -->
+                <rect x="560" y="520" width="150" height="80" 
+                      fill="#9c27b0" 
+                      fill-opacity="0.8" 
+                      stroke="#7b1fa2" 
+                      stroke-width="2" 
+                      rx="8" ry="8"/>
+                <text x="570" y="540" class="component-text" fill="white">
+                    📱 Mobile Service
+                </text>
+                <text x="570" y="555" class="service-text" fill="white">
+                    • Expo Web
+                </text>
+                <text x="570" y="570" class="service-text" fill="white">
+                    • React Native
+                </text>
+                <text x="570" y="585" class="service-text" fill="white">
+                    • Optional Pod
+                </text>
+            </g>
+            
+            <!-- Serviços AWS Gerenciados -->
+            <g id="aws-services">
+                <!-- DynamoDB -->
+                <rect x="150" y="650" width="200" height="80" 
+                      fill="#ff9900" 
+                      fill-opacity="0.8" 
+                      stroke="#ff6600" 
+                      stroke-width="2" 
+                      rx="8" ry="8"/>
+                <text x="210" y="675" class="component-text" fill="white">
+                    🗃️ Amazon DynamoDB
+                </text>
+                <text x="160" y="690" class="service-text" fill="white">
+                    • Tabela: orders
+                </text>
+                <text x="160" y="705" class="service-text" fill="white">
+                    • Pay-per-request
+                </text>
+                <text x="160" y="720" class="service-text" fill="white">
+                    • IRSA Access
+                </text>
+                
+                <!-- ECR -->
+                <rect x="380" y="650" width="180" height="80" 
+                      fill="#ff9900" 
+                      fill-opacity="0.8" 
+                      stroke="#ff6600" 
+                      stroke-width="2" 
+                      rx="8" ry="8"/>
+                <text x="430" y="675" class="component-text" fill="white">
+                    📦 Amazon ECR
+                </text>
+                <text x="390" y="690" class="service-text" fill="white">
+                    • backend registry
+                </text>
+                <text x="390" y="705" class="service-text" fill="white">
+                    • frontend registry
+                </text>
+                <text x="390" y="720" class="service-text" fill="white">
+                    • Image scanning
+                </text>
+                
+                <!-- Secrets Manager -->
+                <rect x="590" y="650" width="180" height="80" 
+                      fill="#ff9900" 
+                      fill-opacity="0.8" 
+                      stroke="#ff6600" 
+                      stroke-width="2" 
+                      rx="8" ry="8"/>
+                <text x="630" y="675" class="component-text" fill="white">
+                    🔐 Secrets Manager
+                </text>
+                <text x="600" y="690" class="service-text" fill="white">
+                    • DD_API_KEY
+                </text>
+                <text x="600" y="705" class="service-text" fill="white">
+                    • DB credentials
+                </text>
+                <text x="600" y="720" class="service-text" fill="white">
+                    • Auto rotation
+                </text>
+                
+                <!-- CloudWatch -->
+                <rect x="800" y="650" width="180" height="80" 
+                      fill="#ff9900" 
+                      fill-opacity="0.8" 
+                      stroke="#ff6600" 
+                      stroke-width="2" 
+                      rx="8" ry="8"/>
+                <text x="845" y="675" class="component-text" fill="white">
+                    📊 CloudWatch
+                </text>
+                <text x="810" y="690" class="service-text" fill="white">
+                    • Logs retention
+                </text>
+                <text x="810" y="705" class="service-text" fill="white">
+                    • EKS metrics
+                </text>
+                <text x="810" y="720" class="service-text" fill="white">
+                    • Datadog forward
+                </text>
+                
+                <!-- IAM OIDC -->
+                <rect x="1010" y="650" width="180" height="80" 
+                      fill="#ff9900" 
+                      fill-opacity="0.8" 
+                      stroke="#ff6600" 
+                      stroke-width="2" 
+                      rx="8" ry="8"/>
+                <text x="1070" y="675" class="component-text" fill="white">
+                    🎭 IAM + OIDC
+                </text>
+                <text x="1020" y="690" class="service-text" fill="white">
+                    • IRSA Roles
+                </text>
+                <text x="1020" y="705" class="service-text" fill="white">
+                    • ServiceAccounts
+                </text>
+                <text x="1020" y="720" class="service-text" fill="white">
+                    • Least privilege
+                </text>
+            </g>
+            
+            <!-- Serviços Externos -->
+            <g id="external-services">
+                <!-- GitHub Actions -->
+                <rect x="100" y="30" width="200" height="60" 
+                      fill="#24292e" 
+                      fill-opacity="0.9" 
+                      stroke="#586069" 
+                      stroke-width="2" 
+                      rx="8" ry="8"/>
+                <text x="160" y="50" class="component-text" fill="white">
+                    🐙 GitHub Actions
+                </text>
+                <text x="110" y="65" class="service-text" fill="#c9d1d9">
+                    CI/CD Pipeline + OIDC
+                </text>
+                <text x="110" y="80" class="service-text" fill="#c9d1d9">
+                    Blue/Green Deployment
+                </text>
+                
+                <!-- Datadog SaaS -->
+                <rect x="1100" y="30" width="200" height="60" 
+                      fill="#632ca6" 
+                      fill-opacity="0.9" 
+                      stroke="#7c4dff" 
+                      stroke-width="2" 
+                      rx="8" ry="8"/>
+                <text x="1170" y="50" class="component-text" fill="white">
+                    🐕 Datadog SaaS
+                </text>
+                <text x="1110" y="65" class="service-text" fill="#e1bee7">
+                    APM + Metrics + Logs
+                </text>
+                <text x="1110" y="80" class="service-text" fill="#e1bee7">
+                    Dashboards + Alerts
+                </text>
+            </g>
+            
+            <!-- Setas de Fluxo de Dados Animadas -->
+            <g id="data-flows">
+                <!-- GitHub Actions -> EKS -->
+                <line x1="300" y1="90" x2="550" y2="300" 
+                      stroke="#e74c3c" 
+                      stroke-width="3" 
+                      stroke-dasharray="8,4" 
+                      marker-end="url(#arrowhead)" 
+                      class="animated-arrow data-flow"/>
+                <text x="350" y="180" class="service-text" fill="#e74c3c" font-weight="bold">
+                    Build & Deploy
+                </text>
+                
+                <!-- EKS -> DynamoDB -->
+                <line x1="290" y1="520" x2="250" y2="650" 
+                      stroke="#3498db" 
+                      stroke-width="3" 
+                      stroke-dasharray="8,4" 
+                      marker-end="url(#arrowhead)" 
+                      class="animated-arrow data-flow"/>
+                <text x="220" y="590" class="service-text" fill="#3498db" font-weight="bold">
+                    API Calls
+                </text>
+                
+                <!-- EKS -> Datadog -->
+                <line x1="650" y1="350" x2="1100" y2="90" 
+                      stroke="#9c27b0" 
+                      stroke-width="3" 
+                      stroke-dasharray="8,4" 
+                      marker-end="url(#arrowhead)" 
+                      class="animated-arrow data-flow"/>
+                <text x="800" y="200" class="service-text" fill="#9c27b0" font-weight="bold">
+                    APM Agentless
+                </text>
+                
+                <!-- Internet -> ALB -->
+                <line x1="800" y1="220" x2="800" y2="260" 
+                      stroke="#4caf50" 
+                      stroke-width="4" 
+                      marker-end="url(#arrowhead)" 
+                      class="animated-arrow"/>
+                <text x="810" y="240" class="service-text" fill="#4caf50" font-weight="bold">
+                    Traffic
+                </text>
+                
+                <!-- ALB -> Pods -->
+                <path d="M 800 300 Q 700 380 290 440" 
+                      stroke="#ff5722" 
+                      stroke-width="3" 
+                      fill="none" 
+                      stroke-dasharray="6,3" 
+                      marker-end="url(#arrowhead)" 
+                      class="animated-arrow data-flow"/>
+                <path d="M 800 300 Q 830 380 860 440" 
+                      stroke="#ff5722" 
+                      stroke-width="3" 
+                      fill="none" 
+                      stroke-dasharray="6,3" 
+                      marker-end="url(#arrowhead)" 
+                      class="animated-arrow data-flow"/>
+                
+                <!-- CloudWatch -> Datadog -->
+                <line x1="980" y1="690" x2="1100" y2="90" 
+                      stroke="#ff9800" 
+                      stroke-width="2" 
+                      stroke-dasharray="4,2" 
+                      marker-end="url(#arrowhead)" 
+                      class="animated-arrow data-flow"/>
+                <text x="1040" y="400" class="service-text" fill="#ff9800" font-weight="bold" transform="rotate(-70 1040 400)">
+                    Log Forward
+                </text>
+            </g>
+            
+            <!-- Indicadores de Status -->
+            <g id="status-indicators">
+                <!-- HA Status -->
+                <circle cx="1250" cy="150" r="8" fill="#4caf50" class="animated-arrow">
+                    <animate attributeName="r" values="8;12;8" dur="2s" repeatCount="indefinite"/>
+                </circle>
+                <text x="1270" y="155" class="service-text" fill="#4caf50" font-weight="bold">
+                    Multi-AZ HA
+                </text>
+                
+                <!-- Security Status -->
+                <circle cx="1250" cy="180" r="8" fill="#2196f3" class="animated-arrow">
+                    <animate attributeName="r" values="8;12;8" dur="2.5s" repeatCount="indefinite"/>
+                </circle>
+                <text x="1270" y="185" class="service-text" fill="#2196f3" font-weight="bold">
+                    IRSA Security
+                </text>
+                
+                <!-- Cost Optimized -->
+                <circle cx="1250" cy="210" r="8" fill="#ff9800" class="animated-arrow">
+                    <animate attributeName="r" values="8;12;8" dur="3s" repeatCount="indefinite"/>
+                </circle>
+                <text x="1270" y="215" class="service-text" fill="#ff9800" font-weight="bold">
+                    Cost Optimized
+                </text>
+            </g>
+        </svg>
+        
+        <!-- Legenda -->
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #ff9900;"></div>
+                <span><strong>AWS Services</strong> - Serviços gerenciados da AWS</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #146eb4;"></div>
+                <span><strong>VPC/Network</strong> - Infraestrutura de rede</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #4caf50;"></div>
+                <span><strong>Public Subnets</strong> - Subnets públicas com Internet Gateway</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #ff5722;"></div>
+                <span><strong>Private Subnets</strong> - Subnets privadas com EKS Fargate</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #ff6b35;"></div>
+                <span><strong>EKS Fargate</strong> - Kubernetes serverless compute</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #632ca6;"></div>
+                <span><strong>Datadog SaaS</strong> - Observabilidade principal (APM + dashboards)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #ff6d00;"></div>
+                <span><strong>Grafana Stack</strong> - Observabilidade alternativa/híbrida</span>
+            </div>
+        </div>
+        
+        <!-- Métricas de Performance -->
+        <div class="metrics-panel">
+            <div class="metric-card">
+                <div class="metric-value">99.9%</div>
+                <div class="metric-label">Availability SLA</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">&lt; 200ms</div>
+                <div class="metric-label">P95 Latency</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">$179-318</div>
+                <div class="metric-label">Monthly Cost</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">15min</div>
+                <div class="metric-label">RTO Target</div>
+            </div>
+        </div>
+        
+        <!-- Informações Técnicas -->
+        <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 10px; border-left: 5px solid #007bff;">
+            <h3>🔧 Características Técnicas</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <h4>📊 Observabilidade (Datadog SaaS)</h4>
+                    <ul>
+                        <li><strong>APM Agentless:</strong> dd-trace para Fargate</li>
+                        <li><strong>4 Golden Signals:</strong> Latency, Traffic, Errors, Saturation</li>
+                        <li><strong>Business Metrics:</strong> orders.created, orders.failed</li>
+                        <li><strong>Logs:</strong> CloudWatch → Datadog forwarding</li>
+                        <li><strong>Dashboards:</strong> Infrastructure + Application + Business</li>
+                    </ul>
+                    
+                    <h4>🔶 Observabilidade Alternativa (Grafana Stack)</h4>
+                    <ul>
+                        <li><strong>Prometheus:</strong> /metrics scraping + alerting rules</li>
+                        <li><strong>Grafana:</strong> Multi-datasource dashboards</li>
+                        <li><strong>Loki:</strong> Log aggregation + LogQL queries</li>
+                        <li><strong>Tempo:</strong> OpenTelemetry traces + TraceQL</li>
+                        <li><strong>Cost-effective:</strong> 80% economia vs Datadog</li>
+                    </ul>
+                    
+                    <h4>🔒 Segurança</h4>
+                    <ul>
+                        <li><strong>IRSA:</strong> IAM Roles for Service Accounts</li>
+                        <li><strong>OIDC:</strong> GitHub Actions sem long-lived keys</li>
+                        <li><strong>Network:</strong> Private subnets, Security Groups</li>
+                        <li><strong>Secrets:</strong> AWS Secrets Manager</li>
+                        <li><strong>Images:</strong> ECR scan-on-push</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>🚀 CI/CD Blue/Green</h4>
+                    <ul>
+                        <li><strong>Build:</strong> GitHub Actions → ECR push</li>
+                        <li><strong>Deploy:</strong> Blue/Green com label switching</li>
+                        <li><strong>Validation:</strong> Health checks + smoke tests</li>
+                        <li><strong>Rollback:</strong> Instant service selector change</li>
+                        <li><strong>Zero Downtime:</strong> Traffic switching strategy</li>
+                    </ul>
+                    
+                    <h4>💰 FinOps & Scaling</h4>
+                    <ul>
+                        <li><strong>Fargate:</strong> Pay-per-pod, sem nós ociosos</li>
+                        <li><strong>DynamoDB:</strong> Pay-per-request auto-scaling</li>
+                        <li><strong>HPA:</strong> CPU 70% threshold</li>
+                        <li><strong>Tags:</strong> Cost allocation por ambiente/team</li>
+                        <li><strong>Rightsizing:</strong> Resource requests/limits</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Adicionar interatividade
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animar entrada dos elementos
+            const components = document.querySelectorAll('rect, ellipse, circle');
+            components.forEach((component, index) => {
+                component.style.opacity = '0';
+                component.style.transform = 'scale(0.8)';
+                
+                setTimeout(() => {
+                    component.style.transition = 'all 0.5s ease-out';
+                    component.style.opacity = '1';
+                    component.style.transform = 'scale(1)';
+                }, index * 50);
+            });
+            
+            // Adicionar tooltips ao passar o mouse
+            const services = [
+                { selector: '#applications rect', info: 'Aplicações executando em EKS Fargate com Blue/Green deployment' },
+                { selector: '#aws-services rect', info: 'Serviços AWS gerenciados com alta disponibilidade' },
+                { selector: '#external-services rect', info: 'Serviços externos integrados via API' }
+            ];
+            
+            services.forEach(service => {
+                document.querySelectorAll(service.selector).forEach(element => {
+                    element.addEventListener('mouseenter', function(e) {
+                        // Criar tooltip dinâmico
+                        const tooltip = document.createElement('div');
+                        tooltip.style.position = 'absolute';
+                        tooltip.style.background = '#2c3e50';
+                        tooltip.style.color = 'white';
+                        tooltip.style.padding = '8px 12px';
+                        tooltip.style.borderRadius = '4px';
+                        tooltip.style.fontSize = '12px';
+                        tooltip.style.zIndex = '1000';
+                        tooltip.style.maxWidth = '200px';
+                        tooltip.textContent = service.info;
+                        tooltip.id = 'svg-tooltip';
+                        
+                        document.body.appendChild(tooltip);
+                        
+                        // Posicionar próximo ao cursor
+                        const rect = e.target.getBoundingClientRect();
+                        tooltip.style.left = (rect.left + rect.width / 2) + 'px';
+                        tooltip.style.top = (rect.top - 40) + 'px';
+                    });
+                    
+                    element.addEventListener('mouseleave', function() {
+                        const tooltip = document.getElementById('svg-tooltip');
+                        if (tooltip) {
+                            tooltip.remove();
+                        }
+                    });
+                    
+                    // Adicionar efeito de hover
+                    element.addEventListener('mouseenter', function() {
+                        this.style.filter = 'brightness(1.1) drop-shadow(0 0 8px rgba(0,0,0,0.3))';
+                        this.style.transform = 'scale(1.02)';
+                        this.style.transition = 'all 0.2s ease';
+                    });
+                    
+                    element.addEventListener('mouseleave', function() {
+                        this.style.filter = 'none';
+                        this.style.transform = 'scale(1)';
+                    });
+                });
+            });
+            
+            // Atualizar métricas em tempo real (simulação)
+            setInterval(() => {
+                const latencyCard = document.querySelector('.metric-card:nth-child(2) .metric-value');
+                const latencies = ['< 150ms', '< 180ms', '< 200ms', '< 165ms', '< 145ms'];
+                latencyCard.textContent = latencies[Math.floor(Math.random() * latencies.length)];
+            }, 5000);
+        });
+    </script>
+</body>
+</html>

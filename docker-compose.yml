@@ -42,7 +42,6 @@ services:
     build:
       context: ./app/mobile
       dockerfile: Dockerfile
-    profiles: ["mobile"]
     environment:
       - EXPO_PUBLIC_BACKEND_URL=http://host.docker.internal:3000
     ports:

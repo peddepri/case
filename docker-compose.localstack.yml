@@ -5,7 +5,7 @@ version: '3.8'
 services:
   # LocalStack - AWS cloud emulator
   localstack:
-    image: localstack/localstack:3.0
+    image: localstack/localstack-pro:latest
     container_name: case-localstack
     ports:
       - "4566:4566"            # LocalStack Gateway
@@ -14,12 +14,13 @@ services:
     environment:
       # Auth
       - LOCALSTACK_AUTH_TOKEN=${LOCALSTACK_AUTH_TOKEN:-}
+      - ACTIVATE_PRO=1
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-test}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-test}
       - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
       
-      # Services to enable
-      - SERVICES=ec2,ecr,eks,dynamodb,iam,sts,secretsmanager,cloudwatch,logs,s3,kms
+      # Services to enable (Pro features: ecr, eks, elbv2, cloudcontrol)
+      - SERVICES=ec2,ecr,eks,dynamodb,iam,sts,secretsmanager,cloudwatch,logs,s3,kms,elbv2,elb,cloudcontrol,autoscaling
       
       # EKS Configuration
       - EKS_LOADBALANCER_PORT=8081
@@ -97,6 +98,22 @@ services:
       - VITE_BACKEND_URL=http://localhost:3001
     ports:
       - "5174:80"
+    depends_on:
+      - backend-localstack
+    networks:
+      - localstack-network
+
+  # Mobile app conectado ao backend LocalStack
+  mobile-localstack:
+    build:
+      context: ./app/mobile
+      dockerfile: Dockerfile
+    container_name: case-mobile-localstack
+    environment:
+      - EXPO_PUBLIC_BACKEND_URL=http://localhost:3001
+      - EXPO_NO_TELEMETRY=1
+    ports:
+      - "19007:19006"
     depends_on:
       - backend-localstack
     networks:

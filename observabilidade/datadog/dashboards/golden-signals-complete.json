@@ -1,0 +1,271 @@
+{
+  "title": "🚀 4 Golden Signals + Business Metrics - Complete Dashboard",
+  "description": "Dashboard completo seguindo SRE best practices: Latência, Tráfego, Erros, Saturação + Métricas de Negócio para Frontend, Backend e Mobile",
+  "template_variables": [
+    {
+      "name": "service",
+      "prefix": "service",
+      "available_values": ["backend", "frontend", "mobile"],
+      "default": "*"
+    },
+    {
+      "name": "environment", 
+      "prefix": "env",
+      "available_values": ["production", "staging", "development"],
+      "default": "*"
+    }
+  ],
+  "layout_type": "ordered",
+  "widgets": [
+    {
+      "id": 1,
+      "definition": {
+        "title": "🚦 System Health Overview",
+        "type": "query_value",
+        "requests": [
+          {
+            "q": "avg:system.uptime{service:backend}",
+            "aggregator": "avg"
+          }
+        ],
+        "autoscale": true,
+        "precision": 2
+      },
+      "layout": {"x": 0, "y": 0, "width": 4, "height": 2}
+    },
+    
+    {
+      "id": 2,
+      "definition": {
+        "title": "📈 1. LATENCY - Response Times (Golden Signal)",
+        "type": "timeseries",
+        "requests": [
+          {
+            "q": "avg:http.request.duration{service:$service,env:$environment} by {service}",
+            "display_type": "line",
+            "style": {
+              "palette": "dog_classic",
+              "line_type": "solid",
+              "line_width": "normal"
+            }
+          },
+          {
+            "q": "p95:http.request.duration{service:$service,env:$environment} by {service}",
+            "display_type": "line"
+          },
+          {
+            "q": "p99:http.request.duration{service:$service,env:$environment} by {service}",
+            "display_type": "line"
+          }
+        ],
+        "yaxis": {
+          "label": "Response Time (ms)",
+          "scale": "linear"
+        },
+        "markers": [
+          {
+            "value": "y = 2000",
+            "display_type": "error dashed",
+            "label": "SLA Threshold"
+          }
+        ]
+      },
+      "layout": {"x": 4, "y": 0, "width": 8, "height": 4}
+    },
+    
+    {
+      "id": 3,
+      "definition": {
+        "title": "🚀 2. TRAFFIC - Request Rate (Golden Signal)",
+        "type": "timeseries",
+        "requests": [
+          {
+            "q": "sum:http.requests{service:$service,env:$environment}.as_rate() by {service,method}",
+            "display_type": "bars",
+            "style": {
+              "palette": "cool"
+            }
+          }
+        ],
+        "yaxis": {
+          "label": "Requests/sec"
+        }
+      },
+      "layout": {"x": 0, "y": 4, "width": 6, "height": 4}
+    },
+    
+    {
+      "id": 4,
+      "definition": {
+        "title": "❌ 3. ERRORS - Error Rate (Golden Signal)", 
+        "type": "timeseries",
+        "requests": [
+          {
+            "q": "(sum:http.requests{service:$service,status_code:4*,env:$environment}.as_rate() + sum:http.requests{service:$service,status_code:5*,env:$environment}.as_rate()) / sum:http.requests{service:$service,env:$environment}.as_rate() * 100",
+            "display_type": "line",
+            "style": {
+              "palette": "warm",
+              "line_type": "solid",
+              "line_width": "thick"
+            }
+          }
+        ],
+        "yaxis": {
+          "label": "Error Rate (%)",
+          "max": "100"
+        },
+        "markers": [
+          {
+            "value": "y = 5",
+            "display_type": "warning dashed",
+            "label": "Warning Threshold"
+          },
+          {
+            "value": "y = 10", 
+            "display_type": "error dashed",
+            "label": "Critical Threshold"
+          }
+        ]
+      },
+      "layout": {"x": 6, "y": 4, "width": 6, "height": 4}
+    },
+    
+    {
+      "id": 5,
+      "definition": {
+        "title": "💾 4. SATURATION - Resource Usage (Golden Signal)",
+        "type": "timeseries",
+        "requests": [
+          {
+            "q": "avg:system.cpu.user{service:$service,env:$environment} by {service}",
+            "display_type": "area",
+            "style": {"palette": "purple"}
+          },
+          {
+            "q": "avg:system.mem.used{service:$service,env:$environment} / avg:system.mem.total{service:$service,env:$environment} * 100 by {service}",
+            "display_type": "line"
+          }
+        ],
+        "yaxis": {
+          "label": "Usage (%)",
+          "max": "100"
+        }
+      },
+      "layout": {"x": 0, "y": 8, "width": 12, "height": 4}
+    },
+    
+    {
+      "id": 6,
+      "definition": {
+        "title": "💼 BUSINESS METRICS - Orders & Revenue",
+        "type": "timeseries",
+        "requests": [
+          {
+            "q": "sum:orders.created{env:$environment}.as_rate()",
+            "display_type": "bars",
+            "style": {"palette": "green"}
+          },
+          {
+            "q": "sum:orders.failed{env:$environment}.as_rate()",
+            "display_type": "bars", 
+            "style": {"palette": "red"}
+          },
+          {
+            "q": "avg:orders.revenue{env:$environment}.as_rate()",
+            "display_type": "line",
+            "style": {"palette": "blue"}
+          }
+        ],
+        "yaxis": {
+          "label": "Orders/sec & Revenue/sec"
+        }
+      },
+      "layout": {"x": 0, "y": 12, "width": 8, "height": 4}
+    },
+    
+    {
+      "id": 7,
+      "definition": {
+        "title": "📱 FRONTEND METRICS",
+        "type": "query_table",
+        "requests": [
+          {
+            "q": "avg:browser.page.load_time{env:$environment} by {page}",
+            "aggregator": "avg",
+            "alias": "Page Load Time"
+          },
+          {
+            "q": "sum:browser.page.views{env:$environment}.as_count() by {page}",
+            "aggregator": "sum",
+            "alias": "Page Views"
+          },
+          {
+            "q": "avg:browser.core_web_vitals.lcp{env:$environment} by {page}",
+            "aggregator": "avg", 
+            "alias": "LCP Score"
+          }
+        ]
+      },
+      "layout": {"x": 8, "y": 12, "width": 4, "height": 4}
+    },
+    
+    {
+      "id": 8,
+      "definition": {
+        "title": "📲 MOBILE METRICS",
+        "type": "timeseries",
+        "requests": [
+          {
+            "q": "sum:mobile.app.launches{env:$environment}.as_rate()",
+            "display_type": "line"
+          },
+          {
+            "q": "sum:mobile.crashes{env:$environment}.as_rate()",
+            "display_type": "line"
+          },
+          {
+            "q": "avg:mobile.app.response_time{env:$environment}",
+            "display_type": "line"
+          }
+        ]
+      },
+      "layout": {"x": 0, "y": 16, "width": 6, "height": 4}
+    },
+    
+    {
+      "id": 9,
+      "definition": {
+        "title": "🔍 LOGS - Error Analysis",
+        "type": "log_stream",
+        "query": "service:$service status:error",
+        "columns": ["timestamp", "service", "level", "message"],
+        "sort": {"column": "timestamp", "order": "desc"}
+      },
+      "layout": {"x": 6, "y": 16, "width": 6, "height": 4}
+    },
+    
+    {
+      "id": 10,
+      "definition": {
+        "title": "🎯 SLI/SLO Dashboard",
+        "type": "slo",
+        "slo_id": "backend-availability-slo",
+        "show_error_budget": true,
+        "view_type": "detail"
+      },
+      "layout": {"x": 0, "y": 20, "width": 12, "height": 3}
+    },
+    
+    {
+      "id": 11,
+      "definition": {
+        "title": "🔄 TRACES - Distributed Tracing",
+        "type": "trace_service",
+        "service": "$service",
+        "env": "$environment",
+        "span_name": "*"
+      },
+      "layout": {"x": 0, "y": 23, "width": 12, "height": 4}
+    }
+  ]
+}
