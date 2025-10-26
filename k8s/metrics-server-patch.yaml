@@ -4,7 +4,13 @@ metadata:
   name: metrics-server
   namespace: kube-system
 spec:
+  selector:
+    matchLabels:
+      k8s-app: metrics-server
   template:
+    metadata:
+      labels:
+        k8s-app: metrics-server
     spec:
       containers:
       - name: metrics-server

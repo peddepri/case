@@ -12,7 +12,7 @@ metadata:
     color: blue
   name: backend
   namespace: case
-  resourceVersion: "15152"
+  resourceVersion: "20984"
   uid: a3758695-5d92-4f46-8765-a4ff24bdc5c1
 spec:
   progressDeadlineSeconds: 600
@@ -112,8 +112,8 @@ status:
     reason: NewReplicaSetAvailable
     status: "True"
     type: Progressing
-  - lastTransitionTime: "2025-10-26T17:33:52Z"
-    lastUpdateTime: "2025-10-26T17:33:52Z"
+  - lastTransitionTime: "2025-10-26T19:12:15Z"
+    lastUpdateTime: "2025-10-26T19:12:15Z"
     message: Deployment has minimum availability.
     reason: MinimumReplicasAvailable
     status: "True"

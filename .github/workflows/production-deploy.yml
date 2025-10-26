@@ -1,0 +1,164 @@
+name: Production Deploy
+
+on:
+  workflow_run:
+    workflows: ["Simple CI-CD Pipeline"]
+    branches: [main]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
+
+env:
+  AWS_REGION: us-east-1
+  DD_SITE: datadoghq.com
+  DDB_TABLE: orders
+
+jobs:
+  deploy-aws:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    environment: ${{ github.event.inputs.environment || 'staging' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate AWS configuration
+        run: |
+          echo "Checking AWS configuration..."
+          if [[ -z "${{ secrets.AWS_ROLE_TO_ASSUME }}" ]]; then
+            echo "❌ AWS_ROLE_TO_ASSUME secret not configured"
+            exit 1
+          fi
+          if [[ -z "${{ vars.EKS_CLUSTER_NAME }}" ]]; then
+            echo "❌ EKS_CLUSTER_NAME variable not configured"
+            exit 1
+          fi
+          echo "✓ AWS configuration validated"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push images to ECR
+        run: |
+          # Backend
+          docker build -t ${{ steps.ecr.outputs.registry }}/backend:${{ github.sha }} app/backend/
+          docker tag ${{ steps.ecr.outputs.registry }}/backend:${{ github.sha }} ${{ steps.ecr.outputs.registry }}/backend:latest
+          docker push ${{ steps.ecr.outputs.registry }}/backend:${{ github.sha }}
+          docker push ${{ steps.ecr.outputs.registry }}/backend:latest
+          
+          # Frontend
+          docker build --build-arg VITE_BACKEND_URL=/api \
+            -t ${{ steps.ecr.outputs.registry }}/frontend:${{ github.sha }} app/frontend/
+          docker tag ${{ steps.ecr.outputs.registry }}/frontend:${{ github.sha }} ${{ steps.ecr.outputs.registry }}/frontend:latest
+          docker push ${{ steps.ecr.outputs.registry }}/frontend:${{ github.sha }}
+          docker push ${{ steps.ecr.outputs.registry }}/frontend:latest
+          
+          echo "BACKEND_IMAGE=${{ steps.ecr.outputs.registry }}/backend:${{ github.sha }}" >> $GITHUB_ENV
+          echo "FRONTEND_IMAGE=${{ steps.ecr.outputs.registry }}/frontend:${{ github.sha }}" >> $GITHUB_ENV
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --name ${{ vars.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+
+      - name: Deploy infrastructure
+        run: |
+          # Namespace and basic config
+          kubectl apply -f k8s/namespace.yaml
+          
+          # Environment config
+          sed -e "s/<AWS_REGION>/${{ env.AWS_REGION }}/g" \
+              -e "s/orders/${{ env.DDB_TABLE }}/g" \
+              -e "s/datadoghq.com/${{ env.DD_SITE }}/g" \
+              k8s/env-config.yaml | kubectl apply -f -
+          
+          # Datadog secret
+          if [[ -n "${{ secrets.DD_API_KEY }}" ]]; then
+            sed -e "s/<DD_API_KEY>/${{ secrets.DD_API_KEY }}/g" \
+                k8s/datadog-secret.yaml | kubectl apply -f -
+          fi
+          
+          # ServiceAccount with IRSA
+          if [[ -n "${{ secrets.BACKEND_IRSA_ROLE_ARN }}" ]]; then
+            sed -e "s#<BACKEND_IRSA_ROLE_ARN>#${{ secrets.BACKEND_IRSA_ROLE_ARN }}#g" \
+                k8s/backend-serviceaccount.yaml | kubectl apply -f -
+          fi
+
+      - name: Blue-Green Deployment
+        run: |
+          # Check if blue deployment exists
+          if kubectl get deployment backend -n case >/dev/null 2>&1; then
+            echo "Blue deployment exists, creating green..."
+            
+            # Create green deployments
+            sed -e "s/name: backend$/name: backend-green/" \
+                -e "s/app: backend$/app: backend/" \
+                -e "s/color: blue/color: green/g" \
+                -e "s#image: .*backend.*#image: ${{ env.BACKEND_IMAGE }}#" \
+                k8s/backend-deployment.yaml | kubectl apply -f -
+            
+            sed -e "s/name: frontend$/name: frontend-green/" \
+                -e "s/app: frontend$/app: frontend/" \
+                -e "s/color: blue/color: green/g" \
+                -e "s#image: .*frontend.*#image: ${{ env.FRONTEND_IMAGE }}#" \
+                k8s/frontend-deployment.yaml | kubectl apply -f -
+            
+            # Wait for green rollout
+            kubectl rollout status deployment/backend-green -n case --timeout=300s
+            kubectl rollout status deployment/frontend-green -n case --timeout=300s
+            
+            # Switch services to green
+            kubectl patch service backend -n case -p '{"spec":{"selector":{"color":"green"}}}'
+            kubectl patch service frontend -n case -p '{"spec":{"selector":{"color":"green"}}}'
+            
+            # Grace period then cleanup blue
+            sleep 30
+            kubectl delete deployment backend frontend -n case --ignore-not-found=true
+            
+            # Rename green to blue for next deployment
+            kubectl patch deployment backend-green -n case -p '{"metadata":{"name":"backend"},"spec":{"selector":{"matchLabels":{"color":"blue"}},"template":{"metadata":{"labels":{"color":"blue"}}}}}'
+            kubectl patch deployment frontend-green -n case -p '{"metadata":{"name":"frontend"},"spec":{"selector":{"matchLabels":{"color":"blue"}},"template":{"metadata":{"labels":{"color":"blue"}}}}}'
+          else
+            echo "No existing deployment, creating initial blue..."
+            sed -e "s#image: .*backend.*#image: ${{ env.BACKEND_IMAGE }}#" \
+                k8s/backend-deployment.yaml | kubectl apply -f -
+            sed -e "s#image: .*frontend.*#image: ${{ env.FRONTEND_IMAGE }}#" \
+                k8s/frontend-deployment.yaml | kubectl apply -f -
+            kubectl apply -f k8s/ingress.yaml
+          fi
+
+      - name: Verify deployment
+        run: |
+          kubectl get pods -n case -o wide
+          kubectl get services -n case
+          
+          # Health check via service
+          kubectl wait --for=condition=available --timeout=300s deployment/backend -n case
+          kubectl wait --for=condition=available --timeout=300s deployment/frontend -n case
+          
+          echo "✓ Deployment successful!"
+
+      - name: Post-deployment monitoring setup
+        if: vars.ENABLE_MONITORING == 'true'
+        run: |
+          # Apply ServiceMonitors only if Prometheus operator is installed
+          if kubectl get crd servicemonitors.monitoring.coreos.com >/dev/null 2>&1; then
+            kubectl apply -f k8s/service-monitors.yaml
+            echo "✓ Monitoring configured"
+          else
+            echo "⚠️  Prometheus operator not found, skipping ServiceMonitors"
+          fi
