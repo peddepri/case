@@ -23,16 +23,43 @@ jobs:
         with:
           node-version: '18'
 
+      - name: Prepare npm
+        run: |
+          npm config set registry https://registry.npmjs.org/
+          npm config set fetch-retries 5
+          npm config set fetch-retry-mintimeout 30000
+          npm config set fetch-retry-maxtimeout 120000
+          npm config set prefer-online true
+          npm cache clean --force
+
       - name: Install and test Backend
         working-directory: app/backend
         run: |
-          npm ci
+          attempts=0
+          until [ $attempts -ge 5 ]; do
+            npm ci --no-audit --no-fund && break
+            attempts=$((attempts+1))
+            npm cache clean --force || true
+            sleep 5
+          done
+          if [ $attempts -ge 5 ]; then
+            npm install --no-audit --no-fund --legacy-peer-deps
+          fi
           npm test || echo "Backend tests completed"
 
       - name: Test Frontend
         working-directory: app/frontend
         run: |
-          npm install
+          attempts=0
+          until [ $attempts -ge 5 ]; do
+            npm ci --no-audit --no-fund && break
+            attempts=$((attempts+1))
+            npm cache clean --force || true
+            sleep 5
+          done
+          if [ $attempts -ge 5 ]; then
+            npm install --no-audit --no-fund --legacy-peer-deps
+          fi
           npm run build || echo "Frontend build completed"
 
   build-and-deploy:
@@ -65,11 +92,11 @@ jobs:
       - name: Build and push images
         run: |
           # Build backend
-          docker build -t localhost:5001/backend:${{ github.sha }} app/backend/
+          docker build --network=host -t localhost:5001/backend:${{ github.sha }} app/backend/
           docker push localhost:5001/backend:${{ github.sha }}
           
           # Build frontend
-          docker build --build-arg VITE_BACKEND_URL=/api \
+          docker build --network=host --build-arg VITE_BACKEND_URL=/api \
             -t localhost:5001/frontend:${{ github.sha }} app/frontend/
           docker push localhost:5001/frontend:${{ github.sha }}
 
