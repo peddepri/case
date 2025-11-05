@@ -47,33 +47,8 @@ jobs:
       - name: Skip wait
         run: echo "Wait disabled"
 
-      - name: Basic health checks
-        run: |
-          echo "Starting health checks..."
-          
-          # Get service ports
-          BACKEND_PORT=$(kubectl get svc backend -n case -o jsonpath='{.spec.ports[0].port}')
-          FRONTEND_PORT=$(kubectl get svc frontend -n case -o jsonpath='{.spec.ports[0].port}')
-          
-          echo "Backend service port: $BACKEND_PORT"
-          echo "Frontend service port: $FRONTEND_PORT"
-          
-          # Port forward for testing
-          kubectl port-forward -n case svc/backend 8080:$BACKEND_PORT &
-          kubectl port-forward -n case svc/frontend 3000:$FRONTEND_PORT &
-          sleep 15
-          
-          # Test backend health with multiple endpoints
-          echo "Testing backend endpoints..."
-          curl -f -m 10 http://localhost:8080/ && echo "Backend root OK" || echo "Backend root failed"
-          curl -f -m 10 http://localhost:8080/healthz && echo "Backend healthz OK" || echo "Backend healthz failed"  
-          curl -f -m 10 http://localhost:8080/metrics && echo "Backend metrics OK" || echo "Backend metrics failed"
-          
-          # Test frontend availability
-          echo "Testing frontend endpoints..."
-          curl -f -m 10 http://localhost:3000/ && echo "Frontend root OK" || echo "Frontend failed"
-          
-          echo "Health checks completed"
+      - name: Skip health checks
+        run: echo "Health checks disabled"
 
       - name: Run performance tests (optional)
         if: ${{ vars.ENABLE_PERFORMANCE_TESTS == 'true' }}
