@@ -30,6 +30,11 @@ jobs:
           npm config set fetch-retry-mintimeout 30000
           npm config set fetch-retry-maxtimeout 120000
           npm config set prefer-online true
+          npm config set progress false
+          echo "Using npm version before upgrade:" && npm -v
+          npm i -g npm@11.6.2
+          echo "Using npm version after upgrade:" && npm -v
+          export NPM_CONFIG_CACHE="$RUNNER_TEMP/npm-cache"
           npm cache clean --force
 
       - name: Install and test Backend
@@ -39,11 +44,12 @@ jobs:
           until [ $attempts -ge 5 ]; do
             npm ci --no-audit --no-fund && break
             attempts=$((attempts+1))
+            rm -rf "$NPM_CONFIG_CACHE" || true
             npm cache clean --force || true
             sleep 5
           done
           if [ $attempts -ge 5 ]; then
-            npm install --no-audit --no-fund --legacy-peer-deps
+            npm install --no-audit --no-fund --legacy-peer-deps --prefer-online
           fi
           npm test || echo "Backend tests completed"
 
@@ -54,11 +60,12 @@ jobs:
           until [ $attempts -ge 5 ]; do
             npm ci --no-audit --no-fund && break
             attempts=$((attempts+1))
+            rm -rf "$NPM_CONFIG_CACHE" || true
             npm cache clean --force || true
             sleep 5
           done
           if [ $attempts -ge 5 ]; then
-            npm install --no-audit --no-fund --legacy-peer-deps
+            npm install --no-audit --no-fund --legacy-peer-deps --prefer-online
           fi
           npm run build || echo "Frontend build completed"
 
