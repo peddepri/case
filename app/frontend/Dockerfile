@@ -3,8 +3,8 @@ FROM node:20-alpine AS build
 WORKDIR /app
 ARG VITE_BACKEND_URL=/api
 ENV VITE_BACKEND_URL=${VITE_BACKEND_URL}
-COPY package.json package-lock.json* pnpm-lock.yaml* yarn.lock* ./
-RUN npm ci --no-audit --no-fund || npm install --no-audit --no-fund --legacy-peer-deps
+COPY package.json ./
+RUN npm install --no-audit --no-fund --legacy-peer-deps --ignore-scripts
 COPY tsconfig*.json ./
 COPY vite.config.ts ./
 COPY index.html ./

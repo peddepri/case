@@ -1,8 +1,8 @@
 # Backend Dockerfile
 FROM node:20-alpine AS base
 WORKDIR /app
-COPY package.json package-lock.json* pnpm-lock.yaml* yarn.lock* ./
-RUN npm ci --no-audit --no-fund || npm install --no-audit --no-fund --legacy-peer-deps
+COPY package.json ./
+RUN npm install --no-audit --no-fund --legacy-peer-deps --ignore-scripts
 COPY tsconfig.json ./
 COPY src ./src
 RUN npm run build
