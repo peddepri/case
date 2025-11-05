@@ -1,4 +1,4 @@
-name: Simple CI-CD Pipeline
+name: Simple CI-CD Pipeline (Fixed)
 
 on:
   push:
@@ -23,19 +23,15 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Prepare npm
+      - name: Setup npm configuration
         run: |
           npm config set registry https://registry.npmjs.org/
-          npm config set fetch-retries 5
-          npm config set fetch-retry-mintimeout 30000
-          npm config set fetch-retry-maxtimeout 120000
-          npm config set prefer-online true
+          npm config set fetch-retries 3
+          npm config set fetch-retry-mintimeout 10000
+          npm config set fetch-retry-maxtimeout 60000
           npm config set progress false
-          echo "Using npm version before upgrade:" && npm -v
-          npm i -g npm@11.6.2
-          echo "Using npm version after upgrade:" && npm -v
-          export NPM_CONFIG_CACHE="$RUNNER_TEMP/npm-cache"
-          npm cache clean --force
+          echo "Using npm version:" && npm -v
+          echo "Using node version:" && node -v
 
       - name: Install and test Backend
         working-directory: app/backend
@@ -96,32 +92,33 @@ jobs:
           sudo systemctl restart docker || true
           sleep 10
 
-      - name: Build and push images
+      - name: Build and push Docker images
         run: |
-          # Build backend
-          docker build --network=host -t localhost:5001/backend:${{ github.sha }} app/backend/
-          docker push localhost:5001/backend:${{ github.sha }}
+          echo "🔨 Building Docker images..."
           
-          # Build frontend
-          docker build --network=host --build-arg VITE_BACKEND_URL=/api \
-            -t localhost:5001/frontend:${{ github.sha }} app/frontend/
-          docker push localhost:5001/frontend:${{ github.sha }}
+          # Build backend (fastest build)
+          docker build -t $REGISTRY/backend:latest ./app/backend --no-cache=false
+          docker push $REGISTRY/backend:latest
+          
+          # Build frontend with cached dependencies  
+          cd app/frontend
+          npm ci --prefer-offline --no-audit
+          npm run build --silent
+          cd ../..
+          docker build -t $REGISTRY/frontend:latest ./app/frontend --no-cache=false
+          docker push $REGISTRY/frontend:latest
+          
+          # Build mobile (simple build)
+          docker build -t $REGISTRY/mobile:latest ./app/mobile --no-cache=false
+          docker push $REGISTRY/mobile:latest
+          
+          echo "✅ All images built and pushed successfully!"
 
       - name: Deploy core components
         run: |
-          # Apply namespace
-          kubectl apply -f k8s/namespace.yaml
-          
-          # Create simplified configs
-          kubectl create configmap env-config -n case \
-            --from-literal=DDB_TABLE=orders \
-            --from-literal=AWS_REGION=us-east-1 \
-            --dry-run=client -o yaml | kubectl apply -f -
-          
-          # Mock secrets for testing
-          kubectl create secret generic datadog -n case \
-            --from-literal=api-key=mock-dd-key \
-            --dry-run=client -o yaml | kubectl apply -f -
+          echo "🚀 Starting deployment..."
+          chmod +x scripts/deploy-simple.sh
+          ./scripts/deploy-simple.sh
 
       - name: Deploy applications
         run: |
@@ -152,28 +149,18 @@ jobs:
           kubectl logs -n case -l app=backend --tail=10 || true
           kubectl logs -n case -l app=frontend --tail=10 || true
 
-      # Optional: Performance testing
-      - name: Performance test
-        if: vars.ENABLE_PERFORMANCE_TESTS == 'true'
+      # Basic validation tests
+      - name: Smoke tests
         run: |
-          kubectl port-forward -n case svc/backend 8080:8080 &
-          sleep 5
-          echo "Running simple load test..."
-          for i in {1..5}; do
-            curl -s http://localhost:8080/health && echo " Request $i successful" || echo " Request $i failed"
-            sleep 1
-          done
-
-      # Optional: Basic chaos test
-      - name: Chaos test
-        if: vars.ENABLE_CHAOS_TESTS == 'true'
-        run: |
-          echo "Testing pod resilience..."
-          POD=$(kubectl get pods -n case -l app=backend -o jsonpath='{.items[0].metadata.name}')
-          echo "Deleting pod: $POD"
-          kubectl delete pod $POD -n case
-          kubectl wait --for=condition=ready pod -l app=backend -n case --timeout=60s
-          echo " Pod recovery successful"
+          echo "📊 Validating deployment..."
+          kubectl get pods -n case
+          kubectl get services -n case
+          
+          echo "🔍 Checking pod readiness..."
+          kubectl wait --for=condition=ready pod -l app=backend -n case --timeout=120s
+          kubectl wait --for=condition=ready pod -l app=frontend -n case --timeout=120s
+          
+          echo "✅ Deployment validation completed!"
 
       - name: Cleanup
         if: always()
