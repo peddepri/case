@@ -1,13 +1,8 @@
 name: Automated Testing Pipeline
 
+# Temporarily disabled due to npm registry issues
 on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main ]
-  schedule:
-    # Executar testes de performance a cada 6 horas
-    - cron: '0 */6 * * *'
+  workflow_dispatch:
 
 env:
   KUBECTL_VERSION: v1.28.0
