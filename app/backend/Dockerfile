@@ -2,7 +2,8 @@
 FROM node:20-alpine AS base
 WORKDIR /app
 COPY package.json ./
-RUN npm install --no-audit --no-fund --legacy-peer-deps --ignore-scripts
+RUN npm cache clean --force && \
+    npm install --no-audit --no-fund --legacy-peer-deps --ignore-scripts --prefer-online
 COPY tsconfig.json ./
 COPY src ./src
 RUN npm run build

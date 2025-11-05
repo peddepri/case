@@ -4,7 +4,8 @@ WORKDIR /app
 ARG VITE_BACKEND_URL=/api
 ENV VITE_BACKEND_URL=${VITE_BACKEND_URL}
 COPY package.json ./
-RUN npm install --no-audit --no-fund --legacy-peer-deps --ignore-scripts
+RUN npm cache clean --force && \
+    npm install --no-audit --no-fund --legacy-peer-deps --ignore-scripts --prefer-online
 COPY tsconfig*.json ./
 COPY vite.config.ts ./
 COPY index.html ./
