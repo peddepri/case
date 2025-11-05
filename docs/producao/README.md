@@ -369,7 +369,7 @@ env:
 | **Setup** | Simples (agentless) | Complexo (múltiplos componentes) |
 | **Custo** | $$$$ (por host/trace) | $ (infra + operational) |
 | **Maintenance** | Zero | Alto (upgrades, scaling, backup) |
-| **Features** | Rica (AI, correlação) | Boa (open source ecosystem) |
+| **Features** | Rica (correlação) | Boa (open source ecosystem) |
 | **Vendor Lock-in** | Alto | Baixo |
 | **Compliance** | Enterprise ready | Customizável |
 | **Learning Curve** | Baixa | Alta |

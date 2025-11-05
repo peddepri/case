@@ -34,14 +34,14 @@ O ambiente local utiliza uma combinação de **kind** (Kubernetes in Docker) + *
 - **Token:** Requer LOCALSTACK_AUTH_TOKEN para funcionalidades Pro
 
 **Serviços Disponíveis:**
-- ✅ **DynamoDB** - Tabela `orders` para persistência
-- ✅ **S3** - Buckets para artefatos e Terraform state
-- ✅ **ECR** - Registros Docker para backend/frontend
-- ✅ **IAM** - Roles e policies (IRSA simulation)
-- ✅ **Secrets Manager** - API keys do Datadog
-- ✅ **CloudWatch Logs** - Log groups
-- ✅ **VPC/EC2** - Networking simulation
-- ❌ **EKS** - Pro feature que falha no Windows (K3D issue)
+- **DynamoDB** - Tabela `orders` para persistência
+- **S3** - Buckets para artefatos e Terraform state
+- **ECR** - Registros Docker para backend/frontend
+- **IAM** - Roles e policies (IRSA simulation)
+- **Secrets Manager** - API keys do Datadog
+- **CloudWatch Logs** - Log groups
+- **VPC/EC2** - Networking simulation
+- **EKS** - Pro feature que falha no Windows (K3D issue)
 
 ### 2. kind Cluster (Kubernetes)
 - **Cluster:** case-local
@@ -60,12 +60,12 @@ O ambiente local utiliza uma combinação de **kind** (Kubernetes in Docker) + *
 Baseado no Grafana ecosystem para observabilidade completa:
 
 **Componentes:**
-- 📊 **Prometheus** (:9090) - Coleta métricas dos pods
-- 📈 **Grafana** (:3100) - Dashboards e visualização
-- 📝 **Loki** (:3101) - Agregação de logs
-- 🔍 **Tempo** (:3102) - Traces distribuídos (OTLP)
-- 📥 **Promtail** - Coleta logs dos containers
-- 🐶 **Datadog Agent** (opcional) - APM alternativo
+- **Prometheus** (:9090) - Coleta métricas dos pods
+- **Grafana** (:3100) - Dashboards e visualização
+- **Loki** (:3101) - Agregação de logs
+- **Tempo** (:3102) - Traces distribuídos (OTLP)
+- **Promtail** - Coleta logs dos containers
+- **Datadog Agent** (opcional) - APM alternativo
 
 ## Fluxo de Dados
 
@@ -261,19 +261,19 @@ docker logs case-grafana
 
 ## Vantagens do Ambiente Local
 
-✅ **Zero custos AWS** - Tudo roda localmente  
-✅ **Desenvolvimento offline** - Sem dependência de internet  
-✅ **Iteração rápida** - Deploy em segundos  
-✅ **Paridade com produção** - Mesmos manifests K8s  
-✅ **Observabilidade completa** - Métricas, logs e traces  
-✅ **Testes de integração** - DynamoDB + S3 simulados  
+**Zero custos AWS** - Tudo roda localmente  
+**Desenvolvimento offline** - Sem dependência de internet  
+**Iteração rápida** - Deploy em segundos  
+**Paridade com produção** - Mesmos manifests K8s  
+**Observabilidade completa** - Métricas, logs e traces  
+**Testes de integração** - DynamoDB + S3 simulados  
 
 ## Limitações Conhecidas
 
-❌ **EKS LocalStack Pro** - Falha no Windows (K3D nginx issue)  
-⚠️ **Performance** - Não reflete latências reais da AWS  
-⚠️ **Compatibilidade** - Algumas APIs LocalStack podem diferir  
-⚠️ **Resources** - Requer Docker com CPU/RAM suficientes  
+Limitação: **EKS LocalStack Pro** - Falha no Windows (K3D nginx issue)  
+Atenção: **Performance** - Não reflete latências reais da AWS  
+Compatibilidade - Algumas APIs LocalStack podem diferir  
+Recursos - Requer Docker com CPU/RAM suficientes  
 
 ## Próximos Passos
 

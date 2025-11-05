@@ -40,6 +40,28 @@ scrape_configs:
           environment: 'kubernetes'
           platform: 'kind'
 
+  # Frontend Kubernetes (via host)  
+  - job_name: 'frontend-kubernetes'
+    static_configs:
+      - targets: ['host.docker.internal:3003']
+        labels:
+          service: 'frontend'
+          environment: 'kubernetes'
+          platform: 'kind'
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # Mobile Kubernetes (via host)
+  - job_name: 'mobile-kubernetes'  
+    static_configs:
+      - targets: ['host.docker.internal:3004']
+        labels:
+          service: 'mobile'
+          environment: 'kubernetes'
+          platform: 'kind'
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
   # Prometheus self-monitoring
   - job_name: 'prometheus'
     static_configs:

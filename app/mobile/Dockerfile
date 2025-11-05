@@ -1,36 +1,26 @@
-# Expo web (simulation) container with observability
-FROM node:20-bullseye
+# Mobile service container with metrics endpoint
+FROM node:20-alpine
 
 WORKDIR /app
 
-# Install expo CLI and dependencies
-RUN npm i -g expo-cli@6.3.10 expo@^51.0.0
+# Install curl for health checks (alpine package)
+RUN apk add --no-cache curl
 
-# Copy package files
-COPY package.json package-lock.json* yarn.lock* .npmrc* ./
+# Copy only the server file
+COPY server.js ./
 
-# Install dependencies
-RUN npm ci --legacy-peer-deps || npm install --legacy-peer-deps
-
-# Copy application code
-COPY . .
+# Install only express (no package.json conflicts)
+RUN npm init -y && npm install express
 
 # Environment variables
-ENV EXPO_NO_TELEMETRY=1
-ENV EXPO_PUBLIC_BACKEND_URL=http://localhost:3000
 ENV NODE_ENV=production
 ENV PORT=19006
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD curl -f http://localhost:19006/ || exit 1
-
-# Install curl for healthcheck
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD curl -f http://localhost:19006/healthz || exit 1
 
 EXPOSE 19006
 
-# Use expo export for static web build and serve with http-server
-RUN npx expo export:web && npm install -g http-server
-
-CMD ["http-server", "web-build", "-p", "19006", "--cors"]
+# Start the metrics server directly
+CMD ["node", "server.js"]

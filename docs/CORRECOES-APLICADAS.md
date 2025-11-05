@@ -29,6 +29,19 @@
 # service-monitors.yaml - API version correta
 apiVersion: monitoring.coreos.com/v1  # Era: v1
 
+#### 4. **Dashboards Grafana sem Dados** 
+- **Problema**: Port-forwards não configurados permanentemente
+- **Solução**: Script automatizado `port-forward-metrics.sh`
+- **Métricas**: Backend expõe métricas Prometheus em `/metrics`
+- **Coleta**: Prometheus precisa acessar via `localhost:3002`
+
+#### 5. **Ambiente Demo Completo**
+- **Guia Completo**: `GUIA-COMPLETO-AMBIENTE-LOCAL.md` 
+- **Script Automatizado**: `setup-demo-environment.sh` - subir tudo
+- **Geração de Tráfego**: `generate-demo-traffic.sh` - tráfego contínuo
+- **Verificação**: `check-demo-status.sh` - status do ambiente
+- **Instrumentação**: Frontend e Mobile com métricas básicas
+
 # metrics-server-patch.yaml - Estrutura completa  
 spec:
   selector:          # Adicionado

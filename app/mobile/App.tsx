@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView, Text, View, Button, FlatList } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { mobileMetrics } from './metrics';
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'http://localhost:3000';
 

@@ -1,124 +1,124 @@
 {
   "current_response_time_percentiles": {
-    "response_time_percentile_0.5": 27,
-    "response_time_percentile_0.95": 230.0
+    "response_time_percentile_0.5": 81,
+    "response_time_percentile_0.95": 400.0
   },
   "errors": [
     {
       "error": "CatchResponseError('Create order failed with status 500')",
       "method": "POST",
       "name": "create_order",
-      "occurrences": 12
-    },
-    {
-      "error": "CatchResponseError('Health check failed with status 0')",
-      "method": "GET",
-      "name": "health_check",
-      "occurrences": 312
+      "occurrences": 10
     },
     {
       "error": "CatchResponseError('Get orders failed with status 0')",
       "method": "GET",
       "name": "get_orders",
-      "occurrences": 190
+      "occurrences": 225
     },
     {
       "error": "CatchResponseError('Create order failed with status 0')",
       "method": "POST",
       "name": "create_order",
-      "occurrences": 134
+      "occurrences": 143
+    },
+    {
+      "error": "CatchResponseError('Health check failed with status 0')",
+      "method": "GET",
+      "name": "health_check",
+      "occurrences": 341
     }
   ],
-  "fail_ratio": 0.96,
+  "fail_ratio": 0.9690026954177897,
   "state": "running",
   "stats": [
     {
-      "avg_content_length": 2.3493150684931505,
-      "avg_response_time": 572.2027258699038,
-      "current_fail_per_sec": 5.0,
-      "current_rps": 5.0,
-      "max_response_time": 22176.0,
-      "median_response_time": 24,
+      "avg_content_length": 1.8758169934640523,
+      "avg_response_time": 349.6947596470943,
+      "current_fail_per_sec": 3.6,
+      "current_rps": 3.6,
+      "max_response_time": 6546.0,
+      "median_response_time": 41,
       "method": "POST",
-      "min_response_time": 5.0,
+      "min_response_time": 4.0,
       "name": "create_order",
-      "num_failures": 146,
-      "num_requests": 146,
-      "response_time_percentile_0.95": 3100.0,
-      "response_time_percentile_0.99": 13000.0,
-      "total_fail_per_sec": 2.3801350235890397,
-      "total_rps": 2.3801350235890397
+      "num_failures": 153,
+      "num_requests": 153,
+      "response_time_percentile_0.95": 1900.0,
+      "response_time_percentile_0.99": 6000.0,
+      "total_fail_per_sec": 2.4547528833716328,
+      "total_rps": 2.4547528833716328
     },
     {
       "avg_content_length": 0.0,
-      "avg_response_time": 634.5508405368156,
-      "current_fail_per_sec": 6.1,
-      "current_rps": 6.1,
-      "max_response_time": 12238.0,
-      "median_response_time": 33,
+      "avg_response_time": 420.2834603420666,
+      "current_fail_per_sec": 5.4,
+      "current_rps": 5.4,
+      "max_response_time": 8608.0,
+      "median_response_time": 54,
+      "method": "GET",
+      "min_response_time": 5.0,
+      "name": "get_orders",
+      "num_failures": 225,
+      "num_requests": 225,
+      "response_time_percentile_0.95": 3300.0,
+      "response_time_percentile_0.99": 6300.0,
+      "total_fail_per_sec": 3.6099307108406364,
+      "total_rps": 3.6099307108406364
+    },
+    {
+      "avg_content_length": 0.9478021978021978,
+      "avg_response_time": 164.9343429010784,
+      "current_fail_per_sec": 9.3,
+      "current_rps": 9.3,
+      "max_response_time": 2362.0,
+      "median_response_time": 52,
       "method": "GET",
       "min_response_time": 4.0,
-      "name": "get_orders",
-      "num_failures": 190,
-      "num_requests": 190,
-      "response_time_percentile_0.95": 4500.0,
-      "response_time_percentile_0.99": 12000.0,
-      "total_fail_per_sec": 3.0974359896021753,
-      "total_rps": 3.0974359896021753
-    },
-    {
-      "avg_content_length": 1.1946902654867257,
-      "avg_response_time": 300.48904144840134,
-      "current_fail_per_sec": 10.1,
-      "current_rps": 10.1,
-      "max_response_time": 22221.0,
-      "median_response_time": 33,
-      "method": "GET",
-      "min_response_time": 3.0,
       "name": "health_check",
-      "num_failures": 312,
-      "num_requests": 339,
-      "response_time_percentile_0.95": 1100.0,
-      "response_time_percentile_0.99": 3200.0,
-      "total_fail_per_sec": 5.086315940820414,
-      "total_rps": 5.526477897237565
+      "num_failures": 341,
+      "num_requests": 364,
+      "response_time_percentile_0.95": 570.0,
+      "response_time_percentile_0.99": 1900.0,
+      "total_fail_per_sec": 5.471050543985142,
+      "total_rps": 5.840065683315518
     },
     {
-      "avg_content_length": 1.108148148148148,
-      "avg_response_time": 453.2919151555688,
-      "current_fail_per_sec": 21.2,
-      "current_rps": 21.2,
-      "max_response_time": 22221.0,
-      "median_response_time": 32,
+      "avg_content_length": 0.8517520215633423,
+      "avg_response_time": 280.46250352959964,
+      "current_fail_per_sec": 18.3,
+      "current_rps": 18.3,
+      "max_response_time": 8608.0,
+      "median_response_time": 50,
       "method": "",
-      "min_response_time": 3.0,
+      "min_response_time": 4.0,
       "name": "Aggregated",
-      "num_failures": 648,
-      "num_requests": 675,
-      "response_time_percentile_0.95": 1600.0,
-      "response_time_percentile_0.99": 11000.0,
-      "total_fail_per_sec": 10.563886954011629,
-      "total_rps": 11.00404891042878
+      "num_failures": 719,
+      "num_requests": 742,
+      "response_time_percentile_0.95": 1500.0,
+      "response_time_percentile_0.99": 4800.0,
+      "total_fail_per_sec": 11.53573413819741,
+      "total_rps": 11.904749277527786
     }
   ],
-  "total_fail_per_sec": 21.2,
-  "total_rps": 21.2,
+  "total_fail_per_sec": 18.3,
+  "total_rps": 18.3,
   "user_count": 30,
   "worker_count": 2,
   "workers": [
     {
-      "cpu_usage": 23.8,
-      "id": "locust-worker-89b9f55d6-frq2s_dedab88fe7d441f59b7e3500ef8f94e2",
-      "memory_usage": 68882432,
-      "state": "running",
-      "user_count": 30
-    },
-    {
-      "cpu_usage": 0.7,
-      "id": "locust-worker-89b9f55d6-w44s4_a3425f627e53488a959841cd741ba825",
-      "memory_usage": 65314816,
+      "cpu_usage": 0.5,
+      "id": "locust-worker-89b9f55d6-2p89t_f2b389b933954b7481eb794a54871d14",
+      "memory_usage": 64831488,
       "state": "ready",
       "user_count": 0
+    },
+    {
+      "cpu_usage": 25.4,
+      "id": "locust-worker-89b9f55d6-92fsc_d026ba457d334a75ac1e47ccfc770a3e",
+      "memory_usage": 67264512,
+      "state": "running",
+      "user_count": 30
     }
   ]
 }
