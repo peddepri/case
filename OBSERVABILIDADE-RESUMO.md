@@ -1,6 +1,6 @@
 # STACK DE OBSERVABILIDADE - RESUMO EXECUTIVO
 
-## ✅ STATUS: TODOS OS SERVICOS FUNCIONANDO
+##  STATUS: TODOS OS SERVICOS FUNCIONANDO
 
 Data: 2025-10-24
 Ambiente: Docker Compose Local
@@ -11,11 +11,11 @@ Ambiente: Docker Compose Local
 
 | Servico | Status | URL | Funcao |
 |---------|--------|-----|--------|
-| **Prometheus** | ✅ UP | http://localhost:9090 | Coleta de metricas (scrape a cada 15s) |
-| **Grafana** | ✅ UP | http://localhost:3100 | Visualizacao (admin/admin) |
-| **Loki** | ✅ UP | http://localhost:3101 | Agregacao de logs |
-| **Promtail** | ✅ UP | - | Coleta logs Docker → Loki |
-| **Tempo** | ✅ UP | http://localhost:3102 | Traces distribuidos (OTLP) |
+| **Prometheus** |  UP | http://localhost:9090 | Coleta de metricas (scrape a cada 15s) |
+| **Grafana** |  UP | http://localhost:3100 | Visualizacao (admin/admin) |
+| **Loki** |  UP | http://localhost:3101 | Agregacao de logs |
+| **Promtail** |  UP | - | Coleta logs Docker  Loki |
+| **Tempo** |  UP | http://localhost:3102 | Traces distribuidos (OTLP) |
 
 ---
 
@@ -31,7 +31,7 @@ Senha: admin
 
 ### 2. Visualizar Dashboards
 
-**Caminho:** Dashboards → Browse → Case/
+**Caminho:** Dashboards  Browse  Case/
 
 **Dashboards disponiveis:**
 1. **4 Golden Signals - Backend API** (UID: golden-signals-backend)
@@ -145,7 +145,7 @@ orders_failed_total 2
 
 ### Acesso via Grafana Explore
 
-1. Grafana → Explore
+1. Grafana  Explore
 2. Selecionar datasource: **Loki**
 3. Executar queries LogQL
 
@@ -197,7 +197,7 @@ curl -s http://localhost:3102/ready
 
 ### Acesso via Grafana
 
-1. Grafana → Explore
+1. Grafana  Explore
 2. Selecionar datasource: **Tempo**
 3. Executar queries TraceQL
 
@@ -376,7 +376,7 @@ export const ordersFailedTotal = new client.Counter({
 
 ### Parte 1: Overview (2 min)
 1. Mostrar stack rodando: `docker compose -f docker-compose.observability.yml ps`
-2. Explicar arquitetura: Backend → Prometheus/Loki/Tempo → Grafana
+2. Explicar arquitetura: Backend  Prometheus/Loki/Tempo  Grafana
 3. Mostrar endpoints de health
 
 ### Parte 2: Golden Signals (5 min)
@@ -398,14 +398,14 @@ export const ordersFailedTotal = new client.Counter({
    - Statistics atualizando
 
 ### Parte 4: Logs (3 min)
-1. Grafana → Explore → Loki
+1. Grafana  Explore  Loki
 2. Query: `{service="backend-localstack"}`
 3. Filtrar por level="error"
 4. Buscar logs de "Order created"
 
 ### Parte 5: Prometheus Direto (2 min)
 1. Abrir http://localhost:9090
-2. Mostrar Targets (Status → Targets)
+2. Mostrar Targets (Status  Targets)
 3. Executar query: `histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))`
 4. Mostrar Graph
 

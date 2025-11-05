@@ -97,7 +97,7 @@
     {
       "id": 4,
       "definition": {
-        "title": "❌ 3. ERRORS - Error Rate (Golden Signal)", 
+        "title": " 3. ERRORS - Error Rate (Golden Signal)", 
         "type": "timeseries",
         "requests": [
           {

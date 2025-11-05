@@ -3,15 +3,15 @@
 ## 🎯 Por que kind em vez de EKS LocalStack?
 
 O EKS do LocalStack Pro tem limitações no Windows:
-- ❌ Usa K3D que falha ao instalar nginx no Docker Desktop Windows
-- ❌ Mais lento e instável
-- ❌ Requer configuração complexa
+-  Usa K3D que falha ao instalar nginx no Docker Desktop Windows
+-  Mais lento e instável
+-  Requer configuração complexa
 
 **kind + LocalStack oferece:**
-- ✅ Funciona perfeitamente no Windows
-- ✅ Mais rápido e estável
-- ✅ 100% compatível com Kubernetes real
-- ✅ Integra com AWS services do LocalStack (DynamoDB, ECR, etc)
+-  Funciona perfeitamente no Windows
+-  Mais rápido e estável
+-  100% compatível com Kubernetes real
+-  Integra com AWS services do LocalStack (DynamoDB, ECR, etc)
 
 ## 🚀 Setup Rápido (5 minutos)
 
@@ -23,12 +23,12 @@ bash scripts/localstack-eks-simple.sh
 ```
 
 Este script automaticamente:
-1. ✅ Inicia LocalStack Pro com serviços AWS
-2. ✅ Cria cluster kind local
-3. ✅ Provisiona DynamoDB, ECR, IAM, Secrets
-4. ✅ Build e load de imagens Docker
-5. ✅ Deploy backend + frontend no Kubernetes
-6. ✅ Configura Ingress Nginx
+1.  Inicia LocalStack Pro com serviços AWS
+2.  Cria cluster kind local
+3.  Provisiona DynamoDB, ECR, IAM, Secrets
+4.  Build e load de imagens Docker
+5.  Deploy backend + frontend no Kubernetes
+6.  Configura Ingress Nginx
 
 **Tempo:** 3-5 minutos
 
@@ -260,12 +260,12 @@ kubectl logs -n case -l app=backend -f
 
 | Aspecto | kind + LocalStack | EKS LocalStack |
 |---------|------------------|----------------|
-| **Windows** | ✅ Funciona bem | ❌ Falha (nginx issue) |
-| **Setup** | ✅ 3-5 min | ⏰ 10-15 min (quando funciona) |
-| **Estabilidade** | ✅ Alta | ⚠️ Média/Baixa no Windows |
-| **AWS Integration** | ✅ Via endpoint | ✅ Nativo |
-| **Performance** | ✅ Rápido | ⏰ Mais lento |
-| **Custo** | ✅ Grátis | 💰 Requer Pro |
+| **Windows** |  Funciona bem |  Falha (nginx issue) |
+| **Setup** |  3-5 min | ⏰ 10-15 min (quando funciona) |
+| **Estabilidade** |  Alta |  Média/Baixa no Windows |
+| **AWS Integration** |  Via endpoint |  Nativo |
+| **Performance** |  Rápido | ⏰ Mais lento |
+| **Custo** |  Grátis | 💰 Requer Pro |
 | **Recomendado para** | Dev local | CI/CD / Linux |
 
 ## 💡 Dicas
@@ -326,17 +326,17 @@ kubectl delete pod -n ingress-nginx -l app.kubernetes.io/component=controller
 kubectl port-forward -n case svc/backend 3000:3000
 ```
 
-## ✅ Checklist de Sucesso
+##  Checklist de Sucesso
 
 Após executar `bash scripts/localstack-eks-simple.sh`, você deve ter:
 
-- ✅ LocalStack rodando em http://localhost:4566
-- ✅ Cluster kind `case-local` ativo
-- ✅ Namespace `case` criado
-- ✅ Pods `backend` e `frontend` em Running
-- ✅ Ingress acessível em http://localhost:8080
-- ✅ DynamoDB table `orders` criada
-- ✅ Backend conectando com DynamoDB via LocalStack
+-  LocalStack rodando em http://localhost:4566
+-  Cluster kind `case-local` ativo
+-  Namespace `case` criado
+-  Pods `backend` e `frontend` em Running
+-  Ingress acessível em http://localhost:8080
+-  DynamoDB table `orders` criada
+-  Backend conectando com DynamoDB via LocalStack
 
 **Teste final:**
 ```bash

@@ -88,11 +88,11 @@ jobs:
               k8s/frontend-deployment.yaml | kubectl apply -f -
           
           # Skip problematic resources that require additional CRDs
-          echo "⚠️ Skipping ServiceMonitors (requires Prometheus Operator CRDs)"
-          echo "⚠️ Skipping HPAs (requires metrics-server)"
-          echo "⚠️ Skipping complex ingress for CI simplicity"
+          echo "Skipping ServiceMonitors (requires Prometheus Operator CRDs)"
+          echo "Skipping HPAs (requires metrics-server)"
+          echo "Skipping complex ingress for CI simplicity"
           
-          echo "✅ Core deployments applied successfully"
+          echo "Core deployments applied successfully"
 
       - name: Wait for deployment readiness
         run: |
@@ -124,13 +124,13 @@ jobs:
           
           # Test backend health with multiple endpoints
           echo "Testing backend endpoints..."
-          curl -f -m 10 http://localhost:8080/ && echo "✅ Backend root OK" || echo "⚠️ Backend root failed"
-          curl -f -m 10 http://localhost:8080/healthz && echo "✅ Backend healthz OK" || echo "⚠️ Backend healthz failed"  
-          curl -f -m 10 http://localhost:8080/metrics && echo "✅ Backend metrics OK" || echo "⚠️ Backend metrics failed"
+          curl -f -m 10 http://localhost:8080/ && echo "Backend root OK" || echo "Backend root failed"
+          curl -f -m 10 http://localhost:8080/healthz && echo "Backend healthz OK" || echo "Backend healthz failed"  
+          curl -f -m 10 http://localhost:8080/metrics && echo "Backend metrics OK" || echo "Backend metrics failed"
           
           # Test frontend availability
           echo "Testing frontend endpoints..."
-          curl -f -m 10 http://localhost:3000/ && echo "✅ Frontend root OK" || echo "⚠️ Frontend failed"
+          curl -f -m 10 http://localhost:3000/ && echo "Frontend root OK" || echo "Frontend failed"
           
           echo "Health checks completed"
 

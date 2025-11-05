@@ -19,7 +19,7 @@ open http://localhost:3100  # (admin/admin)
 ### **🎯 Dashboards (Grafana)**
 ```
 http://localhost:3100                           # Login (admin/admin)
-http://localhost:3100/d/golden-signals         # Golden Signals ⭐
+http://localhost:3100/d/golden-signals         # Golden Signals 
 http://localhost:3100/d/frontend-golden-signals # Frontend Dashboard
 http://localhost:3100/d/mobile-golden-signals  # Mobile Dashboard  
 http://localhost:3100/d/business-metrics       # Business Metrics
@@ -54,27 +54,27 @@ rodando em Kubernetes com monitoramento end-to-end."
 ### **2. Visão Geral das Apps (2-3 min)**
 ```
 🚀 "Primeiro, nossas aplicações funcionando..."
-→ Backend: http://localhost:3002 
+ Backend: http://localhost:3002 
    "Nossa API Node.js com métricas completas"
-→ Frontend: http://localhost:3003
+ Frontend: http://localhost:3003
    "Interface React com Web Vitals"  
-→ Mobile: http://localhost:3004
+ Mobile: http://localhost:3004
    "App mobile com Expo"
 ```
 
 ### **3. Coleta de Métricas (3-4 min)**
 ```
 📊 "Vamos ver como coletamos métricas..."
-→ Prometheus: http://localhost:9090/targets
+ Prometheus: http://localhost:9090/targets
    "6 targets sendo monitorados em tempo real"
-→ Query: up, http_requests_total
+ Query: up, http_requests_total
    "Métricas atualizando a cada 15 segundos"
 ```
 
-### **4. Golden Signals (5-6 min)** ⭐ **FOCO PRINCIPAL**
+### **4. Golden Signals (5-6 min)**  **FOCO PRINCIPAL**
 ```
 📈 "O core do monitoramento: Golden Signals"
-→ http://localhost:3100/d/golden-signals
+ http://localhost:3100/d/golden-signals
 
 🔍 "Latency - Tempo de resposta"
    "P50, P95, P99 - vemos que 95% das requests são sub-200ms"
@@ -92,24 +92,24 @@ rodando em Kubernetes com monitoramento end-to-end."
 ### **5. Dashboards Específicos (3-4 min)**
 ```
 🎨 "Cada aplicação tem métricas específicas..."
-→ Frontend: http://localhost:3100/d/frontend-golden-signals
+ Frontend: http://localhost:3100/d/frontend-golden-signals
    "Web Vitals: FCP, LCP, CLS - performance do usuário"
-→ Mobile: http://localhost:3100/d/mobile-golden-signals  
+ Mobile: http://localhost:3100/d/mobile-golden-signals  
    "Métricas mobile: load time, interactions, crashes"
 ```
 
 ### **6. Business Metrics (2-3 min)**
 ```
 💼 "Conectando técnico com negócio..."
-→ http://localhost:3100/d/business-metrics
+ http://localhost:3100/d/business-metrics
    "Orders criados, revenue, conversão - ROI da observabilidade"
 ```
 
 ### **7. Logs e Traces (2-3 min)**
 ```
 🔍 "Para debugging profundo..."
-→ Grafana Explore → Loki (logs)
-→ Grafana Explore → Tempo (traces)  
+ Grafana Explore  Loki (logs)
+ Grafana Explore  Tempo (traces)  
    "Correlação entre métricas, logs e traces distribuídos"
 ```
 
@@ -187,10 +187,10 @@ curl http://localhost:3100/api/health # Grafana health
 
 ## 💡 **DICAS FINAIS**
 
-- ✅ **Sempre mostrar dados reais** (não mock/estático)
-- ✅ **Explicar o "porquê"** de cada métrica  
-- ✅ **Conectar com cenários reais** de produção
-- ✅ **Mostrar alerting em ação** (se possível)
-- ✅ **Enfatizar ROI** - tempo economizado em troubleshooting
+-  **Sempre mostrar dados reais** (não mock/estático)
+-  **Explicar o "porquê"** de cada métrica  
+-  **Conectar com cenários reais** de produção
+-  **Mostrar alerting em ação** (se possível)
+-  **Enfatizar ROI** - tempo economizado em troubleshooting
 
 🎬 **BOA GRAVAÇÃO!**

@@ -13,10 +13,10 @@ RED='\033[0;31m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-print_step() { echo -e "${GREEN}✓ $1${NC}"; }
+print_step() { echo -e "${GREEN} $1${NC}"; }
 print_info() { echo -e "${BLUE}ℹ $1${NC}"; }
-print_warning() { echo -e "${YELLOW}⚠ $1${NC}"; }
-print_error() { echo -e "${RED}✗ $1${NC}"; exit 1; }
+print_warning() { echo -e "${YELLOW} $1${NC}"; }
+print_error() { echo -e "${RED} $1${NC}"; exit 1; }
 
 echo "╔════════════════════════════════════════════════════════╗"
 echo "║  LocalStack EKS (Pro Trial) - Provisionamento Completo ║"
@@ -366,7 +366,7 @@ print_step "Pods prontos"
 # ============================================================
 echo ""
 echo "╔════════════════════════════════════════════════════════╗"
-echo "║           ✓ Provisionamento Completo!                  ║"
+echo "║            Provisionamento Completo!                  ║"
 echo "╚════════════════════════════════════════════════════════╝"
 echo ""
 

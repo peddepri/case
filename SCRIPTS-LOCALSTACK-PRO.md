@@ -59,7 +59,7 @@ bash scripts/start-localstack-pro-simple.sh
 - 🛑 Para LocalStack e aplicações
 - 🛑 Para stack de observabilidade
 - 🛑 Deleta cluster kind (se existir)
-- 🗑️ Opção para remover dados persistentes
+- 🗑 Opção para remover dados persistentes
 - 🧹 Limpeza de containers e volumes órfãos
 
 **Uso:**
@@ -360,6 +360,6 @@ Após validar o ambiente local:
 
 ---
 
-**Criado por:** Kiro AI Assistant  
+**Criado por:** Kiro  Assistant  
 **Data:** 2025-10-25  
 **Versão:** 1.0

@@ -6,20 +6,20 @@ Stack completa de observabilidade com Prometheus, Grafana, Loki e Tempo.
 
 ```
 ┌─────────────┐
-│   Backend   │ → Metricas (Prometheus) → http://backend:3000/metrics
-│             │ → Logs (Pino JSON)      → Promtail → Loki
-│             │ → Traces (OpenTelemetry)→ Tempo
+│   Backend   │  Metricas (Prometheus)  http://backend:3000/metrics
+│             │  Logs (Pino JSON)       Promtail  Loki
+│             │  Traces (OpenTelemetry) Tempo
 └─────────────┘
        ↓
 ┌──────────────────────────────────────────────────────────┐
 │  Stack de Observabilidade                                │
 │                                                           │
-│  Prometheus (9090)  →  Coleta metricas a cada 15s       │
-│  Loki (3101)        →  Agrega logs via Promtail         │
-│  Tempo (3102)       →  Traces distribuidos OTLP          │
-│  Promtail           →  Coleta logs dos containers       │
+│  Prometheus (9090)    Coleta metricas a cada 15s       │
+│  Loki (3101)          Agrega logs via Promtail         │
+│  Tempo (3102)         Traces distribuidos OTLP          │
+│  Promtail             Coleta logs dos containers       │
 │                                                           │
-│  Grafana (3100)     →  Visualizacao unificada           │
+│  Grafana (3100)       Visualizacao unificada           │
 │    ├─ Dashboards                                         │
 │    │   ├─ 4 Golden Signals                              │
 │    │   └─ Business Metrics (Orders)                     │
@@ -232,9 +232,9 @@ curl http://localhost:3101/ready
 
 ### Grafana nao mostra dashboards
 
-1. Verificar datasources: Grafana → Configuration → Data Sources
+1. Verificar datasources: Grafana  Configuration  Data Sources
 2. Verificar provisioning: `docker logs case-grafana`
-3. Dashboards devem aparecer em: Dashboards → Browse → Case/
+3. Dashboards devem aparecer em: Dashboards  Browse  Case/
 
 ### Tempo nao recebe traces
 

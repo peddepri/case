@@ -1,6 +1,6 @@
 #!/bin/bash
 # Script de teste de carga para validar observabilidade
-# Autor: Kiro AI Assistant
+# Autor: Kiro  Assistant
 # Data: 2025-10-25
 
 set -e
@@ -23,7 +23,7 @@ echo ""
 
 # Verificar se backend está rodando
 if ! curl -sf http://localhost:3001/healthz >/dev/null; then
-    echo "❌ Backend não está rodando. Execute primeiro:"
+    echo " Backend não está rodando. Execute primeiro:"
     echo "   bash scripts/start-localstack-pro-simple.sh"
     exit 1
 fi

@@ -212,9 +212,9 @@ if [ $elapsed -ge $timeout ]; then
     # Verificar se pelo menos alguns pods estão funcionando
     ready_pods=$(kubectl get pods -n case --no-headers 2>/dev/null | grep "1/1.*Running" | wc -l)
     if [ "$ready_pods" -gt 0 ]; then
-        warn "⚠️  $ready_pods pod(s) funcionando. Continuando com demo..."
+        warn "  $ready_pods pod(s) funcionando. Continuando com demo..."
     else
-        fail "❌ Nenhum pod está pronto após ${timeout}s"
+        fail " Nenhum pod está pronto após ${timeout}s"
     fi
 fi
 
@@ -286,9 +286,9 @@ info "Targets UP: $TARGETS"
 
 # Testar endpoints de métricas
 info "Testando endpoints de métricas..."
-curl -s http://localhost:3002/metrics | head -1 | grep -q "#" && success "✅ Backend metrics OK" || warn "⚠️ Backend metrics com problema"
-curl -s http://localhost:3003/metrics | head -1 | grep -q "#" && success "✅ Frontend metrics OK" || warn "⚠️ Frontend metrics com problema"  
-curl -s http://localhost:3004/metrics | head -1 | grep -q "#" && success "✅ Mobile metrics OK" || warn "⚠️ Mobile metrics com problema"
+curl -s http://localhost:3002/metrics | head -1 | grep -q "#" && success " Backend metrics OK" || warn " Backend metrics com problema"
+curl -s http://localhost:3003/metrics | head -1 | grep -q "#" && success " Frontend metrics OK" || warn " Frontend metrics com problema"  
+curl -s http://localhost:3004/metrics | head -1 | grep -q "#" && success " Mobile metrics OK" || warn " Mobile metrics com problema"
 
 # 10. Finalização
 echo ""

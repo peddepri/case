@@ -37,11 +37,11 @@ docker compose ps
 ```
 
 **Esperado:**
-- ✅ Backend health: 200
-- ✅ GET /api/orders: 200
-- ✅ POST /api/orders (válido): 201
-- ✅ POST /api/orders (inválido): 400
-- ✅ Metrics endpoint: 200
+-  Backend health: 200
+-  GET /api/orders: 200
+-  POST /api/orders (válido): 201
+-  POST /api/orders (inválido): 400
+-  Metrics endpoint: 200
 
 ### 1.3 Validação manual
 
@@ -390,11 +390,11 @@ Preparar documento/slide com:
 ### 7.2 Roteiro de demo (sugestão)
 
 1. **Intro (2 min):** Arquitetura na tela (README seção Arquitetura)
-2. **Local (3 min):** `./scripts/up.sh local` → smoke tests → mostrar frontend
+2. **Local (3 min):** `./scripts/up.sh local`  smoke tests  mostrar frontend
 3. **IaC (2 min):** Mostrar Terraform outputs, kubeconfig, cluster EKS no console AWS
-4. **CI/CD (3 min):** Commit fictício → acompanhar pipeline GitHub Actions → Blue/Green
+4. **CI/CD (3 min):** Commit fictício  acompanhar pipeline GitHub Actions  Blue/Green
 5. **Observabilidade (5 min):** Datadog dashboards (golden signals), traces APM, monitors
-6. **Resiliência (3 min):** Locust → HPA scaling; chaos delete pod → auto-recovery
+6. **Resiliência (3 min):** Locust  HPA scaling; chaos delete pod  auto-recovery
 7. **FinOps/Segurança (2 min):** Slides sobre IRSA, Fargate cost, tags, HPA
 
 ### 7.3 Plano B (rollback/troubleshooting)

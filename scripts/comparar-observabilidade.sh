@@ -13,7 +13,7 @@ function show_datadog_stack() {
     echo "   • Log Management"
     echo "   • Real User Monitoring (RUM)"
     echo "   • Synthetic Monitoring"
-    echo "   • AI-powered Alerts"
+    echo "   • -powered Alerts"
     echo ""
     echo "[OK] Vantagens:"
     echo "   • Zero maintenance"
@@ -243,6 +243,6 @@ case "${1:-help}" in
 esac
 
 echo ""
-echo "🏗️  Arquitetura de Produção AWS EKS + Observabilidade"
+echo "🏗  Arquitetura de Produção AWS EKS + Observabilidade"
 echo "📍 Documentação: docs/producao/"
 echo "[FAST] Stack atual: Datadog SaaS + Grafana Stack (híbrido)"

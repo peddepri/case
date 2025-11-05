@@ -54,7 +54,7 @@ function open_file() {
 }
 
 function show_help() {
-    echo "🏗️  Script para Visualizar Diagramas de Arquitetura AWS EKS + Datadog"
+    echo "🏗  Script para Visualizar Diagramas de Arquitetura AWS EKS + Datadog"
     echo ""
     echo "📋 Uso: $0 [opção]"
     echo ""
@@ -134,6 +134,6 @@ case "${1:-all}" in
         ;;
 esac
 
-echo "🏗️  Arquitetura AWS EKS + Datadog Stack"
+echo "🏗  Arquitetura AWS EKS + Datadog Stack"
 echo "📍 Ambiente: Produção (us-east-1)"
 echo "🎯 Stack: EKS Fargate + DynamoDB + Datadog APM"

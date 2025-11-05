@@ -30,7 +30,7 @@ echo "🔑 4. Secrets Manager:"
 aws secretsmanager list-secrets --endpoint-url $AWS_ENDPOINT_URL | grep Name || echo "Nenhum secret encontrado"
 
 echo ""
-echo "☁️  5. S3 Buckets:"
+echo "☁  5. S3 Buckets:"
 aws s3 ls --endpoint-url $AWS_ENDPOINT_URL || echo "Nenhum bucket encontrado"
 
 echo ""

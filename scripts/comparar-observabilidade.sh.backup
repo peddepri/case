@@ -13,16 +13,16 @@ function show_datadog_stack() {
     echo "   • Log Management"
     echo "   • Real User Monitoring (RUM)"
     echo "   • Synthetic Monitoring"
-    echo "   • AI-powered Alerts"
+    echo "   • -powered Alerts"
     echo ""
-    echo "✅ Vantagens:"
+    echo " Vantagens:"
     echo "   • Zero maintenance"
     echo "   • Rich feature set"
     echo "   • Auto-correlation"
     echo "   • Enterprise support"
     echo "   • Quick time-to-value"
     echo ""
-    echo "❌ Desvantagens:"
+    echo " Desvantagens:"
     echo "   • Alto custo (~$325/mês)"
     echo "   • Vendor lock-in"
     echo "   • Limited customization"
@@ -47,14 +47,14 @@ function show_grafana_stack() {
     echo "   • Promtail (log shipping)"
     echo "   • AlertManager (notifications)"
     echo ""
-    echo "✅ Vantagens:"
+    echo " Vantagens:"
     echo "   • Open source ecosystem"
     echo "   • Cost-effective (~$65/mês)"
     echo "   • Full customization"
     echo "   • No vendor lock-in"
     echo "   • Long-term data retention"
     echo ""
-    echo "❌ Desvantagens:"
+    echo " Desvantagens:"
     echo "   • High operational overhead"
     echo "   • Complex setup"
     echo "   • Requires expertise"
@@ -132,7 +132,7 @@ function show_cost_comparison() {
     echo "   Grafana vs Datadog:   80% economia"
     echo "   Híbrido vs Datadog:   37% economia"
     echo ""
-    echo "⚠️  CUSTOS OCULTOS (Grafana):"
+    echo "  CUSTOS OCULTOS (Grafana):"
     echo "   Setup inicial:         $2,000-5,000"
     echo "   Operational (SRE):     $3,000-5,000/mês"
     echo "   Training:              $2,000-8,000"
@@ -235,7 +235,7 @@ case "${1:-help}" in
         ;;
     
     *)
-        echo "❌ Opção inválida: $1"
+        echo " Opção inválida: $1"
         echo ""
         show_help
         exit 1
@@ -243,6 +243,6 @@ case "${1:-help}" in
 esac
 
 echo ""
-echo "🏗️  Arquitetura de Produção AWS EKS + Observabilidade"
+echo "🏗  Arquitetura de Produção AWS EKS + Observabilidade"
 echo "📍 Documentação: docs/producao/"
 echo "⚡ Stack atual: Datadog SaaS + Grafana Stack (híbrido)"

@@ -196,9 +196,9 @@ jobs:
 ### Estratégia Blue/Green
 1. **Deploy Green:** Nova versão em deployment separado
 2. **Health Check:** Validar pods healthy + smoke tests
-3. **Switch Traffic:** Alterar Service selector blue→green
+3. **Switch Traffic:** Alterar Service selector bluegreen
 4. **Cleanup:** Remover deployment blue após validação
-5. **Rollback:** Instant switch green→blue se necessário
+5. **Rollback:** Instant switch greenblue se necessário
 
 ### Secrets & Variables
 **Repository Secrets:**
@@ -285,7 +285,7 @@ spec:
 **Grafana (Visualização)**
 - **Dashboards:** 4 Golden Signals, Business Metrics, Infrastructure
 - **Datasources:** Prometheus (metrics), Loki (logs), Tempo (traces)
-- **Alerting:** Integration com AlertManager → Slack/PagerDuty
+- **Alerting:** Integration com AlertManager  Slack/PagerDuty
 - **Users:** OIDC integration com GitHub/AWS SSO
 
 **Loki (Logs)**

@@ -383,7 +383,7 @@
         </mxCell>
         
         <!-- Metrics Panel -->
-        <mxCell id="metrics" value="Métricas de Performance:&#xa;&#xa;🎯 Availability: 99.9%&#xa;⚡ P95 Latency: &lt; 200ms&#xa;❌ Error Rate: &lt; 1%&#xa;🔄 RTO Target: 15min&#xa;💰 Monthly Cost: $179-318&#xa;&#xa;Características Técnicas:&#xa;✅ Multi-AZ High Availability&#xa;🔐 IRSA Security (Zero Trust)&#xa;💸 Pay-per-pod (Fargate)&#xa;🔄 Blue/Green Zero Downtime&#xa;📊 4 Golden Signals Monitoring" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontColor=#000000;align=left;verticalAlign=top;" parent="1" vertex="1">
+        <mxCell id="metrics" value="Métricas de Performance:&#xa;&#xa;🎯 Availability: 99.9%&#xa;⚡ P95 Latency: &lt; 200ms&#xa; Error Rate: &lt; 1%&#xa;🔄 RTO Target: 15min&#xa;💰 Monthly Cost: $179-318&#xa;&#xa;Características Técnicas:&#xa; Multi-AZ High Availability&#xa;🔐 IRSA Security (Zero Trust)&#xa;💸 Pay-per-pod (Fargate)&#xa;🔄 Blue/Green Zero Downtime&#xa;📊 4 Golden Signals Monitoring" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontColor=#000000;align=left;verticalAlign=top;" parent="1" vertex="1">
           <mxGeometry x="970" y="1200" width="250" height="200" as="geometry" />
         </mxCell>
         

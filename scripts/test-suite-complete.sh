@@ -13,9 +13,9 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 info() { echo -e "${BLUE}ℹ  $1${NC}"; }
-success() { echo -e "${GREEN}✅ $1${NC}"; }
-warn() { echo -e "${YELLOW}⚠  $1${NC}"; }
-fail() { echo -e "${RED}❌ $1${NC}"; }
+success() { echo -e "${GREEN} $1${NC}"; }
+warn() { echo -e "${YELLOW}  $1${NC}"; }
+fail() { echo -e "${RED} $1${NC}"; }
 chaos() { echo -e "${PURPLE}💥 $1${NC}"; }
 test_header() { echo -e "${CYAN}$1${NC}"; }
 
@@ -186,9 +186,9 @@ success=0
 for i in \$(seq 1 15); do
     if curl -s --max-time 3 http://backend:3000/healthz > /dev/null 2>&1; then
         success=\$((success + 1))
-        echo '  ✓'
+        echo '  '
     else
-        echo '  ✗'
+        echo '  '
     fi
 done
 echo \"Requests bem-sucedidos: \$success/15\"
@@ -208,17 +208,17 @@ kubectl run network-test --image=nicolaka/netshoot --rm -i --restart=Never -n ca
 echo '🌐 Análise de conectividade de rede:'
 
 echo '  • Resolução DNS:'
-nslookup backend.case.svc.cluster.local | grep Address | tail -1 && echo '    ✅ DNS funcionando'
+nslookup backend.case.svc.cluster.local | grep Address | tail -1 && echo '     DNS funcionando'
 
 echo '  • Conectividade TCP:'
-nc -z backend 3000 && echo '    ✅ Backend (3000): OK' || echo '    ❌ Backend (3000): FAIL'
-nc -z frontend 80 && echo '    ✅ Frontend (80): OK' || echo '    ❌ Frontend (80): FAIL'
+nc -z backend 3000 && echo '     Backend (3000): OK' || echo '     Backend (3000): FAIL'
+nc -z frontend 80 && echo '     Frontend (80): OK' || echo '     Frontend (80): FAIL'
 
 echo '  • Teste de latência:'
-ping -c 3 backend | grep 'round-trip' || echo '    ⚠ Latência não disponível'
+ping -c 3 backend | grep 'round-trip' || echo '     Latência não disponível'
 
 echo '  • Portas de serviço:'
-nc -z backend.case.svc.cluster.local 3000 && echo '    ✅ Service backend: OK'
+nc -z backend.case.svc.cluster.local 3000 && echo '     Service backend: OK'
 " 2>/dev/null
 
 echo ""
@@ -234,11 +234,11 @@ success "🎉 SUITE DE TESTES CONCLUÍDA COM SUCESSO!"
 echo ""
 
 info "Resumo dos testes executados:"
-echo "  ✅ Testes Funcionais: Health checks e APIs"
-echo "  ✅ Testes de Performance: Carga e stress"
-echo "  ✅ Chaos Engineering: Resiliência e recuperação"
-echo "  ✅ Teste de Escalabilidade: Load balancing"
-echo "  ✅ Teste de Rede: Conectividade e DNS"
+echo "   Testes Funcionais: Health checks e APIs"
+echo "   Testes de Performance: Carga e stress"
+echo "   Chaos Engineering: Resiliência e recuperação"
+echo "   Teste de Escalabilidade: Load balancing"
+echo "   Teste de Rede: Conectividade e DNS"
 
 echo ""
 info "Estado final do sistema:"
@@ -256,7 +256,7 @@ echo "  • Métricas detalhadas: Acesse Grafana em http://localhost:3100"
 echo "  • Traces distribuídos: Acesse Jaeger via Grafana"
 
 echo ""
-success "Sistema validado e funcionando corretamente! ✨"
+success "Sistema validado e funcionando corretamente! "
 
 # Limpeza
 rm -f /tmp/health.json /tmp/orders.json 2>/dev/null || true

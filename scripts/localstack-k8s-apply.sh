@@ -24,7 +24,7 @@ fi
 
 # Criar cluster kind se não existir
 if ! kind get clusters 2>/dev/null | grep -q "^case-local$"; then
-    echo "🏗️  Criando cluster kind 'case-local'..."
+    echo "🏗  Criando cluster kind 'case-local'..."
     cat <<EOF | kind create cluster --name case-local --config=-
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
@@ -94,7 +94,7 @@ kubectl apply -f "$TEMP_DIR/frontend-hpa.yaml" 2>/dev/null || true
 kubectl apply -f "$TEMP_DIR/ingress.yaml" 2>/dev/null || true
 
 echo ""
-echo "⏳ Aguardando pods ficarem prontos..."
+echo " Aguardando pods ficarem prontos..."
 kubectl wait --for=condition=ready pod -l app=backend -n case --timeout=60s || true
 kubectl wait --for=condition=ready pod -l app=frontend -n case --timeout=60s || true
 

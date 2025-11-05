@@ -11,7 +11,7 @@ Os dashboards do Grafana estão sem dados porque:
    - As métricas só aparecem quando há requisições HTTP
    - Métricas principais: `http_requests_total`, `http_request_duration_seconds_bucket`
 
-## ✅ Soluções Aplicadas
+##  Soluções Aplicadas
 
 ### 1. Port-Forward para Métricas (Todos os Serviços)
 ```bash
@@ -29,16 +29,16 @@ Os dashboards do Grafana estão sem dados porque:
 ### 3. Status dos Serviços
 ```bash
 # Observabilidade rodando no Docker
-✅ case-prometheus (porta 9090)
-✅ case-grafana (porta 3100) 
-✅ case-loki (porta 3101)
-✅ case-tempo (porta 3102)
-✅ case-promtail
+ case-prometheus (porta 9090)
+ case-grafana (porta 3100) 
+ case-loki (porta 3101)
+ case-tempo (porta 3102)
+ case-promtail
 
 # Aplicação rodando no Kubernetes
-✅ backend (2 pods)
-✅ frontend (2 pods) 
-✅ mobile (1 pod)
+ backend (2 pods)
+ frontend (2 pods) 
+ mobile (1 pod)
 ```
 
 ## 🎯 Próximos Passos
@@ -114,21 +114,21 @@ grafana_http_*
 
 ## 📋 Resumo do Status
 
-### ✅ **Infraestrutura de Observabilidade**
+###  **Infraestrutura de Observabilidade**
 - Prometheus, Grafana, Loki, Tempo: **Funcionando**
 - Dashboards configurados: Backend, Frontend, Mobile
 
-### ⚠️ **Coleta de Métricas** 
-- **Backend**: ✅ Métricas Prometheus funcionais (`/metrics`)
+###  **Coleta de Métricas** 
+- **Backend**:  Métricas Prometheus funcionais (`/metrics`)
 - **Frontend**: 🚧 Instrumentação adicionada (requer build)
 - **Mobile**: 🚧 Instrumentação adicionada (requer build)
-- **Port-forwards**: ⚠️ Requer execução manual contínua
+- **Port-forwards**:  Requer execução manual contínua
 
 ### 📊 **Status dos Dashboards**
-- **Golden Signals**: ⚠️ Aguardando dados (backend funcional) 
+- **Golden Signals**:  Aguardando dados (backend funcional) 
 - **Frontend Dashboards**: 🚧 Aguardando nova instrumentação
 - **Mobile Dashboards**: 🚧 Aguardando nova instrumentação
-- **Logs/Traces**: ✅ Funcionando via Loki/Tempo
+- **Logs/Traces**:  Funcionando via Loki/Tempo
 
 ### 🔧 **Próximas Ações Necessárias**
 1. **Build das aplicações** com nova instrumentação

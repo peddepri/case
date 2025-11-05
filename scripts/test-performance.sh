@@ -13,7 +13,7 @@ NC='\033[0m'
 info() { echo -e "${BLUE}ℹ  $1${NC}"; }
 success() { echo -e "${GREEN} $1${NC}"; }
 warn() { echo -e "${YELLOW}  $1${NC}"; }
-fail() { echo -e "${RED}❌ $1${NC}"; }
+fail() { echo -e "${RED} $1${NC}"; }
 
 echo " INICIANDO TESTES DE PERFORMANCE"
 echo "=================================="

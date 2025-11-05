@@ -13,9 +13,9 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 info() { echo -e "${BLUE}ℹ  $1${NC}"; }
-success() { echo -e "${GREEN}✅ $1${NC}"; }
-warn() { echo -e "${YELLOW}⚠  $1${NC}"; }
-fail() { echo -e "${RED}❌ $1${NC}"; }
+success() { echo -e "${GREEN} $1${NC}"; }
+warn() { echo -e "${YELLOW}  $1${NC}"; }
+fail() { echo -e "${RED} $1${NC}"; }
 header() { echo -e "${CYAN}$1${NC}"; }
 
 # Banner
@@ -206,7 +206,7 @@ header "======================================"
 cat > reports/proximos-passos-resultado.md << 'EOF'
 # 📊 IMPLEMENTAÇÃO DOS PRÓXIMOS PASSOS - RESULTADOS
 
-## ✅ 1. Metrics Server
+##  1. Metrics Server
 - **Status**: Implantado
 - **Funcionalidade**: Métricas de recursos disponíveis
 - **Acesso**: kubectl top pods -n case
@@ -278,4 +278,4 @@ echo "  3. Execute o pipeline CI/CD em seu repositório Git"
 # Cleanup
 kill $LOCUST_PF_PID 2>/dev/null || true
 
-success "✨ Implementação concluída com sucesso!"
+success " Implementação concluída com sucesso!"

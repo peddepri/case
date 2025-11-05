@@ -2,26 +2,26 @@
 
 ## Status Atual: LocalStack Community Edition
 
-### ✓ Funcionando (Gratuito)
+###  Funcionando (Gratuito)
 
 | Serviço | Status | Uso no Projeto |
 |---------|--------|----------------|
-| DynamoDB | ✓ OK | Tabela `orders` criada automaticamente |
-| S3 | ✓ OK | Bucket para Terraform state (simulado) |
-| IAM | ✓ OK | Role `backend-sa-role` para acesso DynamoDB |
-| Secrets Manager | ✓ OK | Secret `datadog/api-key` |
-| CloudWatch Logs | ✓ OK | Log group `/aws/eks/case-eks/cluster` |
-| STS | ✓ OK | Tokens temporários |
-| ECR (básico) | ✓ OK | Repos `backend` e `frontend` |
+| DynamoDB |  OK | Tabela `orders` criada automaticamente |
+| S3 |  OK | Bucket para Terraform state (simulado) |
+| IAM |  OK | Role `backend-sa-role` para acesso DynamoDB |
+| Secrets Manager |  OK | Secret `datadog/api-key` |
+| CloudWatch Logs |  OK | Log group `/aws/eks/case-eks/cluster` |
+| STS |  OK | Tokens temporários |
+| ECR (básico) |  OK | Repos `backend` e `frontend` |
 
-### ✗ NÃO Funciona (Requer Pro)
+###  NÃO Funciona (Requer Pro)
 
 | Serviço | Status | Alternativa |
 |---------|--------|-------------|
-| **EKS** | ✗ ERRO | **kind** (Kubernetes in Docker) |
-| RDS | ✗ Pro | PostgreSQL/MySQL via Docker |
-| Lambda | ✗ Pro | Express local |
-| ECS | ✗ Pro | Docker Compose |
+| **EKS** |  ERRO | **kind** (Kubernetes in Docker) |
+| RDS |  Pro | PostgreSQL/MySQL via Docker |
+| Lambda |  Pro | Express local |
+| ECS |  Pro | Docker Compose |
 
 ## Erro Esperado: EKS
 
@@ -64,8 +64,8 @@ LocalStack é usado APENAS para:
 ### 2. NÃO tente usar para Kubernetes
 
 Para Kubernetes local:
-- ✗ Não use: LocalStack EKS
-- ✓ Use: **kind**
+-  Não use: LocalStack EKS
+-  Use: **kind**
 
 ### 3. Teste de infraestrutura AWS
 
@@ -146,11 +146,11 @@ env:
 ## Quando Usar LocalStack Pro?
 
 Considere LocalStack Pro ($50/mês) se você precisa:
-- ✓ EKS emulado (sem kind)
-- ✓ RDS completo
-- ✓ Lambda avançado
-- ✓ ECS/Fargate
-- ✓ Suporte prioritário
+-  EKS emulado (sem kind)
+-  RDS completo
+-  Lambda avançado
+-  ECS/Fargate
+-  Suporte prioritário
 
 **Para este projeto:** LocalStack Community + kind é suficiente!
 
@@ -188,10 +188,10 @@ kubectl logs -n case deployment/backend | grep DynamoDB
 
 ## Próximos Passos
 
-1. ✓ LocalStack Community está rodando
-2. ✓ kind cluster está configurado
-3. ✓ Backend conecta ao DynamoDB local
-4. ✓ Frontend e Mobile funcionando
+1.  LocalStack Community está rodando
+2.  kind cluster está configurado
+3.  Backend conecta ao DynamoDB local
+4.  Frontend e Mobile funcionando
 
 **Tudo pronto para desenvolvimento local!**
 

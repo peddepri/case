@@ -5,13 +5,13 @@
 
 DIAGRAM_PATH="docs/producao/arquitetura-aws-eks-datadog.html"
 
-echo "🏗️  Abrindo diagrama de arquitetura AWS EKS + Datadog Stack"
+echo "🏗  Abrindo diagrama de arquitetura AWS EKS + Datadog Stack"
 echo "📁 Arquivo: $DIAGRAM_PATH"
 echo ""
 
 # Verificar se o arquivo existe
 if [ ! -f "$DIAGRAM_PATH" ]; then
-    echo "❌ Erro: Arquivo não encontrado em $DIAGRAM_PATH"
+    echo " Erro: Arquivo não encontrado em $DIAGRAM_PATH"
     exit 1
 fi
 
@@ -20,16 +20,16 @@ case "$OSTYPE" in
     darwin*)
         # macOS
         open "$DIAGRAM_PATH"
-        echo "✅ Diagrama aberto no navegador padrão (macOS)"
+        echo " Diagrama aberto no navegador padrão (macOS)"
         ;;
     linux*)
         # Linux
         if command -v xdg-open &> /dev/null; then
             xdg-open "$DIAGRAM_PATH"
-            echo "✅ Diagrama aberto no navegador padrão (Linux)"
+            echo " Diagrama aberto no navegador padrão (Linux)"
         elif command -v firefox &> /dev/null; then
             firefox "$DIAGRAM_PATH" &
-            echo "✅ Diagrama aberto no Firefox (Linux)"
+            echo " Diagrama aberto no Firefox (Linux)"
         else
             echo "📋 Abra manualmente: file://$(pwd)/$DIAGRAM_PATH"
         fi
@@ -38,7 +38,7 @@ case "$OSTYPE" in
         # Windows
         if command -v start &> /dev/null; then
             start "$DIAGRAM_PATH"
-            echo "✅ Diagrama aberto no navegador padrão (Windows)"
+            echo " Diagrama aberto no navegador padrão (Windows)"
         else
             echo "📋 Abra manualmente: file://$(pwd)/$DIAGRAM_PATH"
         fi

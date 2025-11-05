@@ -1,13 +1,13 @@
 # DEMONSTRACAO - OBSERVABILIDADE PRONTA
 
-## Status Atual: ✅ TUDO FUNCIONANDO
+## Status Atual:  TUDO FUNCIONANDO
 
 Todos os servicos de observabilidade estao UP e acessiveis:
-- Prometheus ✅
-- Grafana ✅
-- Loki ✅
-- Promtail ✅
-- Tempo ✅
+- Prometheus 
+- Grafana 
+- Loki 
+- Promtail 
+- Tempo 
 
 ---
 
@@ -22,11 +22,11 @@ senha: admin
 
 ### Dashboards Disponiveis
 1. **4 Golden Signals - Backend API**
-   - Caminho: Dashboards → Browse → Case/
+   - Caminho: Dashboards  Browse  Case/
    - UID: golden-signals-backend
    
 2. **Business Metrics - Orders**
-   - Caminho: Dashboards → Browse → Case/
+   - Caminho: Dashboards  Browse  Case/
    - UID: business-orders
 
 ### Outros Acessos
@@ -68,7 +68,7 @@ for i in {1..100}; do curl -s http://localhost:3001/ > /dev/null; done
 
 ### 1. Mostrar Grafana (2 min)
 - Login no Grafana (admin/admin)
-- Navegar: Dashboards → Browse → Case/
+- Navegar: Dashboards  Browse  Case/
 - Mostrar 2 dashboards disponiveis
 
 ### 2. Golden Signals Dashboard (5 min)
@@ -88,7 +88,7 @@ for i in {1..100}; do curl -s http://localhost:3001/ > /dev/null; done
 - **Statistics**: Total 1h, Success Rate
 
 ### 4. Logs no Loki (3 min)
-- Grafana → Explore
+- Grafana  Explore
 - Datasource: Loki
 - Query: `{service="backend-localstack"}`
 - Filtrar: `{service="backend-localstack"} | json | level="error"`
@@ -96,8 +96,8 @@ for i in {1..100}; do curl -s http://localhost:3001/ > /dev/null; done
 
 ### 5. Prometheus Direto (2 min)
 - Abrir http://localhost:9090
-- Status → Targets (mostrar alvos UP)
-- Graph → Query: `histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))`
+- Status  Targets (mostrar alvos UP)
+- Graph  Query: `histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))`
 - Mostrar grafico de P99
 
 ---

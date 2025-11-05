@@ -1,15 +1,15 @@
-# ✅ Correções Aplicadas - Pipeline CI/CD
+#  Correções Aplicadas - Pipeline CI/CD
 
 ## 🎯 Problemas Identificados e Resolvidos
 
-### ❌ **Problemas da Pipeline Original:**
-1. **ServiceMonitor com API version incorreta**: `v1` → `monitoring.coreos.com/v1`
+###  **Problemas da Pipeline Original:**
+1. **ServiceMonitor com API version incorreta**: `v1`  `monitoring.coreos.com/v1`
 2. **metrics-server-patch.yaml incompleto**: Faltavam `selector` e `labels` obrigatórios
 3. **Dependência desnecessária do ECR**: LocalStack Community não suporta ECR
 4. **Pipeline complexa demais**: Muito acoplada ao AWS para desenvolvimento local
 5. **Falhas de deploy**: Erros ao aplicar todos os manifests de uma vez
 
-### ✅ **Soluções Implementadas:**
+###  **Soluções Implementadas:**
 
 #### 1. **Pipeline CI/CD Simplificada** (`cicd-simple.yml`)
 - **Testes unitários**: Backend (pytest) + Frontend (npm)
@@ -96,13 +96,13 @@ git push origin main  # Triggera CI/CD completo
 ```
 
 ### **3. Deploy Produção (Manual)**
-- GitHub Actions → Production Deploy → Run workflow
+- GitHub Actions  Production Deploy  Run workflow
 
 ## 🎯 **Benefícios Alcançados**
 
 1. **Simplicidade**: Pipeline focada no essencial
 2. **Velocidade**: Deploy local em ~2 minutos  
-3. **Confiabilidade**: Testes graduais (local→staging→prod)
+3. **Confiabilidade**: Testes graduais (localstagingprod)
 4. **Flexibilidade**: Testes opcionais configuráveis
 5. **Manutenibilidade**: Código limpo e bem documentado
 6. **Observabilidade**: Logs, métricas e health checks

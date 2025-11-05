@@ -20,9 +20,9 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 info() { echo -e "${BLUE}ℹ  $1${NC}"; }
-success() { echo -e "${GREEN}✅ $1${NC}"; }
-warn() { echo -e "${YELLOW}⚠  $1${NC}"; }
-fail() { echo -e "${RED}❌ $1${NC}"; }
+success() { echo -e "${GREEN} $1${NC}"; }
+warn() { echo -e "${YELLOW}  $1${NC}"; }
+fail() { echo -e "${RED} $1${NC}"; }
 header() { echo -e "${CYAN}$1${NC}"; }
 
 echo ""
@@ -55,7 +55,7 @@ test_result() {
 # =====================================================
 # 1. VERIFICAR INFRAESTRUTURA
 # =====================================================
-header "🏗️  1. VALIDANDO INFRAESTRUTURA"
+header "🏗  1. VALIDANDO INFRAESTRUTURA"
 header "==============================="
 
 info "Testando conectividade com Kubernetes..."
@@ -222,7 +222,7 @@ if [ $BACKEND_PODS -gt 0 ]; then
     
     METRICS_AFTER=$(curl -s "http://localhost:9090/api/v1/query?query=http_requests_total" | jq -r '.data.result | length' 2>/dev/null || echo 0)
     
-    test_result "Geração de Tráfego" "$( [ $METRICS_AFTER -ge $METRICS_BEFORE ] && echo PASS || echo FAIL )" "Métricas: $METRICS_BEFORE → $METRICS_AFTER"
+    test_result "Geração de Tráfego" "$( [ $METRICS_AFTER -ge $METRICS_BEFORE ] && echo PASS || echo FAIL )" "Métricas: $METRICS_BEFORE  $METRICS_AFTER"
     
     # Testar geração de logs
     LOGS_BEFORE=$(curl -s "http://localhost:3101/loki/api/v1/query_range?query={service=\"backend\"}&limit=1" | jq -r '.data.result | length' 2>/dev/null || echo 0)
@@ -233,7 +233,7 @@ if [ $BACKEND_PODS -gt 0 ]; then
     
     LOGS_AFTER=$(curl -s "http://localhost:3101/loki/api/v1/query_range?query={service=\"backend\"}&limit=1" | jq -r '.data.result | length' 2>/dev/null || echo 0)
     
-    test_result "Geração de Logs" "$( [ $LOGS_AFTER -ge $LOGS_BEFORE ] && echo PASS || echo FAIL )" "Streams: $LOGS_BEFORE → $LOGS_AFTER"
+    test_result "Geração de Logs" "$( [ $LOGS_AFTER -ge $LOGS_BEFORE ] && echo PASS || echo FAIL )" "Streams: $LOGS_BEFORE  $LOGS_AFTER"
     
 else
     test_result "Geração de Tráfego" "SKIP" "Nenhum pod backend disponível"
@@ -268,10 +268,10 @@ SCORE=$((PASSED_TESTS * 100 / TOTAL_TESTS))
 for result in "${VALIDATION_RESULTS[@]}"; do
     IFS='|' read -r status test_name details <<< "$result"
     case $status in
-        "PASS") success "✅ $test_name $([ -n "$details" ] && echo "- $details")" ;;
-        "FAIL") fail "❌ $test_name $([ -n "$details" ] && echo "- $details")" ;;
-        "WARN") warn "⚠️  $test_name $([ -n "$details" ] && echo "- $details")" ;;
-        "SKIP") info "⏭️  $test_name $([ -n "$details" ] && echo "- $details")" ;;
+        "PASS") success " $test_name $([ -n "$details" ] && echo "- $details")" ;;
+        "FAIL") fail " $test_name $([ -n "$details" ] && echo "- $details")" ;;
+        "WARN") warn "  $test_name $([ -n "$details" ] && echo "- $details")" ;;
+        "SKIP") info "⏭  $test_name $([ -n "$details" ] && echo "- $details")" ;;
     esac
 done
 
@@ -301,8 +301,8 @@ $(echo "$VALIDATION_RESULTS" | grep -q "WARN\|FAIL.*Trace" && echo "   📡 Impl
 $([ $BUSINESS_METRICS -eq 0 ] && echo "   💼 Implementar métricas de negócio customizadas")
 
 🚀 PRÓXIMOS PASSOS:
-   1. $(echo "$VALIDATION_RESULTS" | grep -q "PASS.*Grafana" && echo "✅" || echo "⚠️") Acessar dashboards Grafana: http://localhost:3100
-   2. $(echo "$VALIDATION_RESULTS" | grep -q "PASS.*Prometheus" && echo "✅" || echo "⚠️") Revisar métricas Prometheus: http://localhost:9090
+   1. $(echo "$VALIDATION_RESULTS" | grep -q "PASS.*Grafana" && echo "" || echo "") Acessar dashboards Grafana: http://localhost:3100
+   2. $(echo "$VALIDATION_RESULTS" | grep -q "PASS.*Prometheus" && echo "" || echo "") Revisar métricas Prometheus: http://localhost:9090
    3. 📱 Instrumentar frontend (Core Web Vitals, user journey)
    4. 📲 Instrumentar mobile app (crashes, ANR, performance)
    5. 🔔 Configurar notificações (Slack, PagerDuty, email)
@@ -315,7 +315,7 @@ if [ $SCORE -ge 90 ]; then
 elif [ $SCORE -ge 70 ]; then
     warn "👍 BOM! Algumas melhorias recomendadas"
 else
-    fail "⚠️  ATENÇÃO! Configurações precisam de revisão"
+    fail "  ATENÇÃO! Configurações precisam de revisão"
 fi
 
 echo ""

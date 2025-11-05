@@ -10,9 +10,9 @@ RED='\033[0;31m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-info() { echo -e "${BLUE}ℹ️  $1${NC}"; }
-success() { echo -e "${GREEN}✅ $1${NC}"; }
-fail() { echo -e "${RED}❌ $1${NC}"; exit 1; }
+info() { echo -e "${BLUE}ℹ  $1${NC}"; }
+success() { echo -e "${GREEN} $1${NC}"; }
+fail() { echo -e "${RED} $1${NC}"; exit 1; }
 
 echo "🧪 Testando builds das aplicações..."
 echo ""
@@ -56,9 +56,9 @@ docker rmi localhost:5001/test-backend:latest localhost:5001/test-frontend:lates
 echo ""
 success "🎉 TODOS OS BUILDS FUNCIONANDO!"
 echo ""
-info "✅ Backend: Docker build funcionando"
-info "✅ Frontend: Docker build funcionando (com nginx + métricas)"
-info "✅ Mobile: Docker build funcionando (com express + métricas)"  
-info "✅ Registry: Push/Pull funcionando"
+info " Backend: Docker build funcionando"
+info " Frontend: Docker build funcionando (com nginx + métricas)"
+info " Mobile: Docker build funcionando (com express + métricas)"  
+info " Registry: Push/Pull funcionando"
 echo ""
 success "🚀 Pronto para executar setup-demo-environment.sh"

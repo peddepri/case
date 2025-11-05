@@ -37,9 +37,9 @@ Aguarde 1-2 minutos e acesse:
 - https://app.us5.datadoghq.com/apm/services
 
 Você deve ver:
-- ✅ Host/containers aparecerem em **Infrastructure**
-- ✅ Service `backend` em **APM > Services**
-- ✅ Métricas e traces sendo coletados
+-  Host/containers aparecerem em **Infrastructure**
+-  Service `backend` em **APM > Services**
+-  Métricas e traces sendo coletados
 
 ## 5. Testar envio de traces
 
@@ -68,8 +68,8 @@ docker compose logs datadog-agent | grep -i error
 ```
 
 Erros comuns:
-- `API key is invalid` → Verifique se copiou a key completa
-- `connection refused` → Verifique firewall/proxy
+- `API key is invalid`  Verifique se copiou a key completa
+- `connection refused`  Verifique firewall/proxy
 
 ### Sem dados no Datadog
 
@@ -112,7 +112,7 @@ spec:
 ## Próximos passos
 
 Depois de conectar localmente:
-1. ✅ Validar métricas/traces no Datadog
-2. ➡️ Provisionar EKS com Terraform (Seção 2 do guia)
-3. ➡️ Configurar GitHub Secrets com DD_API_KEY
-4. ➡️ Deploy no EKS com observabilidade completa
+1.  Validar métricas/traces no Datadog
+2.  Provisionar EKS com Terraform (Seção 2 do guia)
+3.  Configurar GitHub Secrets com DD_API_KEY
+4.  Deploy no EKS com observabilidade completa

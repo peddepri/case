@@ -20,7 +20,7 @@ graph TB
     end
     
     %% AWS Cloud
-    subgraph "☁️ AWS Cloud (us-east-1)"
+    subgraph "☁ AWS Cloud (us-east-1)"
         subgraph "🌐 VPC (10.0.0.0/16)"
             
             subgraph "🏢 Availability Zone A"
@@ -36,7 +36,7 @@ graph TB
             
             subgraph "🏢 Availability Zone B"
                 subgraph "🌍 Public Subnet B (10.0.102.0/24)"
-                    ALB[⚖️ Application Load Balancer<br/>Ingress Controller]:::network
+                    ALB[⚖ Application Load Balancer<br/>Ingress Controller]:::network
                 end
                 
                 subgraph "🔒 Private Subnet B (10.0.2.0/24)"
@@ -44,7 +44,7 @@ graph TB
                 end
             end
             
-            subgraph "🎛️ EKS Control Plane (Multi-AZ)"
+            subgraph "🎛 EKS Control Plane (Multi-AZ)"
                 API[[GEAR] Kubernetes API Server]:::k8sService
                 COREDNS[🔍 CoreDNS<br/>(Fargate Profile)]:::k8sService
                 ETCD[💾 Managed Etcd]:::k8sService
@@ -52,7 +52,7 @@ graph TB
         end
         
         subgraph "🔧 AWS Managed Services"
-            DDB[🗃️ DynamoDB<br/>orders table<br/>Pay-per-request]:::awsService
+            DDB[🗃 DynamoDB<br/>orders table<br/>Pay-per-request]:::awsService
             ECR[📦 Elastic Container Registry<br/>backend + frontend images]:::awsService
             SM[🔐 Secrets Manager<br/>API Keys + Credentials]:::awsService
             CW[📊 CloudWatch<br/>Logs + Metrics]:::awsService
@@ -72,7 +72,7 @@ graph TB
             MOBILE[📱 Mobile Service<br/>Expo Web (Optional)]:::appService
         end
         
-        subgraph "⚖️ Load Balancing"
+        subgraph "⚖ Load Balancing"
             SVC_BACKEND[🔄 Backend Service<br/>ClusterIP + Selector]:::k8sService
             SVC_FRONTEND[🔄 Frontend Service<br/>ClusterIP + Selector]:::k8sService
             SVC_MOBILE[🔄 Mobile Service<br/>ClusterIP]:::k8sService
@@ -158,7 +158,7 @@ sequenceDiagram
     GH->>K8S: 5. Run smoke tests
     K8S-->>GH: Tests passed
     
-    GH->>SVC: 6. Switch service selector: blue→green
+    GH->>SVC: 6. Switch service selector: bluegreen
     ALB->>GREEN: 7. Route traffic to Green
     
     Note over BLUE,GREEN: Traffic switched
@@ -167,7 +167,7 @@ sequenceDiagram
     DD-->>GH: 9. Metrics validation
     
     opt Rollback if needed
-        GH->>SVC: Switch back: green→blue
+        GH->>SVC: Switch back: greenblue
         ALB->>BLUE: Route traffic to Blue
     end
     
@@ -188,9 +188,9 @@ graph LR
     end
     
     %% Infrastructure Sources  
-    subgraph "🏗️ Infrastructure Layer"
+    subgraph "🏗 Infrastructure Layer"
         EKS[[GEAR] EKS Cluster<br/>Cluster Agent]
-        AWS[☁️ AWS Services<br/>CloudWatch]
+        AWS[☁ AWS Services<br/>CloudWatch]
         NET[🌐 Network<br/>VPC Flow Logs]
     end
     
@@ -271,10 +271,10 @@ graph TB
     end
     
     %% External Storage
-    subgraph "☁️ AWS Storage"
-        S3_METRICS[🗂️ S3: Prometheus<br/>Long-term metrics]
-        S3_LOGS[🗂️ S3: Loki chunks<br/>30 days retention]
-        S3_TRACES[🗂️ S3: Tempo blocks<br/>Compressed traces]
+    subgraph "☁ AWS Storage"
+        S3_METRICS[🗂 S3: Prometheus<br/>Long-term metrics]
+        S3_LOGS[🗂 S3: Loki chunks<br/>30 days retention]
+        S3_TRACES[🗂 S3: Tempo blocks<br/>Compressed traces]
     end
     
     %% Data Flow
@@ -394,7 +394,7 @@ graph TD
     end
     
     %% AWS Security Services
-    subgraph "🛡️ AWS Security Layer"
+    subgraph "🛡 AWS Security Layer"
         IAM_OIDC[🎭 IAM OIDC Provider<br/>Trust relationship]
         IRSA[🔑 IRSA Roles<br/>Service Account mapping]
         SM[🔐 Secrets Manager<br/>Encrypted secrets]
@@ -404,7 +404,7 @@ graph TD
     %% Network Security
     subgraph "🌐 Network Security"
         VPC[🏠 VPC<br/>Isolated network]
-        SG[🛡️ Security Groups<br/>Firewall rules]
+        SG[🛡 Security Groups<br/>Firewall rules]
         NACL[🚧 Network ACLs<br/>Subnet protection]
         PRIV[🔒 Private Subnets<br/>No public IPs]
     end
@@ -413,8 +413,8 @@ graph TD
     subgraph "[GEAR] K8s Security"
         SA[👤 Service Accounts<br/>Pod identity]
         RBAC[🎯 RBAC<br/>Permission control]
-        NET_POL[🕸️ Network Policies<br/>Pod-to-pod rules]
-        PSS[🛡️ Pod Security Standards<br/>Security context]
+        NET_POL[🕸 Network Policies<br/>Pod-to-pod rules]
+        PSS[🛡 Pod Security Standards<br/>Security context]
     end
     
     %% Container Security

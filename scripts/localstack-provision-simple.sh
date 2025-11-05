@@ -27,7 +27,7 @@ awslocal() {
 }
 
 # 1. DynamoDB Table
-echo "1️⃣  Criando DynamoDB table 'orders'..."
+echo "1⃣  Criando DynamoDB table 'orders'..."
 awslocal dynamodb create-table \
     --table-name orders \
     --attribute-definitions AttributeName=id,AttributeType=S \
@@ -38,7 +38,7 @@ awslocal dynamodb create-table \
 
 # 2. ECR Repositories
 echo ""
-echo "2️⃣  Criando ECR repositories..."
+echo "2⃣  Criando ECR repositories..."
 awslocal ecr create-repository \
     --repository-name backend \
     --tags Key=Project,Value=case \
@@ -51,7 +51,7 @@ awslocal ecr create-repository \
 
 # 3. IAM Role
 echo ""
-echo "3️⃣  Criando IAM role 'case-backend-sa-role'..."
+echo "3⃣  Criando IAM role 'case-backend-sa-role'..."
 awslocal iam create-role \
     --role-name case-backend-sa-role \
     --assume-role-policy-document '{
@@ -66,7 +66,7 @@ awslocal iam create-role \
 
 # 4. IAM Policy para DynamoDB
 echo ""
-echo "4️⃣  Anexando política DynamoDB ao role..."
+echo "4⃣  Anexando política DynamoDB ao role..."
 awslocal iam put-role-policy \
     --role-name case-backend-sa-role \
     --policy-name DynamoDBAccess \
@@ -90,7 +90,7 @@ awslocal iam put-role-policy \
 
 # 5. Secrets Manager
 echo ""
-echo "5️⃣  Criando secret 'datadog/api-key'..."
+echo "5⃣  Criando secret 'datadog/api-key'..."
 awslocal secretsmanager create-secret \
     --name datadog/api-key \
     --secret-string "{\"api-key\":\"${DD_API_KEY:-dummy-key-for-localstack}\"}" \
@@ -98,12 +98,12 @@ awslocal secretsmanager create-secret \
 
 # 6. S3 Bucket
 echo ""
-echo "6️⃣  Criando S3 bucket 'case-artifacts'..."
+echo "6⃣  Criando S3 bucket 'case-artifacts'..."
 awslocal s3 mb s3://case-artifacts 2>/dev/null || echo "     Bucket já existe"
 
 # 7. CloudWatch Log Group
 echo ""
-echo "7️⃣  Criando CloudWatch log group..."
+echo "7⃣  Criando CloudWatch log group..."
 awslocal logs create-log-group \
     --log-group-name /aws/containerinsights/case-eks/application \
     2>/dev/null || echo "     Log group já existe"
@@ -134,7 +134,7 @@ echo "   🔑 Secrets:"
 awslocal secretsmanager list-secrets --query 'SecretList[].Name' --output text
 
 echo ""
-echo "   ☁️  S3 Buckets:"
+echo "   ☁  S3 Buckets:"
 awslocal s3 ls | awk '{print $3}'
 
 echo ""

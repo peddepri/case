@@ -34,14 +34,14 @@ jobs:
         run: |
           echo "Checking AWS configuration..."
           if [[ -z "${{ secrets.AWS_ROLE_TO_ASSUME }}" ]]; then
-            echo "❌ AWS_ROLE_TO_ASSUME secret not configured"
+            echo " AWS_ROLE_TO_ASSUME secret not configured"
             exit 1
           fi
           if [[ -z "${{ vars.EKS_CLUSTER_NAME }}" ]]; then
-            echo "❌ EKS_CLUSTER_NAME variable not configured"
+            echo " EKS_CLUSTER_NAME variable not configured"
             exit 1
           fi
-          echo "✓ AWS configuration validated"
+          echo " AWS configuration validated"
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -150,7 +150,7 @@ jobs:
           kubectl wait --for=condition=available --timeout=300s deployment/backend -n case
           kubectl wait --for=condition=available --timeout=300s deployment/frontend -n case
           
-          echo "✓ Deployment successful!"
+          echo " Deployment successful!"
 
       - name: Post-deployment monitoring setup
         if: vars.ENABLE_MONITORING == 'true'
@@ -158,7 +158,7 @@ jobs:
           # Apply ServiceMonitors only if Prometheus operator is installed
           if kubectl get crd servicemonitors.monitoring.coreos.com >/dev/null 2>&1; then
             kubectl apply -f k8s/service-monitors.yaml
-            echo "✓ Monitoring configured"
+            echo " Monitoring configured"
           else
-            echo "⚠️  Prometheus operator not found, skipping ServiceMonitors"
+            echo "  Prometheus operator not found, skipping ServiceMonitors"
           fi

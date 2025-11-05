@@ -93,7 +93,7 @@
 # Usuário: admin
 # Senha: admin
 
-# Navegue para: Dashboards → Case
+# Navegue para: Dashboards  Case
 # Dashboards disponíveis:
 # - Frontend - 4 Golden Signals & Web Vitals
 # - Mobile Backend - 4 Golden Signals
@@ -114,7 +114,7 @@
 # 3. Query por:
 #    - service.name="case-backend"
 #    - service.name="case-frontend"
-# 4. Visualizar trace com spans de frontend → backend → DynamoDB
+# 4. Visualizar trace com spans de frontend  backend  DynamoDB
 ```
 
 ### Prometheus (Metrics)
@@ -143,14 +143,14 @@ open http://localhost:5173
 # - Web Vitals (FCP, LCP, FID, CLS)
 # - Métricas de requests e errors
 
-# Verificar traces no Grafana Explore → Tempo
+# Verificar traces no Grafana Explore  Tempo
 # Filtrar por service.name="case-frontend" ou "case-backend"
 # Ver trace completo com correlação W3C
 ```
 
 ### 2. Verificar Web Vitals
 ```bash
-# Abrir DevTools → Network → Filter "web-vitals"
+# Abrir DevTools  Network  Filter "web-vitals"
 # Ver POSTs para /api/metrics/web-vitals
 
 # Verificar no Prometheus:
@@ -287,4 +287,4 @@ curl -s http://localhost:3100/api/datasources/proxy/uid/tempo/api/search \
 **Data:** 2025-10-24
 **Tempo Total:** ~2 horas
 **Dashboards:** 4 novos + 2 existentes = 6 total
-**Traces:** Frontend → Backend → DynamoDB (correlacionados via W3C Trace Context)
+**Traces:** Frontend  Backend  DynamoDB (correlacionados via W3C Trace Context)

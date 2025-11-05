@@ -1,6 +1,6 @@
 # 📊 IMPLEMENTAÇÃO DOS PRÓXIMOS PASSOS - RESULTADOS
 
-## ✅ 1. Metrics Server
+##  1. Metrics Server
 - **Status**: Implantado
 - **Funcionalidade**: Métricas de recursos disponíveis
 - **Acesso**: kubectl top pods -n case

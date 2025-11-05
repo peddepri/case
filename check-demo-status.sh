@@ -11,16 +11,16 @@ NC='\033[0m'
 
 check() {
     if $1 > /dev/null 2>&1; then
-        echo -e "  ✅ $2"
+        echo -e "   $2"
         return 0
     else
-        echo -e "  ❌ $2"
+        echo -e "   $2"
         return 1
     fi
 }
 
 info() { echo -e "${BLUE}$1${NC}"; }
-warn() { echo -e "${YELLOW}⚠️  $1${NC}"; }
+warn() { echo -e "${YELLOW}  $1${NC}"; }
 
 echo "🔍 =========================================="  
 echo "🔍  VERIFICAÇÃO DO AMBIENTE DEMO"
@@ -135,7 +135,7 @@ if [ $ISSUES -eq 0 ]; then
     echo "   2. Gerar tráfego: ./generate-demo-traffic.sh"
     echo "   3. Iniciar gravação!"
 else
-    echo -e "${RED}⚠️  AMBIENTE COM $ISSUES PROBLEMA(S). Verifique os itens marcados com ❌${NC}"
+    echo -e "${RED}  AMBIENTE COM $ISSUES PROBLEMA(S). Verifique os itens marcados com ${NC}"
     echo ""
     echo "🔧 Para corrigir, execute: ./setup-demo-environment.sh"
 fi

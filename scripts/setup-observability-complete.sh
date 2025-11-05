@@ -237,7 +237,7 @@ cat << EOF
      - Métricas coletadas: $METRICS_AVAILABLE métricas ativas
      - Alertas configurados: Golden Signals + Business + SLOs
    
-   • Datadog: $([ -n "$DATADOG_API_KEY" ] && echo "Configurado ✅" || echo "Não configurado ⚠")
+   • Datadog: $([ -n "$DATADOG_API_KEY" ] && echo "Configurado " || echo "Não configurado ")
      - Dashboard Golden Signals
      - Monitors abrangentes
 

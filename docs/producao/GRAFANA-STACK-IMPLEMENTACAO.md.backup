@@ -6,7 +6,7 @@ Este documento resume as atualizações realizadas para incluir a **Grafana Stac
 
 ## 🎯 Objetivos Alcançados
 
-### ✅ Documentação Atualizada
+###  Documentação Atualizada
 - **Diagrama Draw.io** (`docs/producao/arquitetura-aws-eks-datadog.drawio`)
   - Adicionados componentes da Grafana Stack (Prometheus, Grafana, Loki, Tempo, Promtail, AlertManager)
   - Fluxos de dados entre aplicações e stack de observabilidade
@@ -23,7 +23,7 @@ Este documento resume as atualizações realizadas para incluir a **Grafana Stac
   - Estratégia híbrida recomendada
   - Análise de custos detalhada
 
-### ✅ Ferramentas de Suporte
+###  Ferramentas de Suporte
 - **Script de Comparação** (`scripts/comparar-observabilidade.sh`)
   - Comparação detalhada entre Datadog e Grafana Stack
   - Análise de custos e TCO
@@ -35,7 +35,7 @@ Este documento resume as atualizações realizadas para incluir a **Grafana Stac
   - Suporte para múltiplos formatos (Draw.io, HTML, Mermaid)
   - Instruções de uso integradas
 
-## 🏗️ Arquitetura Implementada
+## 🏗 Arquitetura Implementada
 
 ### 🔄 Estratégia Híbrida (Recomendada)
 
@@ -140,22 +140,22 @@ env:
 
 ## 🎯 Benefícios da Implementação
 
-### ✅ Flexibilidade Arquitetural
+###  Flexibilidade Arquitetural
 - **Escolha de Stack:** Datadog para critical path, Grafana para analytics
 - **Migração Gradual:** Path evolutivo sem vendor lock-in
 - **Customização:** Dashboards e alertas específicos por necessidade
 
-### ✅ Otimização de Custos
+###  Otimização de Custos
 - **37% economia** com estratégia híbrida vs Datadog puro
 - **Escalabilidade de custos** baseada em criticidade do ambiente
 - **ROI mensurável** com métricas de FinOps integradas
 
-### ✅ Experiência do Desenvolvedor
+###  Experiência do Desenvolvedor
 - **Learning Path:** Grafana Stack para skill development
 - **Debugging Avançado:** Correlation entre metrics, logs e traces
 - **Compliance:** Retenção longa e auditoria de logs
 
-### ✅ Operacional
+###  Operacional
 - **Zero Downtime:** Implementação gradual sem impacto
 - **Disaster Recovery:** Redundância entre stacks de observabilidade
 - **Team Autonomy:** Cada time pode escolher a stack apropriada

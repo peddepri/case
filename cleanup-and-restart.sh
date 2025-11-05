@@ -9,9 +9,9 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-info() { echo -e "${BLUE}ℹ️  $1${NC}"; }
-success() { echo -e "${GREEN}✅ $1${NC}"; }
-warn() { echo -e "${YELLOW}⚠️  $1${NC}"; }
+info() { echo -e "${BLUE}ℹ  $1${NC}"; }
+success() { echo -e "${GREEN} $1${NC}"; }
+warn() { echo -e "${YELLOW}  $1${NC}"; }
 
 echo ""
 echo "=========================================="

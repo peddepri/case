@@ -19,7 +19,7 @@ fi
 
 # Passo 1: Subir LocalStack
 echo ""
-echo "1️⃣  Iniciando LocalStack..."
+echo "1⃣  Iniciando LocalStack..."
 if ! curl -s http://localhost:4566/_localstack/health > /dev/null 2>&1; then
     echo "   LocalStack não está rodando. Subindo..."
     bash scripts/localstack-up.sh
@@ -28,7 +28,7 @@ else
 fi
 
 # Aguardar LocalStack ficar pronto
-echo "   ⏳ Aguardando LocalStack..."
+echo "    Aguardando LocalStack..."
 until curl -s http://localhost:4566/_localstack/health | grep -q '"dynamodb": "running"'; do
     echo -n "."
     sleep 2
@@ -37,7 +37,7 @@ echo " "
 
 # Passo 2: Provisionar recursos AWS via Terraform
 echo ""
-echo "2️⃣  Provisionando recursos AWS no LocalStack..."
+echo "2⃣  Provisionando recursos AWS no LocalStack..."
 
 # Criar diretório temporário para Terraform
 TF_DIR="infra/terraform-localstack"
@@ -103,7 +103,7 @@ echo "    Recursos AWS provisionados"
 
 # Passo 3: Verificar recursos criados
 echo ""
-echo "3️⃣  Verificando recursos no LocalStack..."
+echo "3⃣  Verificando recursos no LocalStack..."
 
 echo "   📦 DynamoDB Tables:"
 bash scripts/awslocal.sh dynamodb list-tables | grep -A1 TableNames || echo "   Nenhuma table encontrada"
@@ -122,19 +122,19 @@ bash scripts/awslocal.sh secretsmanager list-secrets --query 'SecretList[].Name'
 
 # Passo 4: Build e push de imagens (simulado)
 echo ""
-echo "4️⃣  Build de imagens Docker..."
+echo "4⃣  Build de imagens Docker..."
 
-echo "   🏗️  Backend image..."
+echo "   🏗  Backend image..."
 docker build -t case-backend:latest -t 000000000000.dkr.ecr.us-east-1.localhost.localstack.cloud:4566/backend:latest app/backend -q
 
-echo "   🏗️  Frontend image..."
+echo "   🏗  Frontend image..."
 docker build -t case-frontend:latest -t 000000000000.dkr.ecr.us-east-1.localhost.localstack.cloud:4566/frontend:latest app/frontend -q
 
 echo "    Imagens construídas"
 
 # Passo 5: Restart containers para usar novos recursos
 echo ""
-echo "5️⃣  Reiniciando containers para usar recursos provisionados..."
+echo "5⃣  Reiniciando containers para usar recursos provisionados..."
 
 docker compose -f docker-compose.localstack.yml restart backend-localstack
 docker compose -f docker-compose.localstack.yml restart frontend-localstack
@@ -143,7 +143,7 @@ echo "    Containers reiniciados"
 
 # Passo 6: Validação
 echo ""
-echo "6️⃣  Validando ambiente..."
+echo "6⃣  Validando ambiente..."
 
 sleep 3
 

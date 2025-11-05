@@ -1,6 +1,6 @@
 #!/bin/bash
 # Script para parar todos os serviços do ambiente
-# Autor: Kiro AI Assistant
+# Autor: Kiro  Assistant
 # Data: 2025-10-25
 
 set -e
@@ -41,7 +41,7 @@ if kind get clusters 2>/dev/null | grep -q "^${CLUSTER_NAME}$"; then
 fi
 
 echo ""
-read -p "🗑️  Deseja remover dados persistentes? (s/N): " REMOVE_DATA
+read -p "🗑  Deseja remover dados persistentes? (s/N): " REMOVE_DATA
 
 if [[ "$REMOVE_DATA" =~ ^[Ss]$ ]]; then
     log "Removendo dados persistentes..."
@@ -76,7 +76,7 @@ if [[ "$CLEAN_IMAGES" =~ ^[Ss]$ ]]; then
 fi
 
 echo ""
-echo "✅ TODOS OS SERVIÇOS PARADOS"
+echo " TODOS OS SERVIÇOS PARADOS"
 echo ""
 echo "Para reiniciar:"
 echo "   bash scripts/start-localstack-pro-full.sh    # Ambiente completo"

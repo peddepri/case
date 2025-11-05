@@ -30,7 +30,7 @@ Namespace: case
 │ │  ┌─────────────┐    ┌──────────────┐    ┌────────┐│ │
 │ │  │   Backend   │    │   Frontend   │    │ Mobile ││ │
 │ │  │             │    │              │    │        ││ │
-│ │  │ Node.js +   │←───│ React +      │    │ Expo   ││ │
+│ │  │ Node.js +   │───│ React +      │    │ Expo   ││ │
 │ │  │ Express     │    │ Vite +       │    │ Web    ││ │
 │ │  │ Port: 3000  │    │ Nginx        │    │ 19006  ││ │
 │ │  │             │    │ Port: 80     │    │        ││ │
@@ -49,9 +49,9 @@ Namespace: case
 │ │         ↓                                          │ │
 │ │  ┌──────────────────────────────────────────────┐ │ │
 │ │  │ Ingress (nginx)                              │ │ │
-│ │  │ - /api/*      → backend:3000                 │ │ │
-│ │  │ - /mobile/*   → mobile:19006                 │ │ │
-│ │  │ - /*          → frontend:80                  │ │ │
+│ │  │ - /api/*       backend:3000                 │ │ │
+│ │  │ - /mobile/*    mobile:19006                 │ │ │
+│ │  │ - /*           frontend:80                  │ │ │
 │ │  └──────────────────────────────────────────────┘ │ │
 │ └─────────────────────────────────────────────────────┘ │
 └───────────────────────────────────────────────────────────┘
@@ -163,7 +163,7 @@ kubectl logs -n case deployment/mobile -f
 ### 4. Logs no Loki (2 min)
 
 ```bash
-# Grafana → Explore → Loki
+# Grafana  Explore  Loki
 
 # Queries:
 {service="backend-localstack"}
@@ -177,8 +177,8 @@ kubectl logs -n case deployment/mobile -f
 # Abrir Prometheus
 open http://localhost:9090
 
-# Status → Targets (verificar UP)
-# Graph → Queries:
+# Status  Targets (verificar UP)
+# Graph  Queries:
 histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))
 rate(orders_created_total[5m])
 ```

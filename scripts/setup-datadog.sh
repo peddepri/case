@@ -33,7 +33,7 @@ if [ -z "$DD_API_KEY" ]; then
         rm -f .env.bak
         echo " API key configurada!"
     else
-        echo "⏭️  Pulando configuração. Edite .env manualmente."
+        echo "⏭  Pulando configuração. Edite .env manualmente."
         exit 0
     fi
 fi
@@ -44,7 +44,7 @@ docker compose down
 docker compose up -d
 
 echo ""
-echo "⏳ Aguardando Datadog Agent iniciar..."
+echo " Aguardando Datadog Agent iniciar..."
 sleep 5
 
 echo ""

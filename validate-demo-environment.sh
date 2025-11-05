@@ -10,9 +10,9 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 check() { echo -e "${BLUE}🔍 $1${NC}"; }
-success() { echo -e "${GREEN}✅ $1${NC}"; }
-fail() { echo -e "${RED}❌ $1${NC}"; }
-warn() { echo -e "${YELLOW}⚠️  $1${NC}"; }
+success() { echo -e "${GREEN} $1${NC}"; }
+fail() { echo -e "${RED} $1${NC}"; }
+warn() { echo -e "${YELLOW}  $1${NC}"; }
 
 echo ""
 echo "=========================================="
@@ -149,6 +149,6 @@ echo ""
 if [ "$ready_pods" -eq 3 ] && curl -s http://localhost:3100/ >/dev/null 2>&1; then
     echo -e "${GREEN}🎉 AMBIENTE PRONTO PARA GRAVAÇÃO! 🎉${NC}"
 else
-    echo -e "${YELLOW}⚠️  Ambiente parcialmente funcional - verifique os avisos acima${NC}"
+    echo -e "${YELLOW}  Ambiente parcialmente funcional - verifique os avisos acima${NC}"
 fi
 echo ""

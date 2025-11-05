@@ -24,28 +24,28 @@ aws ecr get-login-password --endpoint-url $AWS_ENDPOINT_URL | \
 
 # Build backend
 echo ""
-echo "🏗️  Building backend..."
+echo "🏗  Building backend..."
 docker build -t backend:latest ./app/backend
 
-echo "🏷️  Tagging backend..."
+echo "🏷  Tagging backend..."
 docker tag backend:latest \
   $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.localhost.localstack.cloud:4566/backend:latest
 
-echo "⬆️  Pushing backend to LocalStack ECR..."
+echo "⬆  Pushing backend to LocalStack ECR..."
 docker push \
   $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.localhost.localstack.cloud:4566/backend:latest \
   2>/dev/null || echo "  Push pode não funcionar totalmente (ECR mock básico)"
 
 # Build frontend
 echo ""
-echo "🏗️  Building frontend..."
+echo "🏗  Building frontend..."
 docker build -t frontend:latest ./app/frontend
 
-echo "🏷️  Tagging frontend..."
+echo "🏷  Tagging frontend..."
 docker tag frontend:latest \
   $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.localhost.localstack.cloud:4566/frontend:latest
 
-echo "⬆️  Pushing frontend to LocalStack ECR..."
+echo "⬆  Pushing frontend to LocalStack ECR..."
 docker push \
   $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.localhost.localstack.cloud:4566/frontend:latest \
   2>/dev/null || echo "  Push pode não funcionar totalmente (ECR mock básico)"

@@ -37,6 +37,6 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
 fi
 
 echo ""
-echo "✓ Ambiente limpo!"
+echo " Ambiente limpo!"
 echo ""
 echo "Para reiniciar: bash scripts/localstack-eks-trial.sh"

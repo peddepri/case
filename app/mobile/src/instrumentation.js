@@ -459,7 +459,7 @@ global.trackMobileBusiness = (type, props) => mobileInstrumentation.trackBusines
 
 console.log('📱 Mobile instrumentation ready!');
 console.log('📊 Use trackMobileEvent(action, props) for user actions');
-console.log('❌ Use trackMobileError(error, context) for error tracking');
+console.log(' Use trackMobileError(error, context) for error tracking');
 console.log('💼 Use trackMobileBusiness(type, props) for business events');
 
 export default mobileInstrumentation;

@@ -13,7 +13,7 @@ function open_file() {
     local description="$2"
     
     if [ ! -f "$file" ]; then
-        echo "❌ Erro: Arquivo não encontrado - $file"
+        echo " Erro: Arquivo não encontrado - $file"
         return 1
     fi
     
@@ -54,7 +54,7 @@ function open_file() {
 }
 
 function show_help() {
-    echo "🏗️  Script para Visualizar Diagramas de Arquitetura AWS EKS + Datadog"
+    echo "🏗  Script para Visualizar Diagramas de Arquitetura AWS EKS + Datadog"
     echo ""
     echo "📋 Uso: $0 [opção]"
     echo ""
@@ -80,7 +80,7 @@ function show_help() {
 case "${1:-all}" in
     "drawio"|"draw")
         open_file "$DRAWIO_FILE" "Diagrama Draw.io - Stencils Oficiais AWS"
-        echo "✨ Dicas para Draw.io:"
+        echo " Dicas para Draw.io:"
         echo "   • VS Code: Instale 'Draw.io Integration'"
         echo "   • Web: Acesse app.diagrams.net"
         echo "   • Exportar: File > Export as > PNG/PDF/SVG"
@@ -88,7 +88,7 @@ case "${1:-all}" in
     
     "html"|"interactive")
         open_file "$HTML_FILE" "Diagrama HTML Interativo"
-        echo "✨ Características do diagrama HTML:"
+        echo " Características do diagrama HTML:"
         echo "   • Setas animadas mostrando fluxo de dados"
         echo "   • Tooltips ao passar o mouse nos componentes"
         echo "   • Métricas de performance simuladas"
@@ -97,7 +97,7 @@ case "${1:-all}" in
     
     "mermaid"|"md")
         open_file "$MERMAID_FILE" "Documentação Mermaid - Visões Técnicas"
-        echo "✨ Conteúdo da documentação Mermaid:"
+        echo " Conteúdo da documentação Mermaid:"
         echo "   • Arquitetura geral com componentes AWS"
         echo "   • Fluxo de deploy Blue/Green"
         echo "   • Observabilidade e monitoramento"
@@ -127,13 +127,13 @@ case "${1:-all}" in
         ;;
     
     *)
-        echo "❌ Opção inválida: $1"
+        echo " Opção inválida: $1"
         echo ""
         show_help
         exit 1
         ;;
 esac
 
-echo "🏗️  Arquitetura AWS EKS + Datadog Stack"
+echo "🏗  Arquitetura AWS EKS + Datadog Stack"
 echo "📍 Ambiente: Produção (us-east-1)"
 echo "🎯 Stack: EKS Fargate + DynamoDB + Datadog APM"

@@ -70,7 +70,7 @@ docker logs case-tempo --tail 50
 
 ### 1. 4 Golden Signals - Backend API
 
-**Acesso:** Grafana → Dashboards → Case → 4 Golden Signals - Backend API
+**Acesso:** Grafana  Dashboards  Case  4 Golden Signals - Backend API
 
 **O que ver:**
 
@@ -102,7 +102,7 @@ docker logs case-tempo --tail 50
 
 ### 2. Business Metrics - Orders
 
-**Acesso:** Grafana → Dashboards → Case → Business Metrics - Orders
+**Acesso:** Grafana  Dashboards  Case  Business Metrics - Orders
 
 **O que ver:**
 
@@ -203,8 +203,8 @@ curl -s 'http://localhost:9090/api/v1/query?query=orders_failed_total' | python 
 
 1. Acesse: **http://localhost:3100**
 2. Login: `admin` / `admin` (pode pular mudanca de senha)
-3. Menu lateral esquerdo → **Dashboards** → **Browse**
-4. Pasta **Case** → 2 dashboards:
+3. Menu lateral esquerdo  **Dashboards**  **Browse**
+4. Pasta **Case**  2 dashboards:
    - **4 Golden Signals - Backend API**
    - **Business Metrics - Orders**
 
@@ -224,7 +224,7 @@ curl -s 'http://localhost:9090/api/v1/query?query=orders_failed_total' | python 
 
 ### Passo 7: Explorar Logs no Loki
 
-1. Grafana → Menu lateral → **Explore**
+1. Grafana  Menu lateral  **Explore**
 2. Datasource: **Loki**
 3. Query:
    ```logql
@@ -284,7 +284,7 @@ curl http://localhost:9090/api/v1/rules | python -m json.tool
 ### Grafana nao mostra dados
 
 1. Verificar datasources:
-   - Grafana → Configuration → Data Sources
+   - Grafana  Configuration  Data Sources
    - Testar conexao com Prometheus, Loki
 
 2. Verificar que dashboards foram provisionados:

@@ -10,9 +10,9 @@ BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-info() { echo -e "${BLUE}ℹ️  $1${NC}"; }
-success() { echo -e "${GREEN}✅ $1${NC}"; }
-warn() { echo -e "${YELLOW}⚠️  $1${NC}"; }
+info() { echo -e "${BLUE}ℹ  $1${NC}"; }
+success() { echo -e "${GREEN} $1${NC}"; }
+warn() { echo -e "${YELLOW}  $1${NC}"; }
 
 echo "🎯 DEMONSTRAÇÃO RÁPIDA DOS TESTES"
 echo "================================"
@@ -88,9 +88,9 @@ for i in {1..10}; do
     STATUS=$(curl -s -w "%{http_code}" -o /dev/null http://localhost:3001/api/orders 2>/dev/null || echo "000")
     if [ "$STATUS" = "200" ]; then
         ((SUCCESS_COUNT++))
-        echo -n "✓"
+        echo -n ""
     else
-        echo -n "✗"
+        echo -n ""
     fi
 done
 
@@ -142,9 +142,9 @@ if [ -n "$BACKEND_POD" ]; then
         STATUS=$(curl -s -w "%{http_code}" -o /dev/null --max-time 3 http://localhost:3001/api/orders 2>/dev/null || echo "000")
         if [ "$STATUS" = "200" ]; then
             ((CHAOS_SUCCESS++))
-            echo -n "✓"
+            echo -n ""
         else
-            echo -n "✗"  
+            echo -n ""  
         fi
         sleep 1
     done

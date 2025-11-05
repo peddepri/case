@@ -5,7 +5,7 @@ set -e
 
 cd "$(dirname "$0")/.."
 
-echo "🏗️  Provisionando infraestrutura no LocalStack com Terraform"
+echo "🏗  Provisionando infraestrutura no LocalStack com Terraform"
 echo ""
 
 # Verificar se LocalStack está rodando
@@ -101,7 +101,7 @@ if [[ "$APPLY" =~ ^[Ss]$ ]]; then
     echo ""
     echo " Infraestrutura provisionada no LocalStack!"
 else
-    echo "⏭️  Pulando apply"
+    echo "⏭  Pulando apply"
 fi
 
 echo ""

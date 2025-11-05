@@ -21,7 +21,7 @@
   },
   
   {
-    "name": "❌ [Golden Signal] High Error Rate - All Services",
+    "name": " [Golden Signal] High Error Rate - All Services",
     "type": "metric alert", 
     "query": "avg(last_5m):(sum:http.requests{status_code:4* OR status_code:5*}.as_rate() / sum:http.requests.as_rate()) by {service} > 0.05",
     "message": "@slack-alerts @on-call-backend\n\n**Alert**: High error rate detected\n**Service**: {{service.name}}\n**Current Error Rate**: {{value}}%\n**Threshold**: 5%\n\n**Immediate Actions**:\n1. Check recent deployments\n2. Review error logs in service dashboard\n3. Verify dependencies health\n\n**Dashboard**: [Service Overview](https://app.datadoghq.com/dashboard/service-overview)",

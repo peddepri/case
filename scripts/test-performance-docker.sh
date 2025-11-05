@@ -11,9 +11,9 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 info() { echo -e "${BLUE}ℹ  $1${NC}"; }
-success() { echo -e "${GREEN}✅ $1${NC}"; }
-warn() { echo -e "${YELLOW}⚠  $1${NC}"; }
-fail() { echo -e "${RED}❌ $1${NC}"; }
+success() { echo -e "${GREEN} $1${NC}"; }
+warn() { echo -e "${YELLOW}  $1${NC}"; }
+fail() { echo -e "${RED} $1${NC}"; }
 
 echo "🚀 TESTES DE PERFORMANCE - DOCKER/K8S"
 echo "======================================"
@@ -36,10 +36,10 @@ test_endpoint() {
     
     # Teste básico de conectividade
     if curl -s --max-time 5 "$url" > /dev/null; then
-        echo "✅ $name: Conectividade OK"
+        echo " $name: Conectividade OK"
         return 0
     else
-        echo "❌ $name: Falha na conectividade"
+        echo " $name: Falha na conectividade"
         return 1
     fi
 }
@@ -116,8 +116,8 @@ info "Usando pod: $BACKEND_POD"
 
 kubectl exec -n case $BACKEND_POD -- sh -c "
 echo '🔍 Teste interno do backend:'
-wget -q -O - http://localhost:3000/healthz > /dev/null 2>&1 && echo ' ✅ Health check: OK' || echo ' ❌ Health check: FAIL'
-wget -q -O - http://localhost:3000/api/orders > /dev/null 2>&1 && echo ' ✅ API orders: OK' || echo ' ❌ API orders: FAIL'
+wget -q -O - http://localhost:3000/healthz > /dev/null 2>&1 && echo '  Health check: OK' || echo '  Health check: FAIL'
+wget -q -O - http://localhost:3000/api/orders > /dev/null 2>&1 && echo '  API orders: OK' || echo '  API orders: FAIL'
 
 echo '📊 Teste de carga interno (20 requests):'
 success=0
@@ -126,7 +126,7 @@ for i in \$(seq 1 20); do
         success=\$((success + 1))
     fi
 done
-echo \" ✅ Sucesso: \$success/20 requests\"
+echo \"  Sucesso: \$success/20 requests\"
 "
 
 echo ""
@@ -141,16 +141,16 @@ echo '🔗 Testando conectividade entre serviços:'
 
 # Teste frontend
 if wget -q -T 3 -O /dev/null http://frontend:80 2>/dev/null; then
-    echo ' ✅ Backend -> Frontend: OK'
+    echo '  Backend -> Frontend: OK'
 else
-    echo ' ❌ Backend -> Frontend: FAIL'
+    echo '  Backend -> Frontend: FAIL'
 fi
 
 # Teste mobile  
 if nc -z mobile 19006 2>/dev/null; then
-    echo ' ✅ Backend -> Mobile: Porta acessível'
+    echo '  Backend -> Mobile: Porta acessível'
 else
-    echo ' ❌ Backend -> Mobile: Porta inacessível'
+    echo '  Backend -> Mobile: Porta inacessível'
 fi
 "
 

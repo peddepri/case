@@ -413,7 +413,7 @@ if (typeof window !== 'undefined') {
   
   console.log('🎯 Frontend instrumentation ready!');
   console.log('📊 Use window.trackEvent(name, props) for custom events');
-  console.log('❌ Use window.trackError(error, context) for manual error tracking');
+  console.log(' Use window.trackError(error, context) for manual error tracking');
   console.log('💼 Use window.trackBusiness(type, props) for business events');
 }
 

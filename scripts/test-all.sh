@@ -53,10 +53,10 @@ banner " SUITE COMPLETA DE TESTES"
 banner "=========================="
 echo ""
 echo " Plano de execução:"
-echo "   1️⃣  Testes Funcionais (API, Integração)"
-echo "   2️⃣  Testes de Performance (Load, Stress)"  
-echo "   3️⃣  Chaos Engineering (Resiliência)"
-echo "   4️⃣  Relatório Consolidado"
+echo "   1⃣  Testes Funcionais (API, Integração)"
+echo "   2⃣  Testes de Performance (Load, Stress)"  
+echo "   3⃣  Chaos Engineering (Resiliência)"
+echo "   4⃣  Relatório Consolidado"
 echo ""
 
 # Verificar pré-requisitos
@@ -190,22 +190,22 @@ cat > "$REPORT_DIR/summary.md" << EOF
 
 ## Testes Realizados
 
-### 1. Testes Funcionais ✓
+### 1. Testes Funcionais 
 - Conectividade de endpoints
 - CRUD de APIs
 - Integração com DynamoDB
 - Health checks
 
-### 2. Testes de Performance ✓  
+### 2. Testes de Performance   
 - Load testing (10 users)
 - Stress testing (50 users)
 - Spike testing (100 users)
 - Análise de latência e throughput
 
-### 3. Chaos Engineering ✓
+### 3. Chaos Engineering 
 - Kill de pods aleatórios
 - Stress de CPU e memória
-- Scaling extremo (1→5 replicas)
+- Scaling extremo (15 replicas)
 - Simulação de latência de rede
 - Análise de logs e métricas
 

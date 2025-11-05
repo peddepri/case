@@ -282,8 +282,8 @@ Services:
   - frontend (ClusterIP :80)
 
 Ingress:
-  - /api/* → backend:3000
-  - /* → frontend:80
+  - /api/*  backend:3000
+  - /*  frontend:80
 ```
 
 ### Networking
@@ -295,10 +295,10 @@ localhost:8080 (Ingress hostPort)
    ↓
 Nginx Ingress Controller (Pod)
    ↓
-   ├─ /api → backend Service → backend Pod(s)
-   └─ / → frontend Service → frontend Pod(s)
+   ├─ /api  backend Service  backend Pod(s)
+   └─ /  frontend Service  frontend Pod(s)
           
-backend Pod → host.docker.internal:4566 → LocalStack
+backend Pod  host.docker.internal:4566  LocalStack
 ```
 
 ## Variaveis de Ambiente

@@ -10,7 +10,7 @@ echo "📝 Aplicando namespace..."
 kubectl apply -f k8s/namespace.yaml
 
 # 2. Configurações básicas
-echo "⚙️ Configurando ambiente local..."
+echo "⚙ Configurando ambiente local..."
 kubectl create configmap env-config -n case \
   --from-literal=DDB_TABLE=orders \
   --from-literal=AWS_REGION=us-east-1 \
@@ -46,7 +46,7 @@ if command -v docker &> /dev/null; then
     kind load docker-image case-mobile:local --name case-local
   fi
 else
-  echo "⚠️ Docker não encontrado, usando imagens padrão"
+  echo " Docker não encontrado, usando imagens padrão"
 fi
 
 # 4. Deploy backend com imagem local
@@ -69,16 +69,16 @@ kubectl apply -f -
 
 # 7. Aplicar apenas componentes essenciais (sem HPA que pode causar problemas)
 echo "📡 Aplicando ingress..."
-kubectl apply -f k8s/ingress.yaml || echo "⚠️ Ingress falhou (normal se não tiver controller)"
+kubectl apply -f k8s/ingress.yaml || echo " Ingress falhou (normal se não tiver controller)"
 
 # 8. Aguardar deployments
-echo "⏳ Aguardando pods ficarem prontos..."
+echo " Aguardando pods ficarem prontos..."
 kubectl wait --for=condition=available deployment/backend -n case --timeout=120s || true
 kubectl wait --for=condition=available deployment/frontend -n case --timeout=120s || true  
 kubectl wait --for=condition=available deployment/mobile -n case --timeout=120s || true
 
 # 9. Status final
-echo "✅ Deploy concluído! Status:"
+echo " Deploy concluído! Status:"
 kubectl get pods -n case -o wide
 echo ""
 echo "🔍 Para acessar os serviços:"

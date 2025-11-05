@@ -19,9 +19,9 @@ echo ""
 echo -e "${BLUE}📊 1. DASHBOARDS PRINCIPAIS${NC}"
 echo "   • Grafana Login: http://localhost:3100 (admin/admin)"
 if curl -s http://localhost:3100/api/health | grep -q ok; then
-    echo -e "     ✅ Grafana respondendo"
+    echo -e "      Grafana respondendo"
 else
-    echo -e "     ❌ Grafana não responde"
+    echo -e "      Grafana não responde"
 fi
 
 echo "   • Golden Signals: http://localhost:3100/d/golden-signals"
@@ -36,9 +36,9 @@ for app in "Backend:3002" "Frontend:3003" "Mobile:3004"; do
     name=$(echo $app | cut -d: -f1)
     port=$(echo $app | cut -d: -f2)
     if curl -s http://localhost:$port/ > /dev/null 2>&1; then
-        echo -e "   ✅ $name: http://localhost:$port"
+        echo -e "    $name: http://localhost:$port"
     else
-        echo -e "   ❌ $name: http://localhost:$port (não responde)"
+        echo -e "    $name: http://localhost:$port (não responde)"
     fi
 done
 echo ""
@@ -50,12 +50,12 @@ if command -v jq >/dev/null 2>&1; then
     echo -e "   📊 Prometheus Targets UP: $TARGETS_UP"
     
     if [[ "$TARGETS_UP" -ge 3 ]]; then
-        echo -e "   ✅ Métricas sendo coletadas"
+        echo -e "    Métricas sendo coletadas"
     else
-        echo -e "   ⚠️  Poucos targets ativos ($TARGETS_UP)"
+        echo -e "     Poucos targets ativos ($TARGETS_UP)"
     fi
 else
-    echo -e "   ⚠️  jq não encontrado - verificação limitada"
+    echo -e "     jq não encontrado - verificação limitada"
 fi
 
 # Testar endpoints de métricas
@@ -63,9 +63,9 @@ for endpoint in "3002:Backend" "3003:Frontend" "3004:Mobile"; do
     port=$(echo $endpoint | cut -d: -f1)
     name=$(echo $endpoint | cut -d: -f2)
     if curl -s http://localhost:$port/metrics | head -1 | grep -q "#"; then
-        echo -e "   ✅ $name metrics: http://localhost:$port/metrics"
+        echo -e "    $name metrics: http://localhost:$port/metrics"
     else
-        echo -e "   ⚠️  $name metrics: pode estar com problema"
+        echo -e "     $name metrics: pode estar com problema"
     fi
 done
 echo ""
@@ -74,9 +74,9 @@ echo ""
 echo -e "${BLUE}🔗 4. PORT-FORWARDS${NC}"
 PF_COUNT=$(ps aux 2>/dev/null | grep -c "port-forward" 2>/dev/null || echo "0")
 if [[ "$PF_COUNT" -gt 0 ]]; then
-    echo -e "   ✅ Port-forwards ativos: $PF_COUNT"
+    echo -e "    Port-forwards ativos: $PF_COUNT"
 else
-    echo -e "   ❌ Nenhum port-forward ativo"
+    echo -e "    Nenhum port-forward ativo"
     echo -e "   💡 Execute: ./scripts/port-forward-metrics.sh &"
 fi
 echo ""
@@ -103,17 +103,17 @@ READY=true
 # Check essenciais
 if ! curl -s http://localhost:3100/api/health > /dev/null; then
     READY=false
-    echo -e "${RED}❌ Grafana não acessível${NC}"
+    echo -e "${RED} Grafana não acessível${NC}"
 fi
 
 if ! curl -s http://localhost:9090/-/healthy > /dev/null; then
     READY=false
-    echo -e "${RED}❌ Prometheus não acessível${NC}"
+    echo -e "${RED} Prometheus não acessível${NC}"
 fi
 
 if ! curl -s http://localhost:3002/healthz > /dev/null; then
     READY=false
-    echo -e "${RED}❌ Backend não acessível${NC}"
+    echo -e "${RED} Backend não acessível${NC}"
 fi
 
 if [[ "$READY" == "true" ]]; then
@@ -126,7 +126,7 @@ if [[ "$READY" == "true" ]]; then
     echo ""
     echo -e "${GREEN}⏰ Tempo estimado de gravação: 15-25 minutos${NC}"
 else
-    echo -e "${RED}⚠️  AMBIENTE NÃO ESTÁ PRONTO${NC}"
+    echo -e "${RED}  AMBIENTE NÃO ESTÁ PRONTO${NC}"
     echo ""
     echo -e "${BLUE}🔧 Para corrigir, execute:${NC}"
     echo "   ./setup-demo-environment.sh"

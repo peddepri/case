@@ -245,9 +245,9 @@ if ! echo "$EXISTING_IMAGES" | grep -q "case-mobile:latest"; then
 fi
 
 # Aguardar carregamentos completarem
-[ -n "${BACKEND_LOAD_PID:-}" ] && wait $BACKEND_LOAD_PID && info "   Backend carregado ✅"
-[ -n "${FRONTEND_LOAD_PID:-}" ] && wait $FRONTEND_LOAD_PID && info "   Frontend carregado ✅"
-[ -n "${MOBILE_LOAD_PID:-}" ] && wait $MOBILE_LOAD_PID && info "   Mobile carregado ✅"
+[ -n "${BACKEND_LOAD_PID:-}" ] && wait $BACKEND_LOAD_PID && info "   Backend carregado "
+[ -n "${FRONTEND_LOAD_PID:-}" ] && wait $FRONTEND_LOAD_PID && info "   Frontend carregado "
+[ -n "${MOBILE_LOAD_PID:-}" ] && wait $MOBILE_LOAD_PID && info "   Mobile carregado "
 
 info "Imagens disponíveis no kind!"
 
@@ -322,9 +322,9 @@ kubectl wait --for=condition=ready pod -l app=mobile -n case --timeout=120s &
 MOBILE_WAIT_PID=$!
 
 # Aguardar todos os pods
-wait $BACKEND_WAIT_PID && echo "   Backend: ✅ Pronto"
-wait $FRONTEND_WAIT_PID && echo "   Frontend: ✅ Pronto" 
-wait $MOBILE_WAIT_PID && echo "   Mobile: ✅ Pronto"
+wait $BACKEND_WAIT_PID && echo "   Backend:  Pronto"
+wait $FRONTEND_WAIT_PID && echo "   Frontend:  Pronto" 
+wait $MOBILE_WAIT_PID && echo "   Mobile:  Pronto"
 
 info "Verificando status final dos pods..."
 kubectl get pods -n case
@@ -466,7 +466,7 @@ echo "   • API: http://localhost:3001/api/orders"
 echo ""
 echo " Kubernetes (Precisa Port-Forward):"
 echo "   Para acessar via Kubernetes, execute:"
-echo "   → ./scripts/port-forward-apps.sh"
+echo "    ./scripts/port-forward-apps.sh"
 echo "   • Backend: http://localhost:8081"
 echo "   • Frontend: http://localhost:8082"
 echo "   • Mobile: http://localhost:8083"

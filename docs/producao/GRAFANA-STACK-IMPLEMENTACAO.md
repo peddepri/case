@@ -35,7 +35,7 @@ Este documento resume as atualizações realizadas para incluir a **Grafana Stac
   - Suporte para múltiplos formatos (Draw.io, HTML, Mermaid)
   - Instruções de uso integradas
 
-## 🏗️ Arquitetura Implementada
+## 🏗 Arquitetura Implementada
 
 ### 🔄 Estratégia Híbrida (Recomendada)
 

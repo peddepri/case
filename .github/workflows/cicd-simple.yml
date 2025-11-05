@@ -126,7 +126,7 @@ jobs:
           sleep 5
           echo "Running simple load test..."
           for i in {1..5}; do
-            curl -s http://localhost:8080/health && echo "✓ Request $i successful" || echo "✗ Request $i failed"
+            curl -s http://localhost:8080/health && echo " Request $i successful" || echo " Request $i failed"
             sleep 1
           done
 
@@ -139,7 +139,7 @@ jobs:
           echo "Deleting pod: $POD"
           kubectl delete pod $POD -n case
           kubectl wait --for=condition=ready pod -l app=backend -n case --timeout=60s
-          echo "✓ Pod recovery successful"
+          echo " Pod recovery successful"
 
       - name: Cleanup
         if: always()

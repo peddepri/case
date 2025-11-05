@@ -10,8 +10,8 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 info() { echo -e "${BLUE}ℹ  $1${NC}"; }
-success() { echo -e "${GREEN}✅ $1${NC}"; }
-fail() { echo -e "${RED}❌ $1${NC}"; }
+success() { echo -e "${GREEN} $1${NC}"; }
+fail() { echo -e "${RED} $1${NC}"; }
 
 echo "🚀 TESTE DE PERFORMANCE RÁPIDO"
 echo "==============================="
@@ -61,7 +61,7 @@ for i in $(seq 1 $total); do
 done
 
 success_rate=$((success * 100 / total))
-echo "✅ Resultado: $success/$total requests bem-sucedidos ($success_rate%)"
+echo " Resultado: $success/$total requests bem-sucedidos ($success_rate%)"
 '
 
 echo ""

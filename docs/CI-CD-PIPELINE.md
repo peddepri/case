@@ -26,13 +26,13 @@ Este projeto implementa uma pipeline CI/CD moderna e simplificada que suporta ta
 
 ## Problemas Resolvidos
 
-### ❌ Problemas Identificados:
-1. **ServiceMonitor API version incorreta**: `v1` → `monitoring.coreos.com/v1`
+###  Problemas Identificados:
+1. **ServiceMonitor API version incorreta**: `v1`  `monitoring.coreos.com/v1`
 2. **metrics-server-patch.yaml incompleto**: Faltavam `selector` e `labels`
 3. **Dependência desnecessária do ECR**: Localstack community não suporta ECR
 4. **Complexidade excessiva**: Pipeline muito complexa para desenvolvimento local
 
-### ✅ Soluções Implementadas:
+###  Soluções Implementadas:
 
 #### 1. **Registry Local para Kind**
 ```bash
@@ -98,7 +98,7 @@ git push origin main
 ### 2. **Deploy Manual para Produção**
 ```bash
 # Via GitHub Actions UI:
-# 1. Vá para Actions → Production Deploy
+# 1. Vá para Actions  Production Deploy
 # 2. Clique "Run workflow"
 # 3. Selecione ambiente (staging/production)
 ```
@@ -110,9 +110,9 @@ git push origin main
 ## Testes Implementados
 
 ### 🧪 **Testes Funcionais**
-- ✅ Testes unitários de backend (pytest)
-- ✅ Build do frontend (npm run build)
-- ✅ Health checks via curl
+-  Testes unitários de backend (pytest)
+-  Build do frontend (npm run build)
+-  Health checks via curl
 
 ### ⚡ **Testes de Performance (Opcional)**
 ```bash
@@ -122,7 +122,7 @@ for i in {1..5}; do
 done
 ```
 
-### 🌪️ **Chaos Engineering (Opcional)**
+### 🌪 **Chaos Engineering (Opcional)**
 ```bash
 # Ativado com ENABLE_CHAOS_TESTS=true
 # Simula falha de pod e testa recuperação
@@ -144,9 +144,9 @@ kubectl wait --for=condition=ready pod -l app=backend
 ## Boas Práticas Implementadas
 
 1. **🔄 Blue-Green Deployment**: Zero downtime em produção
-2. **🧪 Testes Graduais**: Local → Staging → Production
-3. **🛡️ Validação de Configuração**: Falha rápida se configs ausentes
-4. **🏗️ Infraestrutura como Código**: Manifests K8s versionados
+2. **🧪 Testes Graduais**: Local  Staging  Production
+3. **🛡 Validação de Configuração**: Falha rápida se configs ausentes
+4. **🏗 Infraestrutura como Código**: Manifests K8s versionados
 5. **📊 Observabilidade**: Logs, métricas e health checks
 6. **🔒 Segurança**: IRSA roles, secrets gerenciados
 7. **🚀 Simplicidade**: Pipeline minimalista mas completa

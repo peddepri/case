@@ -5,10 +5,10 @@ Este guia explica como usar o LocalStack para simular a infraestrutura AWS local
 ## O que é LocalStack?
 
 LocalStack é um emulador de serviços AWS que roda localmente, permitindo:
-- ✅ Testar infraestrutura sem custos AWS
-- ✅ Desenvolvimento offline
-- ✅ Testes de integração rápidos
-- ✅ CI/CD sem credenciais reais
+-  Testar infraestrutura sem custos AWS
+-  Desenvolvimento offline
+-  Testes de integração rápidos
+-  CI/CD sem credenciais reais
 
 ## Pré-requisitos
 
@@ -19,13 +19,13 @@ LocalStack é um emulador de serviços AWS que roda localmente, permitindo:
 ## Serviços Suportados
 
 ### Gratuitos (Community Edition)
-- DynamoDB ✓
-- S3 ✓
-- ECR (básico) ✓
-- IAM ✓
-- Secrets Manager ✓
-- CloudWatch Logs ✓
-- STS ✓
+- DynamoDB 
+- S3 
+- ECR (básico) 
+- IAM 
+- Secrets Manager 
+- CloudWatch Logs 
+- STS 
 
 ### Pro (requer licença - NÃO DISPONÍVEL na Community)
 - **EKS** - ERRO: "API for service 'eks' not yet implemented or pro feature"
@@ -287,16 +287,16 @@ Para limpar:
 
 | Recurso | LocalStack Community | LocalStack Pro | AWS Real |
 |---------|---------------------|----------------|----------|
-| DynamoDB | ✅ | ✅ | ✅ |
-| S3 | ✅ | ✅ | ✅ |
-| ECR | ⚠️ Básico | ✅ | ✅ |
-| EKS | ❌ | ✅ | ✅ |
-| IAM | ✅ | ✅ | ✅ |
-| Secrets Manager | ✅ | ✅ | ✅ |
-| CloudWatch | ⚠️ Logs only | ✅ | ✅ |
+| DynamoDB |  |  |  |
+| S3 |  |  |  |
+| ECR |  Básico |  |  |
+| EKS |  |  |  |
+| IAM |  |  |  |
+| Secrets Manager |  |  |  |
+| CloudWatch |  Logs only |  |  |
 | Custo | Grátis | ~$50/mês | Variável |
 | Latência | <10ms | <10ms | 20-100ms |
-| Offline | ✅ | ✅ | ❌ |
+| Offline |  |  |  |
 
 ## Limitações
 
@@ -376,10 +376,10 @@ docker compose -f docker-compose.localstack.yml down
 
 Depois de validar com LocalStack:
 
-1. ✅ Ambiente local funcionando
-2. ➡️ Provisionar AWS real (Seção 2 do GUIA-VALIDACAO-PRE-DEMO.md)
-3. ➡️ Deploy no EKS real
-4. ➡️ Datadog observabilidade completa
+1.  Ambiente local funcionando
+2.  Provisionar AWS real (Seção 2 do GUIA-VALIDACAO-PRE-DEMO.md)
+3.  Deploy no EKS real
+4.  Datadog observabilidade completa
 
 ## Recursos Úteis
 

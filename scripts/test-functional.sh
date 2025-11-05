@@ -238,6 +238,6 @@ if [ $SUCCESS_RATE -ge 80 ]; then
     echo -e "${GREEN}🎉 TESTES FUNCIONAIS APROVADOS!${NC}"
     exit 0
 else
-    echo -e "${RED}❌ MUITOS TESTES FALHARAM!${NC}"
+    echo -e "${RED} MUITOS TESTES FALHARAM!${NC}"
     exit 1
 fi

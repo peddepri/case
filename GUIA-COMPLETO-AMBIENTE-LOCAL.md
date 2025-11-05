@@ -53,17 +53,17 @@ kubectl get nodes
 docker compose -f docker-compose.observability.yml up -d
 
 # 2.2 - Aguardar serviços ficarem prontos (30-60 segundos)
-echo "⏳ Aguardando serviços de observabilidade..."
+echo " Aguardando serviços de observabilidade..."
 sleep 45
 
 # 2.3 - Verificar status
 docker ps | grep -E "(prometheus|grafana|loki|tempo)"
 
 # 2.4 - Testar acessos
-curl -s http://localhost:9090/-/healthy && echo "✅ Prometheus OK"
-curl -s http://localhost:3100/api/health && echo "✅ Grafana OK" 
-curl -s http://localhost:3101/ready && echo "✅ Loki OK"
-curl -s http://localhost:3102/ready && echo "✅ Tempo OK"
+curl -s http://localhost:9090/-/healthy && echo " Prometheus OK"
+curl -s http://localhost:3100/api/health && echo " Grafana OK" 
+curl -s http://localhost:3101/ready && echo " Loki OK"
+curl -s http://localhost:3102/ready && echo " Tempo OK"
 ```
 
 ### **3. Deploy das Aplicações no Kubernetes**
@@ -107,7 +107,7 @@ kubectl apply -f k8s/frontend-deployment.yaml
 kubectl apply -f k8s/mobile-deployment.yaml
 
 # 3.6 - Aguardar pods ficarem prontos
-echo "⏳ Aguardando pods ficarem Ready..."
+echo " Aguardando pods ficarem Ready..."
 kubectl wait --for=condition=Ready pods --all -n case --timeout=300s
 
 # 3.7 - Verificar status
@@ -128,9 +128,9 @@ sleep 10
 
 # 4.3 - Verificar conectividade
 echo "🧪 Testando conectividade..."
-curl -s http://localhost:3002/metrics | head -3 && echo "✅ Backend metrics OK"
-curl -s -I http://localhost:3003/ | head -1 && echo "✅ Frontend OK"
-curl -s -I http://localhost:3004/ | head -1 && echo "✅ Mobile OK"
+curl -s http://localhost:3002/metrics | head -3 && echo " Backend metrics OK"
+curl -s -I http://localhost:3003/ | head -1 && echo " Frontend OK"
+curl -s -I http://localhost:3004/ | head -1 && echo " Mobile OK"
 
 # 4.4 - Verificar targets no Prometheus
 echo "🎯 Verificando targets no Prometheus..."
@@ -166,10 +166,10 @@ for i in {1..10}; do
     sleep 0.5
 done
 
-echo -e "\n✅ Tráfego inicial gerado!"
+echo -e "\n Tráfego inicial gerado!"
 
 # 5.2 - Aguardar coleta de métricas
-echo "⏳ Aguardando coleta de métricas (60s)..."
+echo " Aguardando coleta de métricas (60s)..."
 sleep 60
 
 # 5.3 - Verificar se métricas estão sendo coletadas
@@ -229,7 +229,7 @@ kubectl get pods -n case | grep locust && {
 
 ---
 
-## ✅ Checklist de Verificação
+##  Checklist de Verificação
 
 Antes de iniciar a gravação, verificar:
 
@@ -247,8 +247,8 @@ Antes de iniciar a gravação, verificar:
 ### **Métricas**
 - [ ] Targets UP: http://localhost:9090/targets
 - [ ] Dados nos dashboards: http://localhost:3100/d/golden-signals
-- [ ] Logs visíveis: Grafana → Explore → Loki
-- [ ] Traces visíveis: Grafana → Explore → Tempo
+- [ ] Logs visíveis: Grafana  Explore  Loki
+- [ ] Traces visíveis: Grafana  Explore  Tempo
 
 ### **Performance** 
 - [ ] Load test funcionando: `bash scripts/load-test.sh`

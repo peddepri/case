@@ -63,9 +63,9 @@ test_availability() {
         
         if [ "$status_code" = "200" ]; then
             ((successful_requests++))
-            echo -n "✓"
+            echo -n ""
         else
-            echo -n "✗"
+            echo -n ""
         fi
         
         sleep $interval
@@ -289,12 +289,12 @@ test_availability "Pós-Chaos Sanity Check" 20 1
 success " CHAOS ENGINEERING CONCLUÍDO!"
 echo ""
 echo " Resumo dos testes:"
-echo "   ✓ Kill de pod aleatório"
-echo "   ✓ Stress de CPU"  
-echo "   ✓ Stress de memória"
-echo "   ✓ Scaling extremo (1→5 replicas)"
-echo "   ✓ Simulação de latência de rede"
-echo "   ✓ Análise de logs e métricas"
+echo "    Kill de pod aleatório"
+echo "    Stress de CPU"  
+echo "    Stress de memória"
+echo "    Scaling extremo (15 replicas)"
+echo "    Simulação de latência de rede"
+echo "    Análise de logs e métricas"
 echo ""
 echo " Para monitoramento contínuo:"
 echo "   • Grafana: http://localhost:3100"

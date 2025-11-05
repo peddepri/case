@@ -1,7 +1,7 @@
 #!/bin/bash
 # Script simplificado para subir LocalStack Pro + Apps + Observabilidade
 # Versão rápida sem Kubernetes para desenvolvimento local
-# Autor: Kiro AI Assistant
+# Autor: Kiro  Assistant
 # Data: 2025-10-25
 
 set -e
@@ -61,11 +61,11 @@ until curl -s http://localhost:4566/_localstack/health | grep -q '"dynamodb": "a
     echo -n "."
     sleep 2
 done
-echo " ✅"
+echo " "
 
 # ETAPA 2: Provisionar AWS
 log "2/4: Provisionando recursos AWS..."
-bash scripts/localstack-provision-simple.sh | grep -E "(✅|❌|Criando|Provisionamento)"
+bash scripts/localstack-provision-simple.sh | grep -E "(||Criando|Provisionamento)"
 
 # ETAPA 3: Observabilidade
 log "3/4: Iniciando observabilidade..."
@@ -76,14 +76,14 @@ until curl -s http://localhost:9090/-/healthy >/dev/null 2>&1; do
     echo -n "."
     sleep 2
 done
-echo " ✅"
+echo " "
 
 echo -n "Aguardando Grafana"
 until curl -s http://localhost:3100/api/health >/dev/null 2>&1; do
     echo -n "."
     sleep 2
 done
-echo " ✅"
+echo " "
 
 # ETAPA 4: Aplicações
 log "4/4: Iniciando aplicações..."
@@ -94,7 +94,7 @@ until curl -s http://localhost:3001/healthz >/dev/null 2>&1; do
     echo -n "."
     sleep 2
 done
-echo " ✅"
+echo " "
 
 # Mobile (opcional)
 read -p "Deseja iniciar o app mobile? (s/N): " START_MOBILE
@@ -112,9 +112,9 @@ ORDER=$(curl -sf -X POST http://localhost:3001/api/orders \
     -d '{"item":"startup-test","price":50}' 2>/dev/null || echo "")
 
 if [ -n "$ORDER" ]; then
-    echo "✅ Order criada com sucesso"
+    echo " Order criada com sucesso"
 else
-    echo "❌ Falha ao criar order"
+    echo " Falha ao criar order"
 fi
 
 echo ""

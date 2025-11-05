@@ -8,11 +8,11 @@
 ./setup-demo-environment.sh
 ```
 **O que acontece:**
-- ✅ Cria cluster Kind
-- ✅ Sobe Prometheus, Grafana, Loki, Tempo
-- ✅ Build e deploy de Backend, Frontend, Mobile
-- ✅ Configura port-forwards para métricas
-- ✅ Gera tráfego inicial
+-  Cria cluster Kind
+-  Sobe Prometheus, Grafana, Loki, Tempo
+-  Build e deploy de Backend, Frontend, Mobile
+-  Configura port-forwards para métricas
+-  Gera tráfego inicial
 
 ### **🔍 2. Verificação Completa do Ambiente**
 ```bash
@@ -22,32 +22,32 @@
 **Checklist esperado:**
 ```
 📋 1. Kubernetes Cluster
-  ✅ Kind cluster 'case-local' existe
-  ✅ Nodes do cluster prontos
-  ✅ Namespace 'case' existe
+   Kind cluster 'case-local' existe
+   Nodes do cluster prontos
+   Namespace 'case' existe
 
 📋 2. Aplicações (Pods)
   📊 Pods Running: 5/5
-  ✅ Backend pods rodando
-  ✅ Frontend pods rodando
-  ✅ Mobile pods rodando
+   Backend pods rodando
+   Frontend pods rodando
+   Mobile pods rodando
 
 📋 3. Stack de Observabilidade
-  ✅ Prometheus container ativo
-  ✅ Grafana container ativo
-  ✅ Loki container ativo
-  ✅ Tempo container ativo
+   Prometheus container ativo
+   Grafana container ativo
+   Loki container ativo
+   Tempo container ativo
 
 📋 4. Conectividade via Port-Forward
-  ✅ Backend acessível (3002)
-  ✅ Frontend acessível (3003)
-  ✅ Mobile acessível (3004)
+   Backend acessível (3002)
+   Frontend acessível (3003)
+   Mobile acessível (3004)
 
 📋 5. Interfaces Web
-  ✅ Prometheus UI (9090)
-  ✅ Grafana UI (3100)
-  ✅ Loki API (3101)
-  ✅ Tempo API (3102)
+   Prometheus UI (9090)
+   Grafana UI (3100)
+   Loki API (3101)
+   Tempo API (3102)
 
 📋 6. Coleta de Métricas
   🎯 Targets Prometheus: 6/6 UP
@@ -65,11 +65,11 @@
 🧪 TESTE DE COLETA DE MÉTRICAS
 
 1. Testando endpoints de métricas...
-✅ Backend metrics (/metrics) - OK
+ Backend metrics (/metrics) - OK
    📊 Métricas encontradas: 25
-✅ Frontend metrics (/metrics) - OK
+ Frontend metrics (/metrics) - OK
    📊 Métricas encontradas: 8
-✅ Mobile metrics (/metrics) - OK
+ Mobile metrics (/metrics) - OK
    📊 Métricas encontradas: 6
 
 2. Verificando coleta no Prometheus...
@@ -79,9 +79,9 @@
    📱 Mobile requests: 3
 
 🎉 TODOS OS SERVIÇOS EXPONDO MÉTRICAS (3/3)
-   ✅ Backend: Métricas Prometheus nativas
-   ✅ Frontend: Métricas simuladas via Nginx
-   ✅ Mobile: Métricas simuladas via Express
+    Backend: Métricas Prometheus nativas
+    Frontend: Métricas simuladas via Nginx
+    Mobile: Métricas simuladas via Express
 
 🎬 DASHBOARDS TERÃO DADOS! Pode iniciar gravação.
 ```
@@ -101,7 +101,7 @@
 - 🔄 Interações simuladas no Mobile
 - 📊 Métricas atualizando em tempo real
 
-### **🖥️ 2. URLs Principais para Demo**
+### **🖥 2. URLs Principais para Demo**
 
 #### **📊 Dashboards Principais (Grafana)**
 - **Login Grafana**: http://localhost:3100 
@@ -132,47 +132,47 @@
 
 #### **3.1 Overview da Arquitetura (2-3 min)**
 ```
-🏗️ "Vamos ver nossa arquitetura completa de observabilidade..."
-→ Mostrar diagrama/slides da arquitetura
-→ Explicar: Apps → Prometheus → Grafana → Dashboards
+🏗 "Vamos ver nossa arquitetura completa de observabilidade..."
+ Mostrar diagrama/slides da arquitetura
+ Explicar: Apps  Prometheus  Grafana  Dashboards
 ```
 
 #### **3.2 Aplicações Funcionando (2-3 min)**
 ```
 🚀 "Primeiro, vamos ver nossas aplicações rodando..."
-→ Backend: http://localhost:3002 (mostrar JSON da API)
-→ Frontend: http://localhost:3003 (mostrar React app)
-→ Mobile: http://localhost:3004 (mostrar Expo web app)
+ Backend: http://localhost:3002 (mostrar JSON da API)
+ Frontend: http://localhost:3003 (mostrar React app)
+ Mobile: http://localhost:3004 (mostrar Expo web app)
 ```
 
 #### **3.3 Coleta de Métricas (3-4 min)**
 ```
 📊 "Agora vamos ver como coletamos métricas..."
-→ Prometheus: http://localhost:9090/targets (mostrar targets UP)
-→ Queries: up, http_requests_total, process_cpu_user_seconds_total
-→ Mostrar métricas sendo atualizadas em tempo real
+ Prometheus: http://localhost:9090/targets (mostrar targets UP)
+ Queries: up, http_requests_total, process_cpu_user_seconds_total
+ Mostrar métricas sendo atualizadas em tempo real
 ```
 
 #### **3.4 Dashboards Principal - Golden Signals (4-5 min)**
 ```
 📈 "O coração do nosso monitoramento são os Golden Signals..."
-→ Grafana: http://localhost:3100/d/golden-signals
-→ Mostrar:
+ Grafana: http://localhost:3100/d/golden-signals
+ Mostrar:
   - Latency (percentis P50, P95, P99)
   - Traffic (requests/segundo)
   - Errors (taxa de erro)
   - Saturation (CPU, memória)
-→ Destacar dados sendo atualizados em tempo real
+ Destacar dados sendo atualizados em tempo real
 ```
 
 #### **3.5 Dashboards Específicos (3-4 min)**
 ```
 🎨 "Cada aplicação tem seu dashboard específico..."
-→ Frontend: http://localhost:3100/d/frontend-golden-signals
+ Frontend: http://localhost:3100/d/frontend-golden-signals
   - Web Vitals (FCP, LCP, CLS)
   - User interactions
   - Page load times
-→ Mobile: http://localhost:3100/d/mobile-golden-signals
+ Mobile: http://localhost:3100/d/mobile-golden-signals
   - App performance
   - User engagement
   - Error tracking
@@ -181,17 +181,17 @@
 #### **3.6 Business Metrics (2-3 min)**
 ```
 💼 "Além da parte técnica, monitoramos métricas de negócio..."
-→ Business: http://localhost:3100/d/business-metrics
-→ Orders created, revenue, user activity
-→ Correlação entre métricas técnicas e de negócio
+ Business: http://localhost:3100/d/business-metrics
+ Orders created, revenue, user activity
+ Correlação entre métricas técnicas e de negócio
 ```
 
 #### **3.7 Logs e Traces (2-3 min)**
 ```
 🔍 "Para troubleshooting, temos logs e traces distribuídos..."
-→ Logs: Grafana Explore → Loki
-→ Traces: Grafana Explore → Tempo
-→ Mostrar correlação entre métricas, logs e traces
+ Logs: Grafana Explore  Loki
+ Traces: Grafana Explore  Tempo
+ Mostrar correlação entre métricas, logs e traces
 ```
 
 ---
@@ -253,10 +253,10 @@ kubectl rollout restart deployment/mobile -n case
 
 ---
 
-## ✅ **CHECKLIST FINAL PRÉ-GRAVAÇÃO**
+##  **CHECKLIST FINAL PRÉ-GRAVAÇÃO**
 
 - [ ] `./setup-demo-environment.sh` executado com sucesso
-- [ ] `./check-demo-status.sh` mostra todos ✅
+- [ ] `./check-demo-status.sh` mostra todos 
 - [ ] `./test-metrics-collection.sh` confirma métricas funcionando
 - [ ] Grafana login funcionando (admin/admin)
 - [ ] Todos os dashboards carregando com dados
@@ -265,7 +265,7 @@ kubectl rollout restart deployment/mobile -n case
 
 ## 🎬 **RESULTADO ESPERADO**
 
-**✅ Ambiente 100% funcional com:**
+** Ambiente 100% funcional com:**
 - **3 aplicações** rodando e acessíveis
 - **4 serviços** de observabilidade ativos  
 - **6+ dashboards** com dados reais

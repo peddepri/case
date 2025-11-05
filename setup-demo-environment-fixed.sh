@@ -13,9 +13,9 @@ PURPLE='\033[0;35m'
 NC='\033[0m'
 
 info() { echo -e "${BLUE}  $1${NC}"; }
-success() { echo -e "${GREEN}✅ $1${NC}"; }
-warn() { echo -e "${YELLOW}⚠️  $1${NC}"; }
-fail() { echo -e "${RED}❌ $1${NC}"; exit 1; }
+success() { echo -e "${GREEN} $1${NC}"; }
+warn() { echo -e "${YELLOW}  $1${NC}"; }
+fail() { echo -e "${RED} $1${NC}"; exit 1; }
 step() { echo -e "${PURPLE}🔧 $1${NC}"; }
 
 echo ""

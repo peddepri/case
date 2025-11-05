@@ -7,9 +7,9 @@ Este documento descreve a implementação completa de observabilidade para front
 ## Arquitetura de Tracing
 
 ```
-Frontend (Browser) → OTLP HTTP → Tempo (4318)
+Frontend (Browser)  OTLP HTTP  Tempo (4318)
                   ↓ (traceparent header)
-Backend (Node.js) → OTLP HTTP → Tempo (4318)
+Backend (Node.js)  OTLP HTTP  Tempo (4318)
                   ↓
               Grafana (Trace Queries)
 ```
@@ -30,7 +30,7 @@ Backend (Node.js) → OTLP HTTP → Tempo (4318)
 - **W3C Trace Context Propagation:**
   - Frontend injeta automaticamente header `traceparent` em todas as chamadas fetch/XHR
   - Backend continua o trace usando o mesmo trace ID
-  - Permite correlação end-to-end: Browser → Backend → DynamoDB
+  - Permite correlação end-to-end: Browser  Backend  DynamoDB
 
 **Configuração:**
 ```typescript
@@ -243,7 +243,7 @@ curl -X POST http://localhost:3002/api/orders \
 curl http://localhost:3102/ready
 # Output: ready
 
-# Query traces via Grafana → Explore → Tempo
+# Query traces via Grafana  Explore  Tempo
 # Filtrar por: service.name="case-backend" ou "case-frontend"
 ```
 
@@ -314,7 +314,7 @@ curl http://localhost:4318/v1/traces -X POST \
 
 1. Verificar se frontend está enviando métricas:
 ```bash
-# Abrir DevTools → Network → Filter "web-vitals"
+# Abrir DevTools  Network  Filter "web-vitals"
 # Deve mostrar POSTs para /api/metrics/web-vitals
 ```
 
@@ -336,7 +336,7 @@ curl http://localhost:9090/api/v1/targets
 ```
 
 2. Verificar se queries estão corretas no dashboard:
-- Abrir dashboard → Panel → Edit
+- Abrir dashboard  Panel  Edit
 - Verificar query PromQL
 - Testar no Prometheus diretamente
 

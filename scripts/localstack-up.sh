@@ -43,7 +43,7 @@ echo "📦 Subindo containers LocalStack..."
 docker compose -f docker-compose.localstack.yml up -d
 
 echo ""
-echo "⏳ Aguardando LocalStack ficar pronto..."
+echo " Aguardando LocalStack ficar pronto..."
 until curl -s http://localhost:4566/_localstack/health | grep -q '"dynamodb": "available"'; do
     echo -n "."
     sleep 2
@@ -63,7 +63,7 @@ curl -s http://localhost:4566/_localstack/health
 echo ""
 echo "📋 Recursos disponíveis:"
 echo "   🌐 LocalStack Gateway: http://localhost:4566"
-echo "   🖥️  Backend: http://localhost:3001"
+echo "   🖥  Backend: http://localhost:3001"
 echo "   🎨 Frontend: http://localhost:5174"
 echo "   📊 Datadog Agent: localhost:8127 (APM), localhost:8126 (StatsD)"
 echo ""

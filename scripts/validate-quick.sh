@@ -11,9 +11,9 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 info() { echo -e "${BLUE}ℹ  $1${NC}"; }
-success() { echo -e "${GREEN}✅ $1${NC}"; }
-warn() { echo -e "${YELLOW}⚠  $1${NC}"; }
-fail() { echo -e "${RED}❌ $1${NC}"; }
+success() { echo -e "${GREEN} $1${NC}"; }
+warn() { echo -e "${YELLOW}  $1${NC}"; }
+fail() { echo -e "${RED} $1${NC}"; }
 
 echo ""
 echo -e "${BLUE}🔍 VALIDAÇÃO RÁPIDA DE OBSERVABILIDADE${NC}"
@@ -145,7 +145,7 @@ SCORE=$((PASSED * 100 / TOTAL))
 if [ $SCORE -ge 80 ]; then
     success "🎉 EXCELENTE! Score: $SCORE% ($PASSED/$TOTAL testes passaram)"
     echo ""
-    echo -e "${GREEN}✅ ACESSO AOS DASHBOARDS:${NC}"
+    echo -e "${GREEN} ACESSO AOS DASHBOARDS:${NC}"
     echo "   • Grafana: http://localhost:3100 (admin/admin)"
     echo "   • Prometheus: http://localhost:9090"
     echo "   • Loki: http://localhost:3101"
@@ -165,12 +165,12 @@ if [ $SCORE -ge 80 ]; then
 elif [ $SCORE -ge 60 ]; then
     warn "👍 BOM! Score: $SCORE% ($PASSED/$TOTAL testes passaram)"
     echo ""
-    echo -e "${YELLOW}⚠  Algumas melhorias são necessárias${NC}"
+    echo -e "${YELLOW}  Algumas melhorias são necessárias${NC}"
     echo "Execute: bash scripts/setup-observability-complete.sh"
 else
-    fail "⚠️  ATENÇÃO! Score: $SCORE% ($PASSED/$TOTAL testes passaram)"
+    fail "  ATENÇÃO! Score: $SCORE% ($PASSED/$TOTAL testes passaram)"
     echo ""
-    echo -e "${RED}❌ Problemas detectados - revisar configuração${NC}"
+    echo -e "${RED} Problemas detectados - revisar configuração${NC}"
     echo "Execute: bash scripts/setup-observability-complete.sh"
 fi
 

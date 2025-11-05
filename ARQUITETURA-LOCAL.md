@@ -13,13 +13,13 @@ Este projeto usa uma combinação de ferramentas para simular a infraestrutura A
 │  │   LocalStack     │     │   kind (K8s local)  │  │
 │  │  (AWS Services)  │     │   Cluster K8s real  │  │
 │  │                  │     │                     │  │
-│  │ ✓ DynamoDB       │     │ ✓ Backend pods      │  │
-│  │ ✓ S3             │     │ ✓ Frontend pods     │  │
-│  │ ✓ IAM            │     │ ✓ Mobile pods       │  │
-│  │ ✓ Secrets Mgr    │     │ ✓ Services          │  │
-│  │ ✓ CloudWatch     │     │ ✓ Ingress           │  │
-│  │                  │     │ ✓ ConfigMaps        │  │
-│  │ ✗ EKS (Pro)      │     │ ✓ Namespaces        │  │
+│  │  DynamoDB       │     │  Backend pods      │  │
+│  │  S3             │     │  Frontend pods     │  │
+│  │  IAM            │     │  Mobile pods       │  │
+│  │  Secrets Mgr    │     │  Services          │  │
+│  │  CloudWatch     │     │  Ingress           │  │
+│  │                  │     │  ConfigMaps        │  │
+│  │  EKS (Pro)      │     │  Namespaces        │  │
 │  └──────────────────┘     └─────────────────────┘  │
 │         :4566                   via kubectl         │
 └─────────────────────────────────────────────────────┘
@@ -27,9 +27,9 @@ Este projeto usa uma combinação de ferramentas para simular a infraestrutura A
 ┌─────────────────────────────────────────────────────┐
 │          Observabilidade (Docker Compose)            │
 │                                                      │
-│  Prometheus → Grafana → Dashboards                  │
-│  Loki → Logs                                        │
-│  Tempo → Traces                                     │
+│  Prometheus  Grafana  Dashboards                  │
+│  Loki  Logs                                        │
+│  Tempo  Traces                                     │
 │  Datadog Agent (opcional)                           │
 └─────────────────────────────────────────────────────┘
 ```
@@ -284,7 +284,7 @@ kubectl get configmap -n case backend-config -o yaml
 
 ## Resumo
 
-✓ **LocalStack** = Serviços AWS (DynamoDB, S3, IAM, etc.) - SEM EKS  
-✓ **kind** = Cluster Kubernetes local - SUBSTITUI EKS  
-✓ **Docker Compose** = Observabilidade (Prometheus, Grafana, Loki)  
-✓ **AWS Real** = Produção via Terraform (EKS Fargate, DynamoDB real)  
+ **LocalStack** = Serviços AWS (DynamoDB, S3, IAM, etc.) - SEM EKS  
+ **kind** = Cluster Kubernetes local - SUBSTITUI EKS  
+ **Docker Compose** = Observabilidade (Prometheus, Grafana, Loki)  
+ **AWS Real** = Produção via Terraform (EKS Fargate, DynamoDB real)  

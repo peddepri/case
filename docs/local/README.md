@@ -71,19 +71,19 @@ Baseado no Grafana ecosystem para observabilidade completa:
 
 ### Tráfego HTTP
 ```
-Developer → Ingress (:8080) → Services → Pods
+Developer  Ingress (:8080)  Services  Pods
 ```
 
-### Dados (Backend → AWS)
+### Dados (Backend  AWS)
 ```
-Backend Pod → AWS SDK → host.docker.internal:4566 → LocalStack DynamoDB
+Backend Pod  AWS SDK  host.docker.internal:4566  LocalStack DynamoDB
 ```
 
 ### Observabilidade
 ```
-Backend Pod → /metrics → Prometheus → Grafana (dashboards)
-Backend Pod → OTLP → Tempo → Grafana (traces)
-Containers → logs → Promtail → Loki → Grafana (logs)
+Backend Pod  /metrics  Prometheus  Grafana (dashboards)
+Backend Pod  OTLP  Tempo  Grafana (traces)
+Containers  logs  Promtail  Loki  Grafana (logs)
 ```
 
 ## Como Executar
