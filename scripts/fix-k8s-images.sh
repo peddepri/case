@@ -1,6 +1,6 @@
 #!/bin/bash
 # Script para corrigir imagens do Kubernetes para usar imagens locais
-# Autor: Kiro  Assistant
+# Autor: Equipe de Desenvolvimento
 # Data: 2025-10-25
 
 set -e

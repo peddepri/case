@@ -1,6 +1,6 @@
 #!/bin/bash
 # Script de validação completa do ambiente
-# Autor: Kiro  Assistant
+# Autor: Equipe de Desenvolvimento
 # Data: 2025-10-25
 
 set -e

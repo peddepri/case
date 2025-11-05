@@ -13,10 +13,10 @@ initTracing();
 initWebVitals();
 
 // Initialize metrics collection
-console.log('📊 Frontend metrics initialized');
+console.log('Frontend metrics initialized');
 
 // Initialize Frontend Observability
-console.log('🚀 Frontend starting with complete observability...');
+console.log('Frontend starting with complete observability...');
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

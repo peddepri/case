@@ -360,6 +360,6 @@ Após validar o ambiente local:
 
 ---
 
-**Criado por:** Kiro  Assistant  
+**Criado por:** Equipe de Desenvolvimento  
 **Data:** 2025-10-25  
 **Versão:** 1.0

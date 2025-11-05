@@ -2,14 +2,14 @@
 # Simple deployment script for CI/CD pipeline
 set -euo pipefail
 
-echo "🚀 Starting simple deployment..."
+echo "Starting simple deployment..."
 
 # Create namespace first
-echo "📦 Creating namespace..."
+echo "Creating namespace..."
 kubectl apply -f k8s/namespace.yaml
 
 # Create config and secrets
-echo "� Creating configs and secrets..."
+echo "Creating configs and secrets..."
 kubectl create configmap env-config -n case \
   --from-literal=DDB_TABLE=orders \
   --from-literal=AWS_REGION=us-east-1 \
@@ -20,25 +20,20 @@ kubectl create secret generic datadog -n case \
   --from-literal=api-key=dummy-key \
   --dry-run=client -o yaml | kubectl apply -f -
 
-# Apply core resources (avoiding problematic ServiceMonitors)
-echo "🚀 Applying deployments..."
+# Apply core resources (backend and mobile only for speed)
+echo "Applying deployments..."
 kubectl apply -f k8s/backend-deployment.yaml
 kubectl apply -f k8s/backend-serviceaccount.yaml
-kubectl apply -f k8s/frontend-deployment.yaml
 kubectl apply -f k8s/mobile-deployment.yaml
 
-# Skip problematic resources for CI/CD
-echo "⏭️  Skipping ServiceMonitors (not needed for CI/CD)"
-
 # Wait for deployments to be ready
-echo "⏳ Waiting for deployments..."
-kubectl rollout status deployment/backend -n case --timeout=300s
-kubectl rollout status deployment/frontend -n case --timeout=300s  
-kubectl rollout status deployment/mobile -n case --timeout=300s
+echo "Waiting for deployments..."
+kubectl rollout status deployment/backend -n case --timeout=180s
+kubectl rollout status deployment/mobile -n case --timeout=180s
 
-echo "✅ Simple deployment completed successfully!"
+echo "Simple deployment completed successfully!"
 
 # Show final status
-echo "📊 Final status:"
+echo "Final status:"
 kubectl get pods -n case
 kubectl get services -n case

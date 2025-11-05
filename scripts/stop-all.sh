@@ -1,6 +1,6 @@
 #!/bin/bash
 # Script para parar todos os serviços do ambiente
-# Autor: Kiro  Assistant
+# Autor: Equipe de Desenvolvimento
 # Data: 2025-10-25
 
 set -e

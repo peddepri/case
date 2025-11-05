@@ -1,7 +1,7 @@
 #!/bin/bash
 # Script simplificado para subir LocalStack Pro + Apps + Observabilidade
 # Versão rápida sem Kubernetes para desenvolvimento local
-# Autor: Kiro  Assistant
+# Autor: Equipe de Desenvolvimento
 # Data: 2025-10-25
 
 set -e

@@ -101,7 +101,7 @@ app.get('*', (req, res) => {
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`📱 Mobile app with metrics running on port ${PORT}`);
-  console.log(`📊 Metrics available at: http://localhost:${PORT}/metrics`);
+  console.log(`Metrics available at: http://localhost:${PORT}/metrics`);
 });
 
 module.exports = app;

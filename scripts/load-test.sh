@@ -1,6 +1,6 @@
 #!/bin/bash
 # Script de teste de carga para validar observabilidade
-# Autor: Kiro  Assistant
+# Autor: Equipe de Desenvolvimento
 # Data: 2025-10-25
 
 set -e

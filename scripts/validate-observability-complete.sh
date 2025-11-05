@@ -271,7 +271,7 @@ for result in "${VALIDATION_RESULTS[@]}"; do
         "PASS") success " $test_name $([ -n "$details" ] && echo "- $details")" ;;
         "FAIL") fail " $test_name $([ -n "$details" ] && echo "- $details")" ;;
         "WARN") warn "  $test_name $([ -n "$details" ] && echo "- $details")" ;;
-        "SKIP") info "⏭  $test_name $([ -n "$details" ] && echo "- $details")" ;;
+        "SKIP") info "  $test_name $([ -n "$details" ] && echo "- $details")" ;;
     esac
 done
 

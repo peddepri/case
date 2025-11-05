@@ -33,7 +33,7 @@ if [ -z "$DD_API_KEY" ]; then
         rm -f .env.bak
         echo " API key configurada!"
     else
-        echo "⏭  Pulando configuração. Edite .env manualmente."
+        echo "  Pulando configuração. Edite .env manualmente."
         exit 0
     fi
 fi

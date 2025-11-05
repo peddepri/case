@@ -101,7 +101,7 @@ if [[ "$APPLY" =~ ^[Ss]$ ]]; then
     echo ""
     echo " Infraestrutura provisionada no LocalStack!"
 else
-    echo "⏭  Pulando apply"
+    echo "  Pulando apply"
 fi
 
 echo ""
