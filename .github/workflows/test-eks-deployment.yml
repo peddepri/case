@@ -47,7 +47,7 @@ jobs:
           aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.CLUSTER_NAME }}
 
       - name: Test cluster connectivity
-        if: inputs.test_type == 'connectivity-test' || inputs.test_type == 'full-validation'
+        if: github.event_name == 'workflow_dispatch' && (inputs.test_type == 'connectivity-test' || inputs.test_type == 'full-validation')
         run: |
           echo "=== Cluster Connectivity Test ==="
           
@@ -64,7 +64,7 @@ jobs:
           kubectl get namespaces
 
       - name: Test application health
-        if: inputs.test_type == 'application-health' || inputs.test_type == 'full-validation'
+        if: github.event_name == 'workflow_dispatch' && (inputs.test_type == 'application-health' || inputs.test_type == 'full-validation')
         run: |
           echo "=== Application Health Test ==="
           
@@ -87,7 +87,7 @@ jobs:
           kubectl get services -n ${{ env.NAMESPACE }} || echo "No services found"
 
       - name: Validate application endpoints
-        if: inputs.test_type == 'full-validation'
+        if: github.event_name == 'workflow_dispatch' && inputs.test_type == 'full-validation'
         run: |
           echo "=== Application Endpoints Validation ==="
           
@@ -122,7 +122,7 @@ jobs:
         run: |
           echo "=== Test Report ===" > test-report.txt
           echo "Timestamp: $(date)" >> test-report.txt
-          echo "Test Type: ${{ inputs.test_type }}" >> test-report.txt
+          echo "Test Type: ${{ github.event_name == 'workflow_dispatch' && inputs.test_type || 'manual' }}" >> test-report.txt
           echo "Cluster: ${{ env.CLUSTER_NAME }}" >> test-report.txt
           echo "Region: ${{ env.AWS_REGION }}" >> test-report.txt
           echo "Namespace: ${{ env.NAMESPACE }}" >> test-report.txt

@@ -33,13 +33,16 @@ env:
 jobs:
   # Job 1: Provisionar infraestrutura com Terraform
   provision-infrastructure:
+    # Evita avaliar inputs/head_commit quando inexistentes
     if: |
       (github.event_name == 'workflow_dispatch' && inputs.action == 'provision-and-deploy') ||
-      (github.event_name == 'push' && contains(github.event.head_commit.modified, 'domains/infra/'))
+      (github.event_name == 'push' && contains(join(github.event.head_commit.modified || fromJson('[]'), ' '), 'domains/infra/'))
     runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
+    # Define environment protegida de forma segura: usa input apenas quando for workflow_dispatch
+    environment: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'dev' }}
     outputs:
       cluster-name: ${{ steps.terraform.outputs.cluster-name }}
       ecr-registry: ${{ steps.terraform.outputs.ecr-registry }}
@@ -90,7 +93,12 @@ jobs:
   # Job 2: Build e Push das imagens Docker
   build-images:
     needs: provision-infrastructure
-    if: always() && (needs.provision-infrastructure.result == 'success' || github.event.inputs.action == 'deploy-only')
+    # Evita acessar github.event.inputs quando não existir
+    if: |
+      always() && (
+        needs.provision-infrastructure.result == 'success' ||
+        (github.event_name == 'workflow_dispatch' && inputs.action == 'deploy-only')
+      )
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -354,10 +362,11 @@ jobs:
   # Job 5: Cleanup on failure or destroy
   cleanup:
     needs: [provision-infrastructure, build-images, deploy-applications, validate-deployment]
+    # Protege acesso aos inputs apenas quando workflow_dispatch
     if: |
       always() && (
-        (github.event.inputs.action == 'destroy') ||
-        (failure() && github.event.inputs.action == 'provision-and-deploy')
+        (github.event_name == 'workflow_dispatch' && inputs.action == 'destroy') ||
+        (failure() && github.event_name == 'workflow_dispatch' && inputs.action == 'provision-and-deploy')
       )
     runs-on: ubuntu-latest
     permissions:
@@ -386,7 +395,7 @@ jobs:
         run: terraform init
 
       - name: Terraform Destroy
-        if: github.event.inputs.action == 'destroy'
+        if: github.event_name == 'workflow_dispatch' && inputs.action == 'destroy'
         working-directory: domains/infra/terraform/environments/dev
         run: |
           terraform destroy -auto-approve \
