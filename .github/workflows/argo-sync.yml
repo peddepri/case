@@ -24,6 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment || 'dev' }}
     permissions:
+      id-token: write
       contents: read
     
     steps:
@@ -34,11 +35,12 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-          aws-region: us-east-1
+          aws-region: us-east-2
+          audience: sts.amazonaws.com
 
       - name: Update kubeconfig
         run: |
-          aws eks update-kubeconfig --name ${{ vars.EKS_CLUSTER_NAME }} --region us-east-1
+          aws eks update-kubeconfig --name ${{ vars.EKS_CLUSTER_NAME }} --region us-east-2
 
       - name: Install Argo CD CLI
         run: |
