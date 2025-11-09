@@ -1,0 +1,118 @@
+name: Provision GitHub OIDC Role
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Action to perform"
+        required: true
+        type: choice
+        options:
+          - deploy
+          - delete
+        default: deploy
+
+env:
+  AWS_REGION: us-east-2
+  STACK_NAME: github-actions-oidc
+
+jobs:
+  provision-oidc-role:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (using existing role or keys)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          # Use existing role if available, otherwise configure with keys
+          role-to-assume: ${{ secrets.AWS_DEPLOYMENT_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          # Fallback to access keys if OIDC not set up yet
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Deploy CloudFormation Stack
+        if: inputs.action == 'deploy'
+        run: |
+          aws cloudformation deploy \
+            --stack-name "${{ env.STACK_NAME }}" \
+            --template-file create-github-oidc-role.yml \
+            --capabilities CAPABILITY_NAMED_IAM \
+            --parameter-overrides \
+              RepoOwner=peddepri \
+              RepoName=case \
+              RoleName=GitHubActionsRole \
+              AWSRegion=${{ env.AWS_REGION }} \
+            --tags \
+              Project=case \
+              Environment=all \
+              ManagedBy=GitHubActions
+
+      - name: Get Role ARN
+        if: inputs.action == 'deploy'
+        id: role-info
+        run: |
+          ROLE_ARN=$(aws cloudformation describe-stacks \
+            --stack-name "${{ env.STACK_NAME }}" \
+            --query 'Stacks[0].Outputs[?OutputKey==`RoleArn`].OutputValue' \
+            --output text)
+          
+          echo "role-arn=$ROLE_ARN" >> $GITHUB_OUTPUT
+          echo ""
+          echo "=============================================="
+          echo "   SETUP COMPLETO!"
+          echo "=============================================="
+          echo ""
+          echo "Configure este secret no GitHub:"
+          echo "AWS_ROLE_TO_ASSUME: $ROLE_ARN"
+          echo ""
+          echo "URL para configurar secrets:"
+          echo "https://github.com/peddepri/case/settings/secrets/actions"
+          echo ""
+
+      - name: Delete CloudFormation Stack
+        if: inputs.action == 'delete'
+        run: |
+          aws cloudformation delete-stack --stack-name "${{ env.STACK_NAME }}"
+          echo "Stack deletion initiated. Check AWS Console for progress."
+
+      - name: Validate Role (if deployed)
+        if: inputs.action == 'deploy'
+        run: |
+          echo "Testando role criado..."
+          aws sts get-caller-identity
+          
+          # Verificar se role existe
+          aws iam get-role --role-name GitHubActionsRole --query 'Role.RoleName' --output text
+          echo "Role validation successful!"
+
+  output-instructions:
+    needs: provision-oidc-role
+    if: always() && inputs.action == 'deploy'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show setup instructions
+        run: |
+          echo "## Próximos Passos"
+          echo ""
+          echo "1. **Configure o Secret no GitHub:**"
+          echo "   - Vá para: https://github.com/peddepri/case/settings/secrets/actions"
+          echo "   - Clique em 'New repository secret'"
+          echo "   - Nome: \`AWS_ROLE_TO_ASSUME\`"
+          echo "   - Valor: ARN do role (veja output acima)"
+          echo ""
+          echo "2. **Teste a pipeline:**"
+          echo "   - Execute: 'Build & Push Images' workflow"
+          echo "   - Escolha service: 'all'"
+          echo ""
+          echo "3. **Pipeline completa:**"
+          echo "   - Execute: 'Complete EKS Deployment Pipeline'"
+          echo "   - Escolha action: 'provision-and-deploy'"
+          echo ""
+          echo "**O OIDC está configurado e pronto para uso!**"
