@@ -1,0 +1,98 @@
+name: Build & Push Images
+
+on:
+  workflow_dispatch:
+    inputs:
+      service:
+        description: "Service to build"
+        required: true
+        type: choice
+        options:
+          - backend
+          - frontend
+          - all
+  push:
+    branches: [main]
+    paths:
+      - 'domains/apps/**'
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  build-backend:
+    if: |
+      (github.event_name == 'workflow_dispatch' && (inputs.service == 'backend' || inputs.service == 'all')) ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push backend
+        uses: docker/build-push-action@v5
+        with:
+          context: domains/apps/backend
+          push: true
+          tags: |
+            ${{ steps.ecr.outputs.registry }}/backend:${{ github.sha }}
+            ${{ steps.ecr.outputs.registry }}/backend:latest
+
+  build-frontend:
+    if: |
+      (github.event_name == 'workflow_dispatch' && (inputs.service == 'frontend' || inputs.service == 'all')) ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: domains/apps/frontend
+          push: true
+          build-args: |
+            VITE_BACKEND_URL=/api
+          tags: |
+            ${{ steps.ecr.outputs.registry }}/frontend:${{ github.sha }}
+            ${{ steps.ecr.outputs.registry }}/frontend:latest
+
+  output-images:
+    needs: [build-backend, build-frontend]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Output image info
+        run: |
+          echo "Backend image: backend:${{ github.sha }}"
+          echo "Frontend image: frontend:${{ github.sha }}"
+          echo "Images pushed to ECR successfully"

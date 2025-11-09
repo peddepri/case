@@ -1,7 +1,0 @@
-Method,Name,Error,Occurrences
-GET,/api/orders,CatchResponseError('Got status 0'),7
-POST,/api/orders,CatchResponseError('Got status 500'),1
-GET,/healthz,CatchResponseError('Health check failed: 0'),1
-GET,/api/orders,CatchResponseError('Got 0'),31
-POST,/api/orders,CatchResponseError('Got status 0'),2
-GET,/healthz,CatchResponseError('Got 0'),33

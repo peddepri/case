@@ -1,15 +1,15 @@
-# Case: Aplicação Cloud-Native na AWS (EKS Fargate) com Datadog, DynamoDB e CI/CD Blue/Green
+# Case: Aplicação Cloud-Native na AWS com EKS Fargate + Argo CD + Observabilidade
 
-Este repositório entrega uma solução ponta a ponta, observável e com custos sob controle, totalmente em contêineres e pronta para AWS:
-- Frontend (React + Vite), Mobile (Expo/React Native – modo web no Docker opcional)
-- Backend (Node.js + TypeScript, Express)
-- Persistência: DynamoDB (serverless, PAY_PER_REQUEST)
-- IaC (Infrastructure as Code): Terraform (VPC, EKS com Fargate, ECR, IRSA, DynamoDB, Datadog Cluster Agent)
-- Kubernetes: Deployments, Services, Ingress, ConfigMap, ServiceAccount com IRSA e rótulos Blue/Green
-- CI/CD: GitHub Actions para build/push de imagens e deploy Blue/Green em EKS
-- Observabilidade: Datadog (APM agentless no EKS, logs via CloudWatch, métricas de cluster via Cluster Agent), dashboards e monitores prontos
-- Qualidade: Testes unitários, teste de integração com WireMock (Testcontainers), scripts de carga e caos
-- Governança: Recomendações de FinOps e segurança (least privilege, tags, HPA, IRSA)
+Solução completa de aplicação cloud-native na AWS com arquitetura moderna e GitOps:
+
+## Arquitetura
+- **Infraestrutura**: Terraform modular (VPC, EKS Fargate, IRSA, ALB Controller)
+- **Deploy**: Argo CD com App of Apps pattern
+- **Aplicações**: Backend/Frontend/Mobile containerizadas
+- **Observabilidade**: Datadog + Grafana Stack (Prometheus/Loki/Tempo) + OpenTelemetry
+- **Ingress**: AWS Load Balancer Controller (ALB)
+- **Persistência**: DynamoDB serverless
+- **CI/CD**: GitHub Actions + GitOps via Argo CD
 
 ## Pré-requisitos
 - Docker & Docker Compose

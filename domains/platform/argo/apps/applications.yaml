@@ -1,0 +1,52 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: backend-app
+  namespace: argocd
+  labels:
+    app.kubernetes.io/instance: case
+spec:
+  project: default
+  
+  source:
+    repoURL: https://github.com/peddepri/case
+    targetRevision: HEAD
+    path: domains/platform/manifests
+    
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: case
+  
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform-services
+  namespace: argocd
+  labels:
+    app.kubernetes.io/instance: case
+spec:
+  project: default
+  
+  source:
+    repoURL: https://github.com/peddepri/case
+    targetRevision: HEAD
+    path: domains/platform/services
+    
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: case
+  
+  syncPolicy:
+    automated:
+      prune: false  # Manual sync for platform services
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

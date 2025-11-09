@@ -1,0 +1,28 @@
+loki:
+  auth_enabled: false
+  commonConfig:
+    replication_factor: 1
+  storage:
+    type: 'filesystem'
+    
+write:
+  replicas: 1
+  persistence:
+    size: 10Gi
+    
+read:
+  replicas: 1
+  
+backend:
+  replicas: 1
+  persistence:
+    size: 10Gi
+
+# Gateway
+gateway:
+  enabled: true
+  replicas: 1
+
+# Monitoring
+monitoring:
+  enabled: false

@@ -1,8 +1,0 @@
-{
-  "title": "Business Metrics - Orders",
-  "description": "KPIs from DogStatsD",
-  "widgets": [
-    { "definition": { "type": "timeseries", "title": "Orders Created", "requests": [{ "q": "sum:orders.created{*}.rollup(sum)" }] } },
-    { "definition": { "type": "timeseries", "title": "Orders Failed", "requests": [{ "q": "sum:orders.failed{*}.rollup(sum)" }] } }
-  ]
-}

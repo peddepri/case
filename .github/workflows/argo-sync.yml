@@ -1,0 +1,82 @@
+name: Argo CD Sync
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to sync"
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+      app_name:
+        description: "App to sync (leave empty for all apps)"
+        required: false
+        type: string
+  push:
+    branches: [main]
+    paths:
+      - 'domains/platform/**'
+
+jobs:
+  sync-argocd:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || 'dev' }}
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: us-east-1
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --name ${{ vars.EKS_CLUSTER_NAME }} --region us-east-1
+
+      - name: Install Argo CD CLI
+        run: |
+          curl -sSL -o argocd-linux-amd64 https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+          sudo install -m 555 argocd-linux-amd64 /usr/local/bin/argocd
+
+      - name: Apply Argo CD manifests
+        run: |
+          kubectl apply -f domains/platform/argo/
+
+      - name: Wait for Argo CD
+        run: |
+          kubectl wait --for=condition=available --timeout=300s deployment/argocd-server -n argocd || true
+
+      - name: Get Argo CD admin password
+        id: argocd-password
+        run: |
+          PASSWORD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
+          echo "::add-mask::$PASSWORD"
+          echo "password=$PASSWORD" >> $GITHUB_OUTPUT
+
+      - name: Login to Argo CD
+        run: |
+          kubectl port-forward svc/argocd-server -n argocd 8080:443 &
+          sleep 10
+          argocd login localhost:8080 --username admin --password ${{ steps.argocd-password.outputs.password }} --insecure
+
+      - name: Sync specific app
+        if: inputs.app_name != ''
+        run: |
+          argocd app sync ${{ inputs.app_name }} --grpc-web
+
+      - name: Sync all apps
+        if: inputs.app_name == ''
+        run: |
+          argocd app sync -l app.kubernetes.io/instance=case --grpc-web
+
+      - name: Check app health
+        run: |
+          argocd app list --grpc-web
+          argocd app wait case-apps --health --timeout 300 --grpc-web || true
