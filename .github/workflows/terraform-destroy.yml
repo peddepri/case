@@ -37,19 +37,19 @@ jobs:
       - name: Validate destroy confirmation
         run: |
           if [ "${{ github.event.inputs.confirm_destroy }}" != "DESTROY" ]; then
-            echo "❌ Destroy confirmation failed. You must type 'DESTROY' exactly."
+            echo "Destroy confirmation failed. You must type 'DESTROY' exactly."
             exit 1
           fi
-          echo "✅ Destroy confirmation validated"
+          echo "Destroy confirmation validated"
 
       - name: Display destruction plan
         run: |
-          echo "🚨 DESTRUCTION PLAN:"
+          echo "DESTRUCTION PLAN:"
           echo "Environment: ${{ github.event.inputs.environment }}"
           echo "Scope: ${{ github.event.inputs.destroy_scope }}"
           echo "Region: ${{ env.AWS_REGION }}"
           echo ""
-          echo "⚠️  This will permanently delete AWS resources and cannot be undone!"
+          echo "WARNING: This will permanently delete AWS resources and cannot be undone!"
 
   destroy-infrastructure:
     if: |
@@ -93,7 +93,7 @@ jobs:
         run: |
           echo "🚨 Starting infrastructure destruction..."
           terraform destroy -auto-approve -input=false
-          echo "✅ Infrastructure destruction completed"
+          echo " Infrastructure destruction completed"
 
       - name: Verify resource cleanup
         run: |
@@ -153,7 +153,7 @@ jobs:
         run: |
           echo "🚨 Starting OIDC resources destruction..."
           terraform destroy -auto-approve -input=false
-          echo "✅ OIDC destruction completed"
+          echo " OIDC destruction completed"
 
       - name: Verify OIDC cleanup
         run: |
@@ -161,7 +161,7 @@ jobs:
           
           # Check IAM role
           echo "Checking GitHubActionsRole:"
-          aws iam get-role --role-name GitHubActionsRole 2>/dev/null && echo "⚠️ Role still exists" || echo "✅ Role deleted"
+          aws iam get-role --role-name GitHubActionsRole 2>/dev/null && echo " Role still exists" || echo " Role deleted"
           
           # Check OIDC provider
           echo "Checking OIDC provider:"
@@ -194,7 +194,7 @@ jobs:
           find . -name ".terraform" -type d -exec rm -rf {} + 2>/dev/null || true
           find . -name ".terraform.lock.hcl" -type f -delete
           
-          echo "✅ Local state cleanup completed"
+          echo " Local state cleanup completed"
 
       - name: Cleanup S3 state backend (if exists)
         run: |
@@ -205,7 +205,7 @@ jobs:
           
           # If state buckets exist, list them for manual cleanup
           for bucket in $(aws s3 ls | grep "terraform-state-case" | awk '{print $3}' || true); do
-            echo "⚠️  Found state bucket: $bucket"
+            echo "  Found state bucket: $bucket"
             echo "   Objects in bucket:"
             aws s3 ls s3://$bucket --recursive || true
             echo "   To delete: aws s3 rb s3://$bucket --force"
@@ -240,7 +240,7 @@ jobs:
           fi
           
           echo ""
-          echo "⚠️  IMPORTANT REMINDERS:"
+          echo "  IMPORTANT REMINDERS:"
           echo "- Verify AWS console for any remaining resources"
           echo "- Check AWS billing for unexpected charges"
           echo "- Remove any manual resources not managed by Terraform"

@@ -14,7 +14,7 @@ NC='\033[0m' # No Color
 AWS_REGION="us-east-2"
 CONFIRMATION_WORD="DESTROY"
 
-echo -e "${RED}⚠️  TERRAFORM DESTROY - AWS RESOURCE CLEANUP${NC}"
+echo -e "${RED}TERRAFORM DESTROY - AWS RESOURCE CLEANUP${NC}"
 echo "=============================================="
 echo ""
 echo "Este script irá DESTRUIR PERMANENTEMENTE todos os recursos AWS provisionados."
@@ -34,12 +34,12 @@ echo -e "${RED}Para continuar, digite exatamente: ${CONFIRMATION_WORD}${NC}"
 read -p "Confirmação: " user_input
 
 if [ "$user_input" != "$CONFIRMATION_WORD" ]; then
-    echo "❌ Confirmação falhou. Saindo..."
+    echo "Confirmação falhou. Saindo..."
     exit 1
 fi
 
 echo ""
-echo -e "${GREEN}✅ Confirmação aceita. Iniciando destruição...${NC}"
+echo -e "${GREEN}Confirmação aceita. Iniciando destruição...${NC}"
 echo ""
 
 # Função para executar terraform destroy com logs
@@ -47,11 +47,11 @@ destroy_terraform() {
     local dir=$1
     local description=$2
     
-    echo -e "${YELLOW}🚨 Destruindo: $description${NC}"
+    echo -e "${YELLOW}Destruindo: $description${NC}"
     echo "Diretório: $dir"
     
     if [ ! -d "$dir" ]; then
-        echo "⚠️ Diretório não encontrado: $dir"
+        echo " Diretório não encontrado: $dir"
         return 0
     fi
     
@@ -59,7 +59,7 @@ destroy_terraform() {
     
     # Verificar se há state file
     if [ ! -f "terraform.tfstate" ] && [ ! -f ".terraform/terraform.tfstate" ]; then
-        echo "ℹ️ Nenhum state file encontrado em $dir"
+        echo " Nenhum state file encontrado em $dir"
         cd - > /dev/null
         return 0
     fi
@@ -82,7 +82,7 @@ destroy_terraform() {
     echo "💥 Executando terraform destroy..."
     terraform destroy -auto-approve -input=false
     
-    echo -e "${GREEN}✅ $description destruído com sucesso${NC}"
+    echo -e "${GREEN} $description destruído com sucesso${NC}"
     cd - > /dev/null
     echo ""
 }
@@ -122,16 +122,16 @@ aws ec2 describe-security-groups --region $AWS_REGION --filters "Name=tag:Projec
 
 # 4. Opção para limpar ECR repositories
 echo ""
-echo -e "${YELLOW}🗂️ Limpeza de ECR Repositories${NC}"
+echo -e "${YELLOW}🗂 Limpeza de ECR Repositories${NC}"
 read -p "Deseja deletar os repositórios ECR (case-backend, case-frontend, case-mobile)? [y/N]: " delete_ecr
 
 if [[ $delete_ecr =~ ^[Yy]$ ]]; then
-    echo "🗑️ Removendo repositórios ECR..."
+    echo "🗑 Removendo repositórios ECR..."
     
     for repo in case-backend case-frontend case-mobile; do
         echo "Deletando repositório: $repo"
         aws ecr delete-repository --region $AWS_REGION --repository-name $repo --force 2>/dev/null && \
-            echo "✅ $repo deletado" || echo "⚠️ $repo não encontrado ou erro na deleção"
+            echo " $repo deletado" || echo " $repo não encontrado ou erro na deleção"
     done
 fi
 
@@ -148,7 +148,7 @@ if [[ $cleanup_local =~ ^[Yy]$ ]]; then
     find . -name ".terraform" -type d -exec rm -rf {} + 2>/dev/null || true
     find . -name ".terraform.lock.hcl" -type f -delete 2>/dev/null || true
     
-    echo "✅ Arquivos locais removidos"
+    echo " Arquivos locais removidos"
 fi
 
 # 6. Verificação final de custos
@@ -162,9 +162,9 @@ echo "2. Monitore o AWS Billing pelos próximos dias"
 echo "3. Verifique se há recursos em outras regiões"
 echo "4. Considere deletar S3 buckets de logs (se existirem)"
 echo ""
-echo -e "${RED}⚠️ IMPORTANTE:${NC}"
+echo -e "${RED} IMPORTANTE:${NC}"
 echo "- Alguns recursos podem ter período de retenção (ex: Load Balancer)"
 echo "- NAT Gateway é cobrado por hora - verifique se foi removido"
 echo "- EIP (Elastic IP) órfãos também são cobrados"
 echo ""
-echo -e "${GREEN}✅ Script concluído com sucesso!${NC}"
+echo -e "${GREEN} Script concluído com sucesso!${NC}"
