@@ -12,9 +12,11 @@ on:
           - frontend
           - mobile
           - all
+        default: all
   push:
     branches: [main]
     paths:
+      - 'app/**'
       - 'domains/apps/**'
 
 env:
@@ -22,10 +24,9 @@ env:
 
 jobs:
   build-backend:
-    # Protege acesso aos inputs apenas quando workflow_dispatch
     if: |
-      (github.event_name == 'workflow_dispatch' && (inputs.service == 'backend' || inputs.service == 'all')) ||
-      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+      github.event_name == 'push' || 
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.service == 'backend' || github.event.inputs.service == 'all'))
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -46,7 +47,17 @@ jobs:
         id: ecr
         uses: aws-actions/amazon-ecr-login@v2
 
+      - name: Check if backend directory exists
+        id: check-backend
+        run: |
+          if [ -d "domains/apps/app/backend" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Build and push backend
+        if: steps.check-backend.outputs.exists == 'true'
         uses: docker/build-push-action@v5
         with:
           context: domains/apps/app/backend
@@ -56,10 +67,9 @@ jobs:
             ${{ steps.ecr.outputs.registry }}/case-backend:latest
 
   build-frontend:
-    # Protege acesso aos inputs apenas quando workflow_dispatch
     if: |
-      (github.event_name == 'workflow_dispatch' && (inputs.service == 'frontend' || inputs.service == 'all')) ||
-      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+      github.event_name == 'push' || 
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.service == 'frontend' || github.event.inputs.service == 'all'))
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -92,10 +102,9 @@ jobs:
             ${{ steps.ecr.outputs.registry }}/case-frontend:latest
 
   build-mobile:
-    # Protege acesso aos inputs apenas quando workflow_dispatch
     if: |
-      (github.event_name == 'workflow_dispatch' && (inputs.service == 'mobile' || inputs.service == 'all')) ||
-      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+      github.event_name == 'push' || 
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.service == 'mobile' || github.event.inputs.service == 'all'))
     runs-on: ubuntu-latest
     permissions:
       id-token: write
