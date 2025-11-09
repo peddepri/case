@@ -1,0 +1,247 @@
+name: Terraform Destroy - Cleanup AWS Resources
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to destroy'
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+        default: dev
+      confirm_destroy:
+        description: 'Type "DESTROY" to confirm resource deletion'
+        required: true
+        type: string
+      destroy_scope:
+        description: 'Scope of destruction'
+        required: true
+        type: choice
+        options:
+          - infrastructure-only
+          - oidc-only
+          - all-resources
+        default: infrastructure-only
+
+env:
+  AWS_REGION: us-east-2
+  TF_VERSION: 1.8.5
+
+jobs:
+  validate-destroy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate destroy confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirm_destroy }}" != "DESTROY" ]; then
+            echo "❌ Destroy confirmation failed. You must type 'DESTROY' exactly."
+            exit 1
+          fi
+          echo "✅ Destroy confirmation validated"
+
+      - name: Display destruction plan
+        run: |
+          echo "🚨 DESTRUCTION PLAN:"
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          echo "Scope: ${{ github.event.inputs.destroy_scope }}"
+          echo "Region: ${{ env.AWS_REGION }}"
+          echo ""
+          echo "⚠️  This will permanently delete AWS resources and cannot be undone!"
+
+  destroy-infrastructure:
+    if: |
+      github.event.inputs.destroy_scope == 'infrastructure-only' || 
+      github.event.inputs.destroy_scope == 'all-resources'
+    needs: validate-destroy
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::918859180133:role/GitHubActionsRole
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: List existing resources before destroy
+        working-directory: domains/infra/terraform
+        run: |
+          terraform init -input=false
+          echo "📋 Current Terraform resources:"
+          terraform state list || echo "No state file found"
+          
+          echo ""
+          echo "🔍 AWS resources that will be affected:"
+          terraform plan -destroy -input=false -no-color || true
+
+      - name: Terraform Destroy - Infrastructure
+        working-directory: domains/infra/terraform
+        run: |
+          echo "🚨 Starting infrastructure destruction..."
+          terraform destroy -auto-approve -input=false
+          echo "✅ Infrastructure destruction completed"
+
+      - name: Verify resource cleanup
+        run: |
+          echo "🔍 Verifying resource cleanup..."
+          
+          # Check EKS clusters
+          echo "Checking EKS clusters:"
+          aws eks list-clusters --region ${{ env.AWS_REGION }} --query 'clusters[?contains(@, `case`)]' || true
+          
+          # Check ECR repositories
+          echo "Checking ECR repositories:"
+          aws ecr describe-repositories --region ${{ env.AWS_REGION }} --query 'repositories[?contains(repositoryName, `case`)]' || true
+          
+          # Check VPCs
+          echo "Checking VPCs:"
+          aws ec2 describe-vpcs --region ${{ env.AWS_REGION }} --filters "Name=tag:Project,Values=case" --query 'Vpcs[*].VpcId' || true
+          
+          # Check Load Balancers
+          echo "Checking Load Balancers:"
+          aws elbv2 describe-load-balancers --region ${{ env.AWS_REGION }} --query 'LoadBalancers[?contains(LoadBalancerName, `case`)]' || true
+
+  destroy-oidc:
+    if: |
+      github.event.inputs.destroy_scope == 'oidc-only' || 
+      github.event.inputs.destroy_scope == 'all-resources'
+    needs: validate-destroy
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::918859180133:role/GitHubActionsRole
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: List OIDC resources before destroy
+        working-directory: terraform/github-oidc
+        run: |
+          terraform init -input=false
+          echo "📋 Current OIDC resources:"
+          terraform state list || echo "No state file found"
+          terraform plan -destroy -input=false -no-color || true
+
+      - name: Terraform Destroy - OIDC
+        working-directory: terraform/github-oidc
+        run: |
+          echo "🚨 Starting OIDC resources destruction..."
+          terraform destroy -auto-approve -input=false
+          echo "✅ OIDC destruction completed"
+
+      - name: Verify OIDC cleanup
+        run: |
+          echo "🔍 Verifying OIDC cleanup..."
+          
+          # Check IAM role
+          echo "Checking GitHubActionsRole:"
+          aws iam get-role --role-name GitHubActionsRole 2>/dev/null && echo "⚠️ Role still exists" || echo "✅ Role deleted"
+          
+          # Check OIDC provider
+          echo "Checking OIDC provider:"
+          aws iam list-open-id-connect-providers --query "OpenIDConnectProviderList[?contains(Url, 'token.actions.githubusercontent.com')]" || true
+
+  cleanup-state-files:
+    if: github.event.inputs.destroy_scope == 'all-resources'
+    needs: [destroy-infrastructure, destroy-oidc]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::918859180133:role/GitHubActionsRole
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Cleanup Terraform state files
+        run: |
+          echo "🧹 Cleaning up local state files..."
+          
+          # Remove local state files
+          find . -name "terraform.tfstate*" -type f -delete
+          find . -name ".terraform" -type d -exec rm -rf {} + 2>/dev/null || true
+          find . -name ".terraform.lock.hcl" -type f -delete
+          
+          echo "✅ Local state cleanup completed"
+
+      - name: Cleanup S3 state backend (if exists)
+        run: |
+          echo "🧹 Checking for S3 state backends..."
+          
+          # List S3 buckets with terraform state
+          aws s3 ls | grep "terraform-state-case" || echo "No terraform state buckets found"
+          
+          # If state buckets exist, list them for manual cleanup
+          for bucket in $(aws s3 ls | grep "terraform-state-case" | awk '{print $3}' || true); do
+            echo "⚠️  Found state bucket: $bucket"
+            echo "   Objects in bucket:"
+            aws s3 ls s3://$bucket --recursive || true
+            echo "   To delete: aws s3 rb s3://$bucket --force"
+          done
+
+  summary:
+    needs: [validate-destroy]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Destruction Summary
+        run: |
+          echo "🎯 TERRAFORM DESTROY SUMMARY"
+          echo "=========================="
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          echo "Scope: ${{ github.event.inputs.destroy_scope }}"
+          echo "Timestamp: $(date -u)"
+          echo ""
+          echo "📊 Job Results:"
+          echo "- Validation: ${{ needs.validate-destroy.result }}"
+          
+          if [[ "${{ github.event.inputs.destroy_scope }}" == "infrastructure-only" || "${{ github.event.inputs.destroy_scope }}" == "all-resources" ]]; then
+            echo "- Infrastructure Destroy: ${{ needs.destroy-infrastructure.result }}"
+          fi
+          
+          if [[ "${{ github.event.inputs.destroy_scope }}" == "oidc-only" || "${{ github.event.inputs.destroy_scope }}" == "all-resources" ]]; then
+            echo "- OIDC Destroy: ${{ needs.destroy-oidc.result }}"
+          fi
+          
+          if [[ "${{ github.event.inputs.destroy_scope }}" == "all-resources" ]]; then
+            echo "- Cleanup: ${{ needs.cleanup-state-files.result }}"
+          fi
+          
+          echo ""
+          echo "⚠️  IMPORTANT REMINDERS:"
+          echo "- Verify AWS console for any remaining resources"
+          echo "- Check AWS billing for unexpected charges"
+          echo "- Remove any manual resources not managed by Terraform"
+          echo "- Consider deleting ECR repositories if no longer needed"
