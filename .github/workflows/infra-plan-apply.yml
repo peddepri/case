@@ -54,7 +54,8 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-          aws-region: us-east-1
+          aws-region: us-east-2
+          audience: sts.amazonaws.com
 
       - name: Terraform Init
         run: terraform init

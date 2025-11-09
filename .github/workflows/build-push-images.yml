@@ -17,7 +17,7 @@ on:
       - 'domains/apps/**'
 
 env:
-  AWS_REGION: us-east-1
+  AWS_REGION: us-east-2
 
 jobs:
   build-backend:
@@ -38,6 +38,7 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ env.AWS_REGION }}
+          audience: sts.amazonaws.com
 
       - name: Login to ECR
         id: ecr
@@ -70,6 +71,7 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ env.AWS_REGION }}
+          audience: sts.amazonaws.com
 
       - name: Login to ECR
         id: ecr
