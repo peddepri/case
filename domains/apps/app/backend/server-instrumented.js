@@ -732,7 +732,7 @@ function sendMobileMetricToDatadog(metric) {
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Backend server running on port ${PORT}`);
+  console.log(`Backend server running on port ${PORT}`);
   console.log(`📊 Metrics available at http://localhost:${PORT}/metrics`);
   console.log(`❤  Health check at http://localhost:${PORT}/healthz`);
   console.log(`📈 Stats endpoint at http://localhost:${PORT}/api/stats`);

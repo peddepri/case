@@ -10,6 +10,7 @@ variable "datadog_api_key" {
   description = "Datadog API key"
   type        = string
   sensitive   = true
+  default     = ""  # Make it optional
 }
 
 variable "datadog_site" {
@@ -20,6 +21,12 @@ variable "datadog_site" {
 
 variable "enable_grafana_stack" {
   description = "Enable Grafana stack (Prometheus, Loki, Tempo)"
+  type        = bool
+  default     = false
+}
+
+variable "enable_datadog" {
+  description = "Enable Datadog monitoring"
   type        = bool
   default     = false
 }

@@ -23,8 +23,8 @@ spec:
     spec:
       containers:
       - name: mobile
-        image: case-mobile:latest
-        imagePullPolicy: Never
+        image: 918859180133.dkr.ecr.us-east-2.amazonaws.com/case-mobile:latest
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 19006
           name: http

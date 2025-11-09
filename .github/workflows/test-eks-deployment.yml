@@ -1,0 +1,158 @@
+name: Test EKS Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: "Type of test to run"
+        required: true
+        type: choice
+        options:
+          - connectivity-test
+          - application-health
+          - full-validation
+        default: full-validation
+
+env:
+  AWS_REGION: us-east-2
+  CLUSTER_NAME: case-dev
+  NAMESPACE: case
+
+jobs:
+  test-eks-deployment:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+          audience: sts.amazonaws.com
+
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/v1.28.0/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+
+      - name: Configure kubectl
+        run: |
+          aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.CLUSTER_NAME }}
+
+      - name: Test cluster connectivity
+        if: inputs.test_type == 'connectivity-test' || inputs.test_type == 'full-validation'
+        run: |
+          echo "=== Cluster Connectivity Test ==="
+          
+          # Test cluster access
+          echo "Testing cluster access..."
+          kubectl cluster-info
+          
+          # List nodes
+          echo -e "\n=== Nodes ==="
+          kubectl get nodes -o wide
+          
+          # List namespaces
+          echo -e "\n=== Namespaces ==="
+          kubectl get namespaces
+
+      - name: Test application health
+        if: inputs.test_type == 'application-health' || inputs.test_type == 'full-validation'
+        run: |
+          echo "=== Application Health Test ==="
+          
+          # Check if namespace exists
+          if ! kubectl get namespace ${{ env.NAMESPACE }} &>/dev/null; then
+            echo "Namespace ${{ env.NAMESPACE }} does not exist. Creating..."
+            kubectl create namespace ${{ env.NAMESPACE }}
+          fi
+          
+          # Check deployments
+          echo -e "\n=== Deployments Status ==="
+          kubectl get deployments -n ${{ env.NAMESPACE }} -o wide || echo "No deployments found"
+          
+          # Check pods
+          echo -e "\n=== Pods Status ==="
+          kubectl get pods -n ${{ env.NAMESPACE }} -o wide || echo "No pods found"
+          
+          # Check services
+          echo -e "\n=== Services ==="
+          kubectl get services -n ${{ env.NAMESPACE }} || echo "No services found"
+
+      - name: Validate application endpoints
+        if: inputs.test_type == 'full-validation'
+        run: |
+          echo "=== Application Endpoints Validation ==="
+          
+          # Check if pods are running
+          BACKEND_POD=$(kubectl get pods -n ${{ env.NAMESPACE }} -l app=backend --no-headers -o custom-columns=":metadata.name" | head -1)
+          FRONTEND_POD=$(kubectl get pods -n ${{ env.NAMESPACE }} -l app=frontend --no-headers -o custom-columns=":metadata.name" | head -1)
+          MOBILE_POD=$(kubectl get pods -n ${{ env.NAMESPACE }} -l app=mobile --no-headers -o custom-columns=":metadata.name" | head -1)
+          
+          if [ -n "$BACKEND_POD" ]; then
+            echo "Testing backend pod: $BACKEND_POD"
+            kubectl exec $BACKEND_POD -n ${{ env.NAMESPACE }} -- curl -f http://localhost:3000/health || echo "Backend health check failed"
+          else
+            echo "No backend pods found"
+          fi
+          
+          if [ -n "$FRONTEND_POD" ]; then
+            echo "Testing frontend pod: $FRONTEND_POD"
+            kubectl exec $FRONTEND_POD -n ${{ env.NAMESPACE }} -- curl -f http://localhost:80/ || echo "Frontend check failed"
+          else
+            echo "No frontend pods found"
+          fi
+          
+          if [ -n "$MOBILE_POD" ]; then
+            echo "Testing mobile pod: $MOBILE_POD"
+            kubectl exec $MOBILE_POD -n ${{ env.NAMESPACE }} -- curl -f http://localhost:19006/healthz || echo "Mobile check failed"
+          else
+            echo "No mobile pods found"
+          fi
+
+      - name: Generate test report
+        if: always()
+        run: |
+          echo "=== Test Report ===" > test-report.txt
+          echo "Timestamp: $(date)" >> test-report.txt
+          echo "Test Type: ${{ inputs.test_type }}" >> test-report.txt
+          echo "Cluster: ${{ env.CLUSTER_NAME }}" >> test-report.txt
+          echo "Region: ${{ env.AWS_REGION }}" >> test-report.txt
+          echo "Namespace: ${{ env.NAMESPACE }}" >> test-report.txt
+          echo "" >> test-report.txt
+          
+          echo "=== Cluster Info ===" >> test-report.txt
+          kubectl cluster-info >> test-report.txt 2>&1 || echo "Failed to get cluster info" >> test-report.txt
+          echo "" >> test-report.txt
+          
+          echo "=== Nodes ===" >> test-report.txt
+          kubectl get nodes -o wide >> test-report.txt 2>&1 || echo "Failed to get nodes" >> test-report.txt
+          echo "" >> test-report.txt
+          
+          echo "=== Pods in namespace ${{ env.NAMESPACE }} ===" >> test-report.txt
+          kubectl get pods -n ${{ env.NAMESPACE }} -o wide >> test-report.txt 2>&1 || echo "No pods or namespace not found" >> test-report.txt
+          echo "" >> test-report.txt
+          
+          echo "=== Services in namespace ${{ env.NAMESPACE }} ===" >> test-report.txt
+          kubectl get services -n ${{ env.NAMESPACE }} >> test-report.txt 2>&1 || echo "No services or namespace not found" >> test-report.txt
+          echo "" >> test-report.txt
+          
+          echo "=== Resource Usage ===" >> test-report.txt
+          kubectl top nodes >> test-report.txt 2>&1 || echo "Metrics not available" >> test-report.txt
+          kubectl top pods -n ${{ env.NAMESPACE }} >> test-report.txt 2>&1 || echo "Pod metrics not available" >> test-report.txt
+          
+          cat test-report.txt
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eks-test-report-${{ github.run_number }}
+          path: test-report.txt

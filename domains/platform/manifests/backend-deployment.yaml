@@ -24,7 +24,7 @@ spec:
       serviceAccountName: backend-sa
       containers:
         - name: backend
-          image: <AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com/backend:latest
+          image: 918859180133.dkr.ecr.us-east-2.amazonaws.com/case-backend:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000

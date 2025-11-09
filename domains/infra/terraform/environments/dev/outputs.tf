@@ -21,6 +21,11 @@ output "ecr_frontend_url" {
   value       = aws_ecr_repository.frontend.repository_url
 }
 
+output "ecr_mobile_url" {
+  description = "ECR repository URL for mobile"
+  value       = aws_ecr_repository.mobile.repository_url
+}
+
 output "dynamodb_table_name" {
   description = "Name of the DynamoDB table"
   value       = aws_dynamodb_table.orders.name

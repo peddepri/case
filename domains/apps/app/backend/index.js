@@ -452,7 +452,7 @@ app.use((err, req, res, next) => {
 // SERVER START
 // ==========================================
 app.listen(port, '0.0.0.0', () => {
-    console.log(`🚀 Backend server running on http://0.0.0.0:${port}`);
+    console.log(`Backend server running on http://0.0.0.0:${port}`);
     console.log(`📊 Metrics available at http://0.0.0.0:${port}/metrics`);
     console.log(`🏥 Health check at http://0.0.0.0:${port}/healthz`);
     

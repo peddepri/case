@@ -32,3 +32,13 @@ output "cluster_certificate_authority_data" {
   description = "Dados do certificado da autoridade certificadora"
   value       = module.eks.cluster_certificate_authority_data
 }
+
+output "cluster_name" {
+  description = "Nome do cluster EKS"
+  value       = module.eks.cluster_name
+}
+
+output "cluster_ca_certificate" {
+  description = "Certificado CA do cluster"
+  value       = module.eks.cluster_certificate_authority_data
+}

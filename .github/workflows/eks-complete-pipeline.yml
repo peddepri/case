@@ -1,0 +1,394 @@
+name: Complete EKS Deployment Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Action to perform"
+        required: true
+        type: choice
+        options:
+          - provision-and-deploy
+          - deploy-only
+          - destroy
+      environment:
+        description: "Environment"
+        required: true
+        type: choice
+        options:
+          - dev
+        default: dev
+  push:
+    branches: [main]
+    paths:
+      - 'domains/infra/**'
+      - 'domains/apps/**'
+      - 'domains/platform/**'
+
+env:
+  AWS_REGION: us-east-2
+  TF_VERSION: 1.8.5
+  KUBECTL_VERSION: v1.28.0
+
+jobs:
+  # Job 1: Provisionar infraestrutura com Terraform
+  provision-infrastructure:
+    if: |
+      (github.event_name == 'workflow_dispatch' && inputs.action == 'provision-and-deploy') ||
+      (github.event_name == 'push' && contains(github.event.head_commit.modified, 'domains/infra/'))
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    outputs:
+      cluster-name: ${{ steps.terraform.outputs.cluster-name }}
+      ecr-registry: ${{ steps.terraform.outputs.ecr-registry }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+          audience: sts.amazonaws.com
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        working-directory: domains/infra/terraform/environments/dev
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: domains/infra/terraform/environments/dev
+        run: |
+          terraform plan -out=tfplan \
+            -var="enable_datadog=false" \
+            -var="enable_grafana_stack=true"
+
+      - name: Terraform Apply
+        id: terraform
+        working-directory: domains/infra/terraform/environments/dev
+        run: |
+          terraform apply -auto-approve tfplan
+          
+          # Capturar outputs
+          echo "cluster-name=$(terraform output -raw eks_cluster_name)" >> $GITHUB_OUTPUT
+          echo "ecr-registry=$(terraform output -raw ecr_backend_url | cut -d'/' -f1)" >> $GITHUB_OUTPUT
+
+      - name: Wait for EKS cluster ready
+        run: |
+          aws eks wait cluster-active --name $(terraform output -raw eks_cluster_name) --region ${{ env.AWS_REGION }}
+        working-directory: domains/infra/terraform/environments/dev
+
+  # Job 2: Build e Push das imagens Docker
+  build-images:
+    needs: provision-infrastructure
+    if: always() && (needs.provision-infrastructure.result == 'success' || github.event.inputs.action == 'deploy-only')
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    outputs:
+      backend-image: ${{ steps.images.outputs.backend-image }}
+      frontend-image: ${{ steps.images.outputs.frontend-image }}
+      mobile-image: ${{ steps.images.outputs.mobile-image }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+          audience: sts.amazonaws.com
+
+      - name: Login to ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push backend
+        uses: docker/build-push-action@v5
+        with:
+          context: domains/apps/app/backend
+          push: true
+          tags: |
+            ${{ steps.ecr.outputs.registry }}/case-backend:${{ github.sha }}
+            ${{ steps.ecr.outputs.registry }}/case-backend:latest
+
+      - name: Build and push frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: domains/apps/app/frontend
+          push: true
+          build-args: |
+            VITE_BACKEND_URL=/api
+          tags: |
+            ${{ steps.ecr.outputs.registry }}/case-frontend:${{ github.sha }}
+            ${{ steps.ecr.outputs.registry }}/case-frontend:latest
+
+      - name: Build and push mobile
+        uses: docker/build-push-action@v5
+        with:
+          context: domains/apps/app/mobile
+          push: true
+          tags: |
+            ${{ steps.ecr.outputs.registry }}/case-mobile:${{ github.sha }}
+            ${{ steps.ecr.outputs.registry }}/case-mobile:latest
+
+      - name: Set image outputs
+        id: images
+        run: |
+          echo "backend-image=${{ steps.ecr.outputs.registry }}/case-backend:${{ github.sha }}" >> $GITHUB_OUTPUT
+          echo "frontend-image=${{ steps.ecr.outputs.registry }}/case-frontend:${{ github.sha }}" >> $GITHUB_OUTPUT
+          echo "mobile-image=${{ steps.ecr.outputs.registry }}/case-mobile:${{ github.sha }}" >> $GITHUB_OUTPUT
+
+  # Job 3: Deploy no Kubernetes
+  deploy-applications:
+    needs: [provision-infrastructure, build-images]
+    if: always() && needs.build-images.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+          audience: sts.amazonaws.com
+
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/${{ env.KUBECTL_VERSION }}/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+
+      - name: Configure kubectl
+        run: |
+          aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ needs.provision-infrastructure.outputs.cluster-name || 'case-dev' }}
+
+      - name: Create namespace
+        run: |
+          kubectl apply -f domains/platform/manifests/namespace.yaml
+
+      - name: Apply ConfigMaps and Secrets
+        run: |
+          kubectl apply -f domains/platform/manifests/env-config.yaml
+
+      - name: Apply ServiceAccounts
+        run: |
+          kubectl apply -f domains/platform/manifests/backend-serviceaccount.yaml
+
+      - name: Update deployment manifests with new images
+        run: |
+          # Atualizar backend deployment
+          sed -i 's|image: .*case-backend:.*|image: ${{ needs.build-images.outputs.backend-image }}|' domains/platform/manifests/backend-deployment.yaml
+          
+          # Atualizar frontend deployment  
+          sed -i 's|image: .*case-frontend:.*|image: ${{ needs.build-images.outputs.frontend-image }}|' domains/platform/manifests/frontend-deployment.yaml
+          
+          # Atualizar mobile deployment
+          sed -i 's|image: .*case-mobile:.*|image: ${{ needs.build-images.outputs.mobile-image }}|' domains/platform/manifests/mobile-deployment.yaml
+
+      - name: Deploy applications
+        run: |
+          kubectl apply -f domains/platform/manifests/backend-deployment.yaml
+          kubectl apply -f domains/platform/manifests/frontend-deployment.yaml
+          kubectl apply -f domains/platform/manifests/mobile-deployment.yaml
+
+      - name: Apply HPA and other resources
+        run: |
+          kubectl apply -f domains/platform/manifests/backend-hpa.yaml
+          kubectl apply -f domains/platform/manifests/frontend-hpa.yaml
+          kubectl apply -f domains/platform/manifests/mobile-hpa.yaml
+          kubectl apply -f domains/platform/manifests/ingress.yaml
+
+      - name: Wait for deployments to be ready
+        run: |
+          echo "Waiting for deployments to be ready..."
+          kubectl wait --for=condition=available --timeout=600s deployment/backend -n case
+          kubectl wait --for=condition=available --timeout=600s deployment/frontend -n case
+          kubectl wait --for=condition=available --timeout=600s deployment/mobile -n case
+
+  # Job 4: Validação e Testes
+  validate-deployment:
+    needs: [provision-infrastructure, build-images, deploy-applications]
+    if: always() && needs.deploy-applications.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+          audience: sts.amazonaws.com
+
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/${{ env.KUBECTL_VERSION }}/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+
+      - name: Configure kubectl
+        run: |
+          aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ needs.provision-infrastructure.outputs.cluster-name || 'case-dev' }}
+
+      - name: Check pods status
+        run: |
+          echo "=== Pod Status ==="
+          kubectl get pods -n case -o wide
+          
+          echo -e "\n=== Services ==="
+          kubectl get services -n case
+          
+          echo -e "\n=== Ingress ==="
+          kubectl get ingress -n case
+
+      - name: Validate backend health
+        run: |
+          echo "=== Backend Health Check ==="
+          kubectl port-forward service/backend 8080:3000 -n case &
+          PF_PID=$!
+          sleep 10
+          
+          # Test backend health endpoint
+          if curl -f http://localhost:8080/health; then
+            echo "Backend health check passed"
+          else
+            echo "Backend health check failed"
+            exit 1
+          fi
+          
+          kill $PF_PID
+
+      - name: Validate frontend availability
+        run: |
+          echo "=== Frontend Health Check ==="
+          kubectl port-forward service/frontend 8081:80 -n case &
+          PF_PID=$!
+          sleep 10
+          
+          # Test frontend availability
+          if curl -f http://localhost:8081/; then
+            echo "Frontend availability check passed"
+          else
+            echo "Frontend availability check failed"
+            exit 1
+          fi
+          
+          kill $PF_PID
+
+      - name: Validate mobile metrics endpoint
+        run: |
+          echo "=== Mobile Metrics Check ==="
+          kubectl port-forward service/mobile 8082:19006 -n case &
+          PF_PID=$!
+          sleep 10
+          
+          # Test mobile metrics endpoint
+          if curl -f http://localhost:8082/healthz; then
+            echo "Mobile metrics endpoint check passed"
+          else
+            echo "Mobile metrics endpoint check failed"
+            exit 1
+          fi
+          
+          kill $PF_PID
+
+      - name: Check resource utilization
+        run: |
+          echo "=== Resource Utilization ==="
+          kubectl top nodes 2>/dev/null || echo "Metrics server not ready yet"
+          kubectl top pods -n case 2>/dev/null || echo "Pod metrics not ready yet"
+
+      - name: Generate deployment report
+        run: |
+          echo "=== Deployment Report ===" > deployment-report.txt
+          echo "Timestamp: $(date)" >> deployment-report.txt
+          echo "Cluster: ${{ needs.provision-infrastructure.outputs.cluster-name || 'case-dev' }}" >> deployment-report.txt
+          echo "Region: ${{ env.AWS_REGION }}" >> deployment-report.txt
+          echo "" >> deployment-report.txt
+          
+          echo "=== Images Deployed ===" >> deployment-report.txt
+          echo "Backend: ${{ needs.build-images.outputs.backend-image }}" >> deployment-report.txt
+          echo "Frontend: ${{ needs.build-images.outputs.frontend-image }}" >> deployment-report.txt
+          echo "Mobile: ${{ needs.build-images.outputs.mobile-image }}" >> deployment-report.txt
+          echo "" >> deployment-report.txt
+          
+          echo "=== Pod Status ===" >> deployment-report.txt
+          kubectl get pods -n case >> deployment-report.txt
+          
+          echo "" >> deployment-report.txt
+          echo "=== Services ===" >> deployment-report.txt  
+          kubectl get services -n case >> deployment-report.txt
+          
+          cat deployment-report.txt
+
+      - name: Upload deployment report
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-report-${{ github.sha }}
+          path: deployment-report.txt
+
+  # Job 5: Cleanup on failure or destroy
+  cleanup:
+    needs: [provision-infrastructure, build-images, deploy-applications, validate-deployment]
+    if: |
+      always() && (
+        (github.event.inputs.action == 'destroy') ||
+        (failure() && github.event.inputs.action == 'provision-and-deploy')
+      )
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+          audience: sts.amazonaws.com
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        working-directory: domains/infra/terraform/environments/dev
+        run: terraform init
+
+      - name: Terraform Destroy
+        if: github.event.inputs.action == 'destroy'
+        working-directory: domains/infra/terraform/environments/dev
+        run: |
+          terraform destroy -auto-approve \
+            -var="enable_datadog=false" \
+            -var="enable_grafana_stack=true"

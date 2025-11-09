@@ -5,9 +5,16 @@ variable "cluster_name" {
   type        = string
 }
 
+variable "enable_datadog" {
+  description = "Enable Datadog monitoring"
+  type        = bool
+  default     = false
+}
+
 variable "datadog_api_key" {
   description = "Datadog API key"
   type        = string
+  default     = ""
   sensitive   = true
 }
 
@@ -29,8 +36,10 @@ variable "tags" {
   default     = {}
 }
 
-# Datadog Agent via Helm
+# Datadog Agent via Helm (Optional)
 resource "helm_release" "datadog_agent" {
+  count = var.enable_datadog ? 1 : 0
+
   name       = "datadog-agent"
   repository = "https://helm.datadoghq.com"
   chart      = "datadog"
@@ -50,6 +59,8 @@ resource "helm_release" "datadog_agent" {
 }
 
 resource "kubernetes_namespace" "datadog" {
+  count = var.enable_datadog ? 1 : 0
+
   metadata {
     name = "datadog"
     labels = {

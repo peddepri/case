@@ -18,14 +18,14 @@ terraform {
     }
   }
 
-  backend "s3" {
-    bucket = "case-terraform-state-dev"
-    key    = "dev/terraform.tfstate"
-    region = "us-east-1"
-    
-    dynamodb_table = "case-terraform-locks"
-    encrypt        = true
-  }
+  # backend "s3" {
+  #   bucket = "case-terraform-state-dev"
+  #   key    = "dev/terraform.tfstate"
+  #   region = "us-east-2"
+  #   
+  #   dynamodb_table = "case-terraform-locks"
+  #   encrypt        = true
+  # }
 }
 
 # AWS Provider
@@ -140,6 +140,17 @@ resource "aws_ecr_repository" "frontend" {
   tags = local.tags
 }
 
+resource "aws_ecr_repository" "mobile" {
+  name                 = "${local.project}-mobile"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+
+  tags = local.tags
+}
+
 # DynamoDB Table
 resource "aws_dynamodb_table" "orders" {
   name           = "${local.project}-orders-${local.environment}"
@@ -205,6 +216,7 @@ module "observability" {
   source = "../../modules/observability"
 
   cluster_name         = module.eks.cluster_name
+  enable_datadog       = var.enable_datadog
   datadog_api_key      = var.datadog_api_key
   datadog_site         = var.datadog_site
   enable_grafana_stack = var.enable_grafana_stack
