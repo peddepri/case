@@ -7,9 +7,9 @@ terraform {
   }
 }
 
-# OIDC Identity Provider for GitHub Actions (usar existente se disponível)
+# OIDC Identity Provider for GitHub Actions (usar existente)
 data "aws_iam_openid_connect_provider" "github" {
-  url = "https://token.actions.githubusercontent.com"
+  arn = "arn:aws:iam::918859180133:oidc-provider/token.actions.githubusercontent.com"
 }
 
 # IAM Role for GitHub Actions
