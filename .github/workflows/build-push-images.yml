@@ -1,32 +1,26 @@
-name: Build & Push Images
+name: Build and Push Images
 
 on:
+  push:
+    branches: [ main ]
   workflow_dispatch:
     inputs:
       service:
-        description: "Service to build"
+        description: 'Service to build'
         required: true
+        default: 'all'
         type: choice
         options:
+          - all
           - backend
           - frontend
           - mobile
-          - all
-        default: all
-  push:
-    branches: [main]
-    paths:
-      - 'app/**'
-      - 'domains/apps/**'
 
 env:
   AWS_REGION: us-east-2
 
 jobs:
-  build-backend:
-    if: |
-      github.event_name == 'push' || 
-      (github.event_name == 'workflow_dispatch' && (github.event.inputs.service == 'backend' || github.event.inputs.service == 'all'))
+  build:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -39,109 +33,51 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-to-assume: arn:aws:iam::918859180133:role/GitHubActionsRole
           aws-region: ${{ env.AWS_REGION }}
-          audience: sts.amazonaws.com
 
       - name: Login to ECR
-        id: ecr
+        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Check if backend directory exists
-        id: check-backend
+      - name: Build backend
+        if: |
+          github.event_name == 'push' || 
+          (github.event_name == 'workflow_dispatch' && 
+           (inputs.service == 'backend' || inputs.service == 'all'))
         run: |
-          if [ -d "domains/apps/app/backend" ]; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
+          if [ -f "domains/apps/app/backend/Dockerfile" ]; then
+            docker build -t ${{ steps.login-ecr.outputs.registry }}/case-backend:${{ github.sha }} domains/apps/app/backend/
+            docker tag ${{ steps.login-ecr.outputs.registry }}/case-backend:${{ github.sha }} ${{ steps.login-ecr.outputs.registry }}/case-backend:latest
+            docker push ${{ steps.login-ecr.outputs.registry }}/case-backend:${{ github.sha }}
+            docker push ${{ steps.login-ecr.outputs.registry }}/case-backend:latest
+            echo "Backend image built and pushed"
           fi
 
-      - name: Build and push backend
-        if: steps.check-backend.outputs.exists == 'true'
-        uses: docker/build-push-action@v5
-        with:
-          context: domains/apps/app/backend
-          push: true
-          tags: |
-            ${{ steps.ecr.outputs.registry }}/case-backend:${{ github.sha }}
-            ${{ steps.ecr.outputs.registry }}/case-backend:latest
-
-  build-frontend:
-    if: |
-      github.event_name == 'push' || 
-      (github.event_name == 'workflow_dispatch' && (github.event.inputs.service == 'frontend' || github.event.inputs.service == 'all'))
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-    
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-          aws-region: ${{ env.AWS_REGION }}
-          audience: sts.amazonaws.com
-
-      - name: Login to ECR
-        id: ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build and push frontend
-        uses: docker/build-push-action@v5
-        with:
-          context: domains/apps/app/frontend
-          push: true
-          build-args: |
-            VITE_BACKEND_URL=/api
-          tags: |
-            ${{ steps.ecr.outputs.registry }}/case-frontend:${{ github.sha }}
-            ${{ steps.ecr.outputs.registry }}/case-frontend:latest
-
-  build-mobile:
-    if: |
-      github.event_name == 'push' || 
-      (github.event_name == 'workflow_dispatch' && (github.event.inputs.service == 'mobile' || github.event.inputs.service == 'all'))
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-    
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-          aws-region: ${{ env.AWS_REGION }}
-          audience: sts.amazonaws.com
-
-      - name: Login to ECR
-        id: ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build and push mobile
-        uses: docker/build-push-action@v5
-        with:
-          context: domains/apps/app/mobile
-          push: true
-          tags: |
-            ${{ steps.ecr.outputs.registry }}/case-mobile:${{ github.sha }}
-            ${{ steps.ecr.outputs.registry }}/case-mobile:latest
-
-  output-images:
-    needs: [build-backend, build-frontend, build-mobile]
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Output image info
+      - name: Build frontend
+        if: |
+          github.event_name == 'push' || 
+          (github.event_name == 'workflow_dispatch' && 
+           (inputs.service == 'frontend' || inputs.service == 'all'))
         run: |
-          echo "Backend image: case-backend:${{ github.sha }}"
-          echo "Frontend image: case-frontend:${{ github.sha }}"
-          echo "Mobile image: case-mobile:${{ github.sha }}"
-          echo "Images pushed to ECR successfully"
+          if [ -f "domains/apps/app/frontend/Dockerfile" ]; then
+            docker build -t ${{ steps.login-ecr.outputs.registry }}/case-frontend:${{ github.sha }} domains/apps/app/frontend/
+            docker tag ${{ steps.login-ecr.outputs.registry }}/case-frontend:${{ github.sha }} ${{ steps.login-ecr.outputs.registry }}/case-frontend:latest
+            docker push ${{ steps.login-ecr.outputs.registry }}/case-frontend:${{ github.sha }}
+            docker push ${{ steps.login-ecr.outputs.registry }}/case-frontend:latest
+            echo "Frontend image built and pushed"
+          fi
+
+      - name: Build mobile
+        if: |
+          github.event_name == 'push' || 
+          (github.event_name == 'workflow_dispatch' && 
+           (inputs.service == 'mobile' || inputs.service == 'all'))
+        run: |
+          if [ -f "domains/apps/app/mobile/Dockerfile" ]; then
+            docker build -t ${{ steps.login-ecr.outputs.registry }}/case-mobile:${{ github.sha }} domains/apps/app/mobile/
+            docker tag ${{ steps.login-ecr.outputs.registry }}/case-mobile:${{ github.sha }} ${{ steps.login-ecr.outputs.registry }}/case-mobile:latest
+            docker push ${{ steps.login-ecr.outputs.registry }}/case-mobile:${{ github.sha }}
+            docker push ${{ steps.login-ecr.outputs.registry }}/case-mobile:latest
+            echo "Mobile image built and pushed"
+          fi

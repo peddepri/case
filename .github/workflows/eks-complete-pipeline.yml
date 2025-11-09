@@ -31,18 +31,15 @@ env:
   KUBECTL_VERSION: v1.28.0
 
 jobs:
-  # Job 1: Provisionar infraestrutura com Terraform
   provision-infrastructure:
-    # Evita avaliar inputs/head_commit quando inexistentes
     if: |
       (github.event_name == 'workflow_dispatch' && inputs.action == 'provision-and-deploy') ||
-      (github.event_name == 'push' && contains(join(github.event.head_commit.modified || fromJson('[]'), ' '), 'domains/infra/'))
+      (github.event_name == 'push')
     runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
-    # Define environment protegida de forma segura: usa input apenas quando for workflow_dispatch
-    environment: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'dev' }}
+    environment: dev
     outputs:
       cluster-name: ${{ steps.terraform.outputs.cluster-name }}
       ecr-registry: ${{ steps.terraform.outputs.ecr-registry }}
@@ -54,7 +51,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-to-assume: arn:aws:iam::918859180133:role/GitHubActionsRole
           aws-region: ${{ env.AWS_REGION }}
           audience: sts.amazonaws.com
 
@@ -115,7 +112,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-to-assume: arn:aws:iam::918859180133:role/GitHubActionsRole
           aws-region: ${{ env.AWS_REGION }}
           audience: sts.amazonaws.com
 
@@ -175,7 +172,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-to-assume: arn:aws:iam::918859180133:role/GitHubActionsRole
           aws-region: ${{ env.AWS_REGION }}
           audience: sts.amazonaws.com
 
@@ -248,7 +245,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-to-assume: arn:aws:iam::918859180133:role/GitHubActionsRole
           aws-region: ${{ env.AWS_REGION }}
           audience: sts.amazonaws.com
 
@@ -380,7 +377,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-to-assume: arn:aws:iam::918859180133:role/GitHubActionsRole
           aws-region: ${{ env.AWS_REGION }}
           audience: sts.amazonaws.com
 

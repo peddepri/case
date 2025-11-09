@@ -109,7 +109,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-to-assume: arn:aws:iam::918859180133:role/GitHubActionsRole
           aws-region: ${{ env.AWS_REGION }}
           role-session-name: GitHubActions-Backend-${{ github.run_id }}
 
@@ -167,7 +167,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-to-assume: arn:aws:iam::918859180133:role/GitHubActionsRole
           aws-region: ${{ env.AWS_REGION }}
           role-session-name: GitHubActions-Frontend-${{ github.run_id }}
 
@@ -216,7 +216,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-to-assume: arn:aws:iam::918859180133:role/GitHubActionsRole
           aws-region: ${{ env.AWS_REGION }}
           role-session-name: GitHubActions-Mobile-${{ github.run_id }}
 
