@@ -1,0 +1,36 @@
+datadog:
+  apiKey: ${datadog_api_key}
+  site: ${datadog_site}
+  
+  # Fargate-compatible configuration
+  clusterName: ${cluster_name}
+  
+  # APM Configuration
+  apm:
+    enabled: true
+    
+  # Logs Configuration
+  logs:
+    enabled: true
+    containerCollectAll: true
+    
+  # Process Agent
+  processAgent:
+    enabled: true
+    
+  # System Probe (limited in Fargate)
+  systemProbe:
+    enabled: false
+    
+  # Cluster Agent
+  clusterAgent:
+    enabled: true
+    replicas: 2
+    
+agents:
+  # No DaemonSet in Fargate - use sidecar mode
+  enabled: false
+  
+# Fargate-specific configuration
+fargate:
+  enabled: true

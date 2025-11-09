@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: observabilidade-stack
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/peddepri/case
+    targetRevision: main
+    path: plataforma/observabilidade
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observabilidade
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ingress-alb
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/peddepri/case
+    targetRevision: main
+    path: plataforma/ingress
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
