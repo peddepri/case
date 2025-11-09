@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Script de validação da nova arquitetura refatorada
+# Script de validao da nova arquitetura refatorada
 
 set -e
 
@@ -16,87 +16,87 @@ info() { echo -e "${BLUE}[INFO] $1${NC}"; }
 warning() { echo -e "${YELLOW}[WARN] $1${NC}"; }
 
 echo "=========================================="
-echo "  VALIDAÇÃO DA ARQUITETURA REFATORADA"
+echo " VALIDAO DA ARQUITETURA REFATORADA"
 echo "=========================================="
 
-# Verificar estrutura de módulos Terraform
-info "1. Verificando módulos Terraform"
+# Verificar estrutura de mdulos Terraform
+info "1. Verificando mdulos Terraform"
 if [ -d "infra/terraform/modules/eks" ] && [ -d "infra/terraform/modules/fargate" ] && [ -d "infra/terraform/modules/irsa" ] && [ -d "infra/terraform/modules/alb" ]; then
-    success "Módulos Terraform criados"
+ success "Mdulos Terraform criados"
 else
-    error "Módulos Terraform não encontrados"
+ error "Mdulos Terraform no encontrados"
 fi
 
 # Verificar estrutura Argo CD
 info "2. Verificando estrutura Argo CD"
 if [ -f "argo/root.yaml" ] && [ -d "argo/apps" ]; then
-    success "Estrutura Argo CD configurada"
+ success "Estrutura Argo CD configurada"
 else
-    error "Estrutura Argo CD não encontrada"
+ error "Estrutura Argo CD no encontrada"
 fi
 
 # Verificar plataforma
-info "3. Verificando configuração de plataforma"
+info "3. Verificando configurao de plataforma"
 if [ -d "plataforma/ingress" ] && [ -d "plataforma/observabilidade" ]; then
-    success "Estrutura de plataforma criada"
+ success "Estrutura de plataforma criada"
 else
-    error "Estrutura de plataforma não encontrada"
+ error "Estrutura de plataforma no encontrada"
 fi
 
-# Verificar remoção de arquivos desnecessários
+# Verificar remoo de arquivos desnecessrios
 info "4. Verificando limpeza de arquivos"
 REMOVED_ITEMS=0
 
 if [ ! -f "docker-compose.localstack.yml" ]; then
-    success "docker-compose.localstack.yml removido"
-    ((REMOVED_ITEMS++))
+ success "docker-compose.localstack.yml removido"
+ ((REMOVED_ITEMS++))
 fi
 
 if [ ! -f "docker-compose.tools.yml" ]; then
-    success "docker-compose.tools.yml removido"
-    REMOVED_ITEMS=$((REMOVED_ITEMS + 1))
+ success "docker-compose.tools.yml removido"
+ REMOVED_ITEMS=$((REMOVED_ITEMS + 1))
 fi
 
 if [ ! -d "infra/terraform-localstack" ]; then
-    success "terraform-localstack/ removido"
-    REMOVED_ITEMS=$((REMOVED_ITEMS + 1))
+ success "terraform-localstack/ removido"
+ REMOVED_ITEMS=$((REMOVED_ITEMS + 1))
 fi
 
 if [ ! -d "localstack-data" ]; then
-    success "localstack-data/ removido"
-    REMOVED_ITEMS=$((REMOVED_ITEMS + 1))
+ success "localstack-data/ removido"
+ REMOVED_ITEMS=$((REMOVED_ITEMS + 1))
 fi
 
 if [ ! -d "localstack-kubeconfig" ]; then
-    success "localstack-kubeconfig/ removido"
-    REMOVED_ITEMS=$((REMOVED_ITEMS + 1))
+ success "localstack-kubeconfig/ removido"
+ REMOVED_ITEMS=$((REMOVED_ITEMS + 1))
 fi
 
-info "Total de itens desnecessários removidos: $REMOVED_ITEMS"
+info "Total de itens desnecessrios removidos: $REMOVED_ITEMS"
 
-# Verificar configuração Terraform
-info "5. Validando configuração Terraform"
+# Verificar configurao Terraform
+info "5. Validando configurao Terraform"
 cd infra/terraform
 if terraform validate > /dev/null 2>&1; then
-    success "Configuração Terraform válida"
+ success "Configurao Terraform vlida"
 else
-    error "Configuração Terraform inválida"
-    terraform validate
+ error "Configurao Terraform invlida"
+ terraform validate
 fi
 cd ../..
 
 # Verificar estrutura final
 info "6. Resumo da estrutura final"
 echo ""
-echo "Diretórios criados:"
-echo "  argo/"
-echo "  plataforma/"
-echo "  infra/terraform/modules/"
+echo "Diretrios criados:"
+echo " argo/"
+echo " plataforma/"
+echo " infra/terraform/modules/"
 echo ""
 
-success "VALIDAÇÃO CONCLUÍDA"
+success "VALIDAO CONCLUDA"
 echo ""
-echo "Próximos passos:"
+echo "Prximos passos:"
 echo "1. terraform plan (validar infraestrutura)"
 echo "2. terraform apply (provisionar recursos)"
 echo "3. Instalar Argo CD no cluster"
