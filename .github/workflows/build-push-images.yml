@@ -10,6 +10,7 @@ on:
         options:
           - backend
           - frontend
+          - mobile
           - all
   push:
     branches: [main]
@@ -47,11 +48,11 @@ jobs:
       - name: Build and push backend
         uses: docker/build-push-action@v5
         with:
-          context: domains/apps/backend
+          context: domains/apps/app/backend
           push: true
           tags: |
-            ${{ steps.ecr.outputs.registry }}/backend:${{ github.sha }}
-            ${{ steps.ecr.outputs.registry }}/backend:latest
+            ${{ steps.ecr.outputs.registry }}/case-backend:${{ github.sha }}
+            ${{ steps.ecr.outputs.registry }}/case-backend:latest
 
   build-frontend:
     if: |
@@ -80,21 +81,55 @@ jobs:
       - name: Build and push frontend
         uses: docker/build-push-action@v5
         with:
-          context: domains/apps/frontend
+          context: domains/apps/app/frontend
           push: true
           build-args: |
             VITE_BACKEND_URL=/api
           tags: |
-            ${{ steps.ecr.outputs.registry }}/frontend:${{ github.sha }}
-            ${{ steps.ecr.outputs.registry }}/frontend:latest
+            ${{ steps.ecr.outputs.registry }}/case-frontend:${{ github.sha }}
+            ${{ steps.ecr.outputs.registry }}/case-frontend:latest
+
+  build-mobile:
+    if: |
+      (github.event_name == 'workflow_dispatch' && (inputs.service == 'mobile' || inputs.service == 'all')) ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+          audience: sts.amazonaws.com
+
+      - name: Login to ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push mobile
+        uses: docker/build-push-action@v5
+        with:
+          context: domains/apps/app/mobile
+          push: true
+          tags: |
+            ${{ steps.ecr.outputs.registry }}/case-mobile:${{ github.sha }}
+            ${{ steps.ecr.outputs.registry }}/case-mobile:latest
 
   output-images:
-    needs: [build-backend, build-frontend]
+    needs: [build-backend, build-frontend, build-mobile]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Output image info
         run: |
-          echo "Backend image: backend:${{ github.sha }}"
-          echo "Frontend image: frontend:${{ github.sha }}"
+          echo "Backend image: case-backend:${{ github.sha }}"
+          echo "Frontend image: case-frontend:${{ github.sha }}"
+          echo "Mobile image: case-mobile:${{ github.sha }}"
           echo "Images pushed to ECR successfully"
