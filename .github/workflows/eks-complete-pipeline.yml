@@ -65,6 +65,16 @@ jobs:
         working-directory: domains/infra/terraform/environments/dev
         run: terraform init
 
+      - name: Import existing AWS resources (idempotent)
+        working-directory: .
+        run: |
+          bash scripts/terraform-import-existing.sh --skip-init \
+            domains/infra/terraform/environments/dev \
+            ${{ env.AWS_REGION }} \
+            case \
+            dev \
+            case-dev || true
+
       - name: Terraform Plan
         working-directory: domains/infra/terraform/environments/dev
         run: |
