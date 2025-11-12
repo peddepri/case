@@ -114,6 +114,16 @@ jobs:
           argocd app sync -l app.kubernetes.io/instance=case --grpc-web
 
       - name: Check app health
+        env:
+          APP_NAME: ${{ inputs.environment == 'prod' && 'case-app-prod' || 'case-app-dev' }}
         run: |
-          argocd app list --grpc-web
-          argocd app wait case-apps --health --timeout 300 --grpc-web || true
+          echo "Validating Argo CD application: $APP_NAME"
+          # List apps for visibility
+          argocd app list --grpc-web || true
+          # Wait for health and sync (fail if not Healthy/Synced in time)
+          argocd app wait "$APP_NAME" --health --sync --timeout 600 --grpc-web
+
+      - name: Cleanup port-forward
+        if: always()
+        run: |
+          pkill -f "kubectl port-forward.*argocd-server" || true
