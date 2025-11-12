@@ -39,8 +39,12 @@ jobs:
           audience: sts.amazonaws.com
 
       - name: Update kubeconfig
+        env:
+          AWS_REGION: us-east-1
+          CLUSTER_NAME: case-dev
         run: |
-          aws eks update-kubeconfig --name ${{ vars.EKS_CLUSTER_NAME }} --region us-east-1
+          echo "Using cluster name: $CLUSTER_NAME"
+          aws eks update-kubeconfig --name "$CLUSTER_NAME" --region "$AWS_REGION"
 
       - name: Install Argo CD CLI
         run: |
