@@ -8,17 +8,23 @@ backend:
     tag: latest
   hpa:
     enabled: false   # disable HPA in dev quick test
+  service:
+    enabled: false    # keep disabled until ALB webhook is installed/fixed
 
 frontend:
   image:
     tag: latest
   hpa:
     enabled: false
+  service:
+    enabled: false
 
 mobile:
   image:
     tag: latest
   hpa:
+    enabled: false
+  service:
     enabled: false
 
 ingress:

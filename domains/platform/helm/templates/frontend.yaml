@@ -29,6 +29,7 @@ spec:
               cpu: {{ .Values.frontend.resources.limits.cpu | quote }}
               memory: {{ .Values.frontend.resources.limits.memory | quote }}
 ---
+{{- if .Values.frontend.service.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -43,6 +44,7 @@ spec:
     - name: http
       port: 80
       targetPort: 80
+{{- end }}
 {{- if .Values.frontend.hpa.enabled }}
 ---
 apiVersion: autoscaling/v2

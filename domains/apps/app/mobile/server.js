@@ -91,9 +91,9 @@ app.get('/', (req, res) => {
   });
 });
 
-// Catch all other routes
-app.get('*', (req, res) => {
-  res.status(404).json({ 
+// Catch all other routes (Express 5/path-to-regexp v6 compatible)
+app.use((req, res) => {
+  res.status(404).json({
     error: 'Route not found',
     message: 'Mobile API - Route not available'
   });

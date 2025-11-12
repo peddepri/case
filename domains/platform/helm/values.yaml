@@ -9,6 +9,8 @@ backend:
   image:
     repository: case-backend
     tag: latest
+  service:
+    enabled: true
   resources:
     requests:
       cpu: 250m
@@ -28,6 +30,8 @@ frontend:
   image:
     repository: case-frontend
     tag: latest
+  service:
+    enabled: true
   resources:
     requests:
       cpu: 250m
@@ -47,6 +51,8 @@ mobile:
   image:
     repository: case-mobile
     tag: latest
+  service:
+    enabled: true
   resources:
     requests:
       cpu: 250m

@@ -60,6 +60,7 @@ coverage/
 .env
 **/.env
 .env.local
+scripts/aws-config.env
 
 # OS
 .DS_Store

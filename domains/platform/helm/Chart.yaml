@@ -3,6 +3,7 @@ name: case-platform
 description: Consolidated platform workloads (backend, frontend, mobile) with cost-optimized Fargate settings
 version: 0.1.0
 appVersion: 0.1.0
-kubeVersion: ">=1.27.0"
+# Use -0 to include vendor-specific pre-release/build metadata (e.g., -eks-xxxxx)
+kubeVersion: ">=1.27.0-0"
 type: application
 dependencies: []

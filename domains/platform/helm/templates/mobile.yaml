@@ -29,6 +29,7 @@ spec:
               cpu: {{ .Values.mobile.resources.limits.cpu | quote }}
               memory: {{ .Values.mobile.resources.limits.memory | quote }}
 ---
+{{- if .Values.mobile.service.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -43,6 +44,7 @@ spec:
     - name: http
       port: 19006
       targetPort: 19006
+{{- end }}
 {{- if .Values.mobile.hpa.enabled }}
 ---
 apiVersion: autoscaling/v2
