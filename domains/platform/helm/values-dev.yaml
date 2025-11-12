@@ -9,7 +9,7 @@ backend:
   hpa:
     enabled: false   # disable HPA in dev quick test
   service:
-    enabled: false    # keep disabled until ALB webhook is installed/fixed
+    enabled: true     # enable Service in dev
 
 frontend:
   image:
@@ -17,7 +17,7 @@ frontend:
   hpa:
     enabled: false
   service:
-    enabled: false
+    enabled: true
 
 mobile:
   image:
@@ -25,10 +25,10 @@ mobile:
   hpa:
     enabled: false
   service:
-    enabled: false
+    enabled: true
 
 ingress:
-  enabled: false  # disable ingress while testing basic pod readiness
+  enabled: true   # enable ingress (ALB)
 
 adot:
   enabled: false
