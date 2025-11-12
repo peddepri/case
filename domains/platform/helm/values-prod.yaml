@@ -1,0 +1,25 @@
+# Prod environment overrides
+global:
+  imageRegistry: "123456789012.dkr.ecr.us-east-1.amazonaws.com"  # CHANGE to prod account
+  ingressHost: case.example.com
+
+backend:
+  image:
+    tag: v1.0.0
+  hpa:
+    minReplicas: 2
+    maxReplicas: 10
+
+frontend:
+  image:
+    tag: v1.0.0
+  hpa:
+    minReplicas: 2
+    maxReplicas: 10
+
+mobile:
+  image:
+    tag: v1.0.0
+  hpa:
+    minReplicas: 2
+    maxReplicas: 6

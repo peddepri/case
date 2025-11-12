@@ -38,15 +38,15 @@ provider "aws" {
 }
 
 # Kubernetes Provider
+data "aws_eks_cluster_auth" "cluster" {
+  name       = module.eks.cluster_name
+  depends_on = [module.eks]
+}
+
 provider "kubernetes" {
   host                   = module.eks.cluster_endpoint
   cluster_ca_certificate = base64decode(module.eks.cluster_ca_certificate)
-  
-  exec {
-    api_version = "client.authentication.k8s.io/v1beta1"
-    command     = "aws"
-    args        = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
-  }
+  token                  = data.aws_eks_cluster_auth.cluster.token
 }
 
 # Helm Provider
@@ -54,12 +54,7 @@ provider "helm" {
   kubernetes {
     host                   = module.eks.cluster_endpoint
     cluster_ca_certificate = base64decode(module.eks.cluster_ca_certificate)
-    
-    exec {
-      api_version = "client.authentication.k8s.io/v1beta1"
-      command     = "aws"
-      args        = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
-    }
+    token                  = data.aws_eks_cluster_auth.cluster.token
   }
 }
 
@@ -224,4 +219,71 @@ module "observability" {
   tags = local.tags
 
   depends_on = [module.eks]
+}
+
+# AWS Load Balancer Controller (single shared ALB, target-type ip for Fargate)
+module "alb" {
+  source = "../../modules/alb"
+
+  cluster_name            = module.eks.cluster_name
+  cluster_oidc_issuer_url = module.eks.oidc_provider_arn
+  vpc_id                  = module.vpc.vpc_id
+
+  tags = local.tags
+
+  depends_on = [module.eks]
+}
+
+# IRSA role for ADOT Collector (minimal CloudWatch permissions)
+data "aws_iam_policy_document" "adot" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:DescribeLogStreams",
+      "logs:PutLogEvents",
+      "cloudwatch:PutMetricData"
+    ]
+    resources = ["*"]
+  }
+}
+
+module "adot_irsa" {
+  source = "../../modules/irsa"
+
+  role_name            = "${local.project}-adot-irsa-${local.environment}"
+  cluster_name         = module.eks.cluster_name
+  oidc_provider_arn    = module.eks.oidc_provider_arn
+  namespace            = "observability"
+  service_account_name = "adot-collector-sa"
+  inline_policies = {
+    adot-cloudwatch = data.aws_iam_policy_document.adot.json
+  }
+  policy_arns = []
+
+  tags = local.tags
+
+  depends_on = [module.eks]
+}
+
+resource "kubernetes_namespace" "observability" {
+  metadata {
+    name = "observability"
+    labels = {
+      app = "adot"
+    }
+  }
+}
+
+resource "kubernetes_service_account" "adot_sa" {
+  metadata {
+    name      = "adot-collector-sa"
+    namespace = kubernetes_namespace.observability.metadata[0].name
+    annotations = {
+      "eks.amazonaws.com/role-arn" = module.adot_irsa.role_arn
+    }
+  }
+
+  depends_on = [module.adot_irsa]
 }

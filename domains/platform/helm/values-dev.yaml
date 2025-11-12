@@ -1,0 +1,29 @@
+# Dev environment overrides
+global:
+  imageRegistry: "918859180133.dkr.ecr.us-east-1.amazonaws.com"
+  ingressHost: case.local
+
+backend:
+  image:
+    tag: latest
+  hpa:
+    enabled: false   # disable HPA in dev quick test
+
+frontend:
+  image:
+    tag: latest
+  hpa:
+    enabled: false
+
+mobile:
+  image:
+    tag: latest
+  hpa:
+    enabled: false
+
+ingress:
+  enabled: false  # disable ingress while testing basic pod readiness
+
+adot:
+  enabled: false
+  metricsNamespace: case-dev

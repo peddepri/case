@@ -1,22 +1,22 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: backend-app
+  name: case-app-dev
   namespace: argocd
   labels:
     app.kubernetes.io/instance: case
 spec:
   project: default
-  
   source:
     repoURL: https://github.com/peddepri/case
     targetRevision: HEAD
-    path: domains/platform/manifests
-    
+    path: domains/platform/helm
+    helm:
+      valueFiles:
+        - values-dev.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: case
-  
   syncPolicy:
     automated:
       prune: true
@@ -28,25 +28,25 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: platform-services
+  name: case-app-prod
   namespace: argocd
   labels:
     app.kubernetes.io/instance: case
 spec:
   project: default
-  
   source:
     repoURL: https://github.com/peddepri/case
     targetRevision: HEAD
-    path: domains/platform/services
-    
+    path: domains/platform/helm
+    helm:
+      valueFiles:
+        - values-prod.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: case
-  
+    namespace: case-prod
   syncPolicy:
     automated:
-      prune: false  # Manual sync for platform services
+      prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true

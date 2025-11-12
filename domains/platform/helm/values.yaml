@@ -1,0 +1,77 @@
+global:
+  imageRegistry: "918859180133.dkr.ecr.us-east-1.amazonaws.com"
+  imagePullPolicy: IfNotPresent
+  ingressHost: case.local
+
+backend:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: case-backend
+    tag: latest
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 250m
+      memory: 512Mi
+  hpa:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 5
+    cpuAverageUtilization: 70
+
+frontend:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: case-frontend
+    tag: latest
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 250m
+      memory: 512Mi
+  hpa:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 5
+    cpuAverageUtilization: 70
+
+mobile:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: case-mobile
+    tag: latest
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 250m
+      memory: 512Mi
+  hpa:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 3
+    cpuAverageUtilization: 70
+    memoryAverageUtilization: 80
+
+ingress:
+  enabled: true
+
+adot:
+  enabled: false
+  region: us-east-1
+  metricsNamespace: case-dev
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 250m
+      memory: 512Mi

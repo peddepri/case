@@ -24,147 +24,140 @@ echo -e "${YELLOW}Recursos que serão removidos:${NC}"
 echo "- Cluster EKS e Node Groups"
 echo "- VPC, Subnets, Internet Gateway, NAT Gateway"
 echo "- Load Balancers (ALB/NLB)"
-echo "- Security Groups"
-echo "- IAM Roles (GitHub Actions)"
-echo "- ECR Repositories (opcional)"
-echo ""
+#!/bin/bash
 
-# Confirmar destruição
-echo -e "${RED}Para continuar, digite exatamente: ${CONFIRMATION_WORD}${NC}"
-read -p "Confirmação: " user_input
+# Script seguro para destruir a infraestrutura provisionada via Terraform.
+# Uso: ./scripts/terraform-destroy.sh <caminho_ambiente>
+# Ex.: ./scripts/terraform-destroy.sh domains/infra/terraform/environments/dev
 
-if [ "$user_input" != "$CONFIRMATION_WORD" ]; then
-    echo "Confirmação falhou. Saindo..."
+set -euo pipefail
+
+CONFIRMATION_WORD="DESTROY"
+AWS_REGION_DEFAULT="us-east-1" # Alinhado ao deploy
+
+ENV_PATH="${1:-}"
+
+if [ -z "$ENV_PATH" ]; then
+    echo "ERRO: informe o caminho do ambiente Terraform (ex: domains/infra/terraform/environments/dev)"
     exit 1
 fi
 
+if [ ! -d "$ENV_PATH" ]; then
+    echo "ERRO: diretório não encontrado: $ENV_PATH"
+    exit 1
+fi
+
+echo "===================================================="
+echo "TERRAFORM DESTROY (alvo: $ENV_PATH)"
+echo "===================================================="
+echo "ATENÇÃO: TODOS os recursos gerenciados pelo state deste ambiente serão destruídos."
+echo "Esta ação é irreversível. Certifique-se de que o ambiente é apenas de laboratório." 
 echo ""
-echo -e "${GREEN}Confirmação aceita. Iniciando destruição...${NC}"
+echo "Digite a palavra de confirmação para continuar: $CONFIRMATION_WORD"
+read -p "Confirmação: " user_input
+if [ "$user_input" != "$CONFIRMATION_WORD" ]; then
+    echo "Confirmação incorreta. Abortando."
+    exit 1
+fi
+
+echo "Confirmação aceita. Prosseguindo."
 echo ""
 
-# Função para executar terraform destroy com logs
-destroy_terraform() {
-    local dir=$1
-    local description=$2
-    
-    echo -e "${YELLOW}Destruindo: $description${NC}"
-    echo "Diretório: $dir"
-    
-    if [ ! -d "$dir" ]; then
-        echo " Diretório não encontrado: $dir"
-        return 0
-    fi
-    
-    cd "$dir"
-    
-    # Verificar se há state file
-    if [ ! -f "terraform.tfstate" ] && [ ! -f ".terraform/terraform.tfstate" ]; then
-        echo " Nenhum state file encontrado em $dir"
-        cd - > /dev/null
-        return 0
-    fi
-    
-    # Inicializar se necessário
-    if [ ! -d ".terraform" ]; then
-        echo "🔧 Inicializando Terraform..."
-        terraform init -input=false
-    fi
-    
-    # Listar recursos antes da destruição
-    echo "📋 Recursos atuais:"
-    terraform state list 2>/dev/null || echo "Nenhum recurso no state"
-    
-    # Mostrar plano de destruição
-    echo "🔍 Plano de destruição:"
-    terraform plan -destroy -input=false -no-color 2>/dev/null || echo "Erro ao gerar plano"
-    
-    # Executar destroy
-    echo "💥 Executando terraform destroy..."
-    terraform destroy -auto-approve -input=false
-    
-    echo -e "${GREEN} $description destruído com sucesso${NC}"
-    cd - > /dev/null
-    echo ""
+destroy_one() {
+    local dir="$1"
+    echo "---"
+    echo "Ambiente: $dir"
+    pushd "$dir" >/dev/null
+
+    echo "Inicializando Terraform (backend remoto/local)..."
+    terraform init -input=false -no-color
+
+    echo "Obtendo lista de recursos (state)..."
+    terraform state list || echo "Nenhum recurso no state ou state remoto não acessível ainda."
+
+    echo "Gerando plano de destruição (destroy.tfplan)..."
+    terraform plan -destroy -input=false -out=destroy.tfplan -no-color || {
+        echo "Falha ao gerar plano. Verifique erros acima."; popd >/dev/null; return 1; }
+
+    echo "Resumo do plano (linhas relevantes):"
+    terraform show -no-color destroy.tfplan | grep -E "(Plan:|Destroy:)" || true
+
+    echo "Executando terraform destroy..."
+    terraform destroy -auto-approve -input=false -no-color
+
+    echo "Destroy concluído: $dir"
+    popd >/dev/null
 }
 
-# 1. Destruir infraestrutura principal (EKS, VPC, etc.)
-if [ -d "domains/infra/terraform" ]; then
-    destroy_terraform "domains/infra/terraform" "Infraestrutura Principal (EKS, VPC, ALB)"
+# Se for uma pasta "environments", destruir todos os subambientes; do contrário, apenas o alvo
+if [ -d "$ENV_PATH" ] && [ -f "$ENV_PATH/main.tf" ]; then
+    # Diretório de um ambiente individual
+    read -p "Confirmar destroy para este ambiente único? [y/N]: " proceed
+    if [[ $proceed =~ ^[Yy]$ ]]; then
+        destroy_one "$ENV_PATH"
+    else
+        echo "Abortado."
+        exit 0
+    fi
+elif [ -d "$ENV_PATH" ] && ls "$ENV_PATH" >/dev/null 2>&1; then
+    # Diretório pai (ex: domains/infra/terraform/environments)
+    echo "Detectado diretório pai. Serão destruídos todos os subdiretórios que contêm main.tf."
+    read -p "Deseja continuar destruindo TODOS os ambientes deste diretório? [y/N]: " proceed_all
+    if [[ $proceed_all =~ ^[Yy]$ ]]; then
+        mapfile -t envs < <(find "$ENV_PATH" -maxdepth 1 -mindepth 1 -type d)
+        for envdir in "${envs[@]}"; do
+            if [ -f "$envdir/main.tf" ]; then
+                destroy_one "$envdir"
+            fi
+        done
+    else
+        echo "Abortado."
+        exit 0
+    fi
 fi
 
-# 2. Destruir recursos OIDC
-if [ -d "terraform/github-oidc" ]; then
-    destroy_terraform "terraform/github-oidc" "GitHub OIDC (IAM Role)"
-fi
+echo "Verificando possíveis recursos órfãos marcados com tag Project=case na região padrão..."
+AWS_REGION="${AWS_REGION:-$AWS_REGION_DEFAULT}"
 
-# 3. Verificar recursos restantes na AWS
-echo -e "${YELLOW}🔍 Verificando recursos restantes na AWS...${NC}"
+echo "Clusters EKS restantes:"; aws eks list-clusters --region "$AWS_REGION" --query 'clusters' --output table 2>/dev/null || true
+echo "VPCs tag Project=case:"; aws ec2 describe-vpcs --region "$AWS_REGION" --filters Name=tag:Project,Values=case --query 'Vpcs[*].VpcId' --output table 2>/dev/null || true
+echo "ALBs contendo 'case':"; aws elbv2 describe-load-balancers --region "$AWS_REGION" --query 'LoadBalancers[?contains(LoadBalancerName, `case`)].LoadBalancerName' --output table 2>/dev/null || true
+echo "Security Groups tag Project=case:"; aws ec2 describe-security-groups --region "$AWS_REGION" --filters Name=tag:Project,Values=case --query 'SecurityGroups[*].GroupId' --output table 2>/dev/null || true
 
-# Verificar EKS clusters
-echo "EKS Clusters:"
-aws eks list-clusters --region $AWS_REGION --query 'clusters[?contains(@, `case`)]' --output table 2>/dev/null || echo "Nenhum cluster EKS encontrado"
-
-# Verificar VPCs
-echo "VPCs do projeto:"
-aws ec2 describe-vpcs --region $AWS_REGION --filters "Name=tag:Project,Values=case" --query 'Vpcs[*].[VpcId,Tags[?Key==`Name`].Value|[0]]' --output table 2>/dev/null || echo "Nenhuma VPC encontrada"
-
-# Verificar Load Balancers
-echo "Load Balancers:"
-aws elbv2 describe-load-balancers --region $AWS_REGION --query 'LoadBalancers[?contains(LoadBalancerName, `case`)].[LoadBalancerName,State.Code]' --output table 2>/dev/null || echo "Nenhum Load Balancer encontrado"
-
-# Verificar ECR repositories
-echo "ECR Repositories:"
-aws ecr describe-repositories --region $AWS_REGION --query 'repositories[?contains(repositoryName, `case`)].repositoryName' --output table 2>/dev/null || echo "Nenhum repositório ECR encontrado"
-
-# Verificar Security Groups
-echo "Security Groups do projeto:"
-aws ec2 describe-security-groups --region $AWS_REGION --filters "Name=tag:Project,Values=case" --query 'SecurityGroups[*].[GroupId,GroupName]' --output table 2>/dev/null || echo "Nenhum Security Group encontrado"
-
-# 4. Opção para limpar ECR repositories
-echo ""
-echo -e "${YELLOW}🗂 Limpeza de ECR Repositories${NC}"
-read -p "Deseja deletar os repositórios ECR (case-backend, case-frontend, case-mobile)? [y/N]: " delete_ecr
-
-if [[ $delete_ecr =~ ^[Yy]$ ]]; then
-    echo "🗑 Removendo repositórios ECR..."
-    
+echo "Opcional: remover repositórios ECR (case-backend, case-frontend, case-mobile)."
+read -p "Remover repositórios ECR? [y/N]: " remove_ecr
+if [[ $remove_ecr =~ ^[Yy]$ ]]; then
     for repo in case-backend case-frontend case-mobile; do
-        echo "Deletando repositório: $repo"
-        aws ecr delete-repository --region $AWS_REGION --repository-name $repo --force 2>/dev/null && \
-            echo " $repo deletado" || echo " $repo não encontrado ou erro na deleção"
+        echo "Removendo $repo ..."
+        aws ecr delete-repository --region "$AWS_REGION" --repository-name "$repo" --force 2>/dev/null && echo "OK" || echo "Não encontrado / erro"
     done
 fi
 
-# 5. Limpeza de arquivos locais
-echo ""
-echo -e "${YELLOW}🧹 Limpeza de arquivos locais${NC}"
-read -p "Deseja remover arquivos de state local do Terraform? [y/N]: " cleanup_local
-
-if [[ $cleanup_local =~ ^[Yy]$ ]]; then
-    echo "🧹 Removendo arquivos locais..."
-    
-    # Remover state files
-    find . -name "terraform.tfstate*" -type f -delete 2>/dev/null || true
-    find . -name ".terraform" -type d -exec rm -rf {} + 2>/dev/null || true
-    find . -name ".terraform.lock.hcl" -type f -delete 2>/dev/null || true
-    
-    echo " Arquivos locais removidos"
+# OIDC (IAM role para GitHub Actions) — sem custo, mas pode ser removido
+if [ -d "terraform/github-oidc" ]; then
+    echo "OIDC para GitHub Actions encontrado em terraform/github-oidc."
+    read -p "Deseja destruir também os recursos de OIDC (IAM Role/Policies)? [y/N]: " destroy_oidc
+    if [[ $destroy_oidc =~ ^[Yy]$ ]]; then
+        pushd "terraform/github-oidc" >/dev/null
+        terraform init -input=false -no-color || true
+        terraform destroy -auto-approve -input=false -no-color || true
+        popd >/dev/null
+    fi
 fi
 
-# 6. Verificação final de custos
-echo ""
-echo -e "${GREEN}🎉 DESTRUIÇÃO CONCLUÍDA${NC}"
-echo "========================"
-echo ""
-echo -e "${YELLOW}📊 PRÓXIMOS PASSOS:${NC}"
-echo "1. Verifique o AWS Console para recursos órfãos"
-echo "2. Monitore o AWS Billing pelos próximos dias"
-echo "3. Verifique se há recursos em outras regiões"
-echo "4. Considere deletar S3 buckets de logs (se existirem)"
-echo ""
-echo -e "${RED} IMPORTANTE:${NC}"
-echo "- Alguns recursos podem ter período de retenção (ex: Load Balancer)"
-echo "- NAT Gateway é cobrado por hora - verifique se foi removido"
-echo "- EIP (Elastic IP) órfãos também são cobrados"
-echo ""
-echo -e "${GREEN} Script concluído com sucesso!${NC}"
+echo "Limpar arquivos locais de state (cache .terraform)?"
+read -p "Limpar? [y/N]: " clean_state
+if [[ $clean_state =~ ^[Yy]$ ]]; then
+    find "$ENV_PATH" -name "terraform.tfstate*" -type f -delete 2>/dev/null || true
+    find "$ENV_PATH" -name ".terraform" -type d -exec rm -rf {} + 2>/dev/null || true
+    find "$ENV_PATH" -name ".terraform.lock.hcl" -type f -delete 2>/dev/null || true
+    echo "Limpeza local concluída."
+fi
+
+echo "===================================================="
+echo "Destroy finalizado. Próximos passos:"
+echo "- Conferir AWS Billing para garantir ausência de custos residuais"
+echo "- Verificar se há NAT Gateway, EIP ou buckets S3 órfãos"
+echo "- Remover possíveis logs ou artefatos se desejado"
+echo "===================================================="
+echo "Pronto."

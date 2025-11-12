@@ -7,7 +7,7 @@ metadata:
     app: backend
     color: blue
 spec:
-  replicas: 2
+  replicas: 1  # Start minimal; HPA will scale. Lower base reduces idle Fargate cost.
   selector:
     matchLabels:
       app: backend
@@ -73,10 +73,10 @@ spec:
               value: "0.1.0"
           resources:
             requests:
-              cpu: 100m
-              memory: 128Mi
+              cpu: 250m    # Maps to 0.25 vCPU Fargate billing tier
+              memory: 512Mi # Minimal Fargate memory billing tier
             limits:
-              cpu: 500m
+              cpu: 250m    # Keep limits == requests to avoid tier jumps
               memory: 512Mi
 ---
 apiVersion: v1

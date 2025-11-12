@@ -4,7 +4,7 @@
 set -e
 
 # Configuration
-AWS_REGION="us-east-2"
+AWS_REGION="us-east-1"
 AWS_ACCOUNT_ID="918859180133"
 ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 

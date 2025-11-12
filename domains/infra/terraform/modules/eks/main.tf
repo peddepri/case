@@ -14,14 +14,41 @@ module "eks" {
     kube-proxy = { most_recent = true }
   }
 
-  # Fargate Profiles
+  # Fargate Profiles (right-sized by workload type to enable granular policies/cost tracking)
   fargate_profiles = {
-    case = {
-      name       = "case"
+    backend = {
+      name       = "backend"
       subnet_ids = var.subnet_ids
       selectors = [
         {
           namespace = "case"
+          labels = {
+            app = "backend"
+          }
+        }
+      ]
+    }
+    frontend = {
+      name       = "frontend"
+      subnet_ids = var.subnet_ids
+      selectors = [
+        {
+          namespace = "case"
+          labels = {
+            app = "frontend"
+          }
+        }
+      ]
+    }
+    mobile = {
+      name       = "mobile"
+      subnet_ids = var.subnet_ids
+      selectors = [
+        {
+          namespace = "case"
+          labels = {
+            app = "mobile"
+          }
         }
       ]
     }
@@ -39,12 +66,19 @@ module "eks" {
     }
   }
 
+  # Habilita acesso público ao endpoint do EKS para permitir que o Terraform (fora da VPC) aplique recursos Kubernetes/Helm
+  cluster_endpoint_public_access       = true
+  cluster_endpoint_public_access_cidrs = ["0.0.0.0/0"]
+
+  # Desabilita criação de OIDC provider pelo módulo para evitar conflito (já existe no ambiente AWS)
+  enable_irsa = false
+
   enable_cluster_creator_admin_permissions = var.enable_cluster_creator_admin_permissions
 
   tags = var.tags
 }
 
-# OIDC Provider para IRSA
+// Reintroduz OIDC Provider gerenciado por este módulo wrapper, evitando conflito com criação interna do módulo EKS.
 resource "aws_iam_openid_connect_provider" "eks" {
   url             = module.eks.cluster_oidc_issuer_url
   client_id_list  = ["sts.amazonaws.com"]

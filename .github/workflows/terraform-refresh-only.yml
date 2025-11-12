@@ -1,0 +1,126 @@
+name: Terraform Refresh-Only
+
+on:
+  pull_request:
+  schedule:
+    - cron: "0 2 * * *"  # daily at 02:00 UTC
+  workflow_dispatch:
+    inputs:
+      tf_working_dir:
+        description: Terraform working directory
+        default: domains/infra/terraform/environments/dev
+        required: true
+      state_prefix:
+        description: S3 state key prefix (e.g., case/)
+        default: case/
+        required: true
+
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write  # Required for OIDC
+
+jobs:
+  refresh-only:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        env: [dev, prod]
+    env:
+      AWS_REGION: us-east-1
+      ENV_NAME: ${{ matrix.env }}
+      TF_WORKING_DIR: domains/infra/terraform/environments/${{ matrix.env }}
+      TF_STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+      TF_STATE_DDB_TABLE: ${{ vars.TF_STATE_DDB_TABLE }}
+      TF_STATE_PREFIX: case/${{ matrix.env }}/
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Terraform Init (remote backend)
+        id: init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${TF_STATE_BUCKET:-}" || -z "${TF_STATE_DDB_TABLE:-}" ]]; then
+            echo "TF_STATE_BUCKET and TF_STATE_DDB_TABLE must be set as repository 'Variables'." >&2
+            exit 1
+          fi
+          KEY="${TF_STATE_PREFIX}terraform.tfstate"
+          echo "Using state key: ${KEY}"
+          terraform init -reconfigure \
+            -backend-config="bucket=${TF_STATE_BUCKET}" \
+            -backend-config="key=${KEY}" \
+            -backend-config="region=${AWS_REGION}" \
+            -backend-config="dynamodb_table=${TF_STATE_DDB_TABLE}" \
+            -backend-config="encrypt=true"
+
+      - name: Terraform Plan (refresh-only)
+        id: plan
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          terraform version
+          terraform fmt -check -recursive || true
+          set +e
+          terraform plan -refresh-only -detailed-exitcode -out=tfplan.refresh
+          exitcode=$?
+          set -e
+          echo "exitcode=$exitcode" >> "$GITHUB_OUTPUT"
+          terraform show -no-color tfplan.refresh > refresh.txt || true
+          terraform show -json tfplan.refresh > refresh.json || true
+
+      - name: Upload plan artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-refresh-${{ matrix.env }}-${{ github.run_id }}
+          path: |
+            ${{ env.TF_WORKING_DIR }}/refresh.txt
+            ${{ env.TF_WORKING_DIR }}/refresh.json
+
+      - name: Comment PR (if drift)
+        if: github.event_name == 'pull_request' && steps.plan.outputs.exitcode == '2'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = `${process.env.TF_WORKING_DIR}/refresh.txt`;
+            let plan = '';
+            try { plan = fs.readFileSync(path, 'utf8').slice(0, 60000); } catch(e) { plan = 'Arquivo refresh.txt não encontrado.'; }
+            const envName = process.env.ENV_NAME || 'env';
+            const body = `### Drift detectado (${envName}) – refresh-only\nSaída (parcial):\n<details>\n<summary>Mostrar</summary>\n\n\n\n\u0060\u0060\u0060\n${plan}\n\u0060\u0060\u0060\n</details>`;
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body
+            });
+
+      - name: Fail job on drift
+        if: steps.plan.outputs.exitcode == '2'
+        shell: bash
+        run: |
+          echo "Drift detectado (exit code 2)." >&2
+          exit 2
+
+      - name: Exit on error
+        if: steps.plan.outputs.exitcode == '1'
+        shell: bash
+        run: |
+          echo "Erro ao executar terraform plan (exit code 1)." >&2
+          exit 1
