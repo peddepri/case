@@ -60,6 +60,15 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
+      - name: Import existing AWS resources (idempotent)
+        run: |
+          bash scripts/terraform-import-existing.sh --skip-init \
+            domains/infra/terraform/environments/${{ inputs.environment || 'dev' }} \
+            us-east-1 \
+            case \
+            ${{ inputs.environment || 'dev' }} \
+            case-${{ inputs.environment || 'dev' }} || true
+
       - name: Terraform Validate
         run: terraform validate
 
