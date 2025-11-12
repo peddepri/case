@@ -38,6 +38,14 @@ jobs:
           aws-region: us-east-1
           audience: sts.amazonaws.com
 
+      - name: Install kubectl
+        env:
+          KUBECTL_VERSION: v1.28.0
+        run: |
+          curl -sSLo kubectl "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+
       - name: Update kubeconfig
         env:
           AWS_REGION: us-east-1
@@ -45,6 +53,28 @@ jobs:
         run: |
           echo "Using cluster name: $CLUSTER_NAME"
           aws eks update-kubeconfig --name "$CLUSTER_NAME" --region "$AWS_REGION"
+          # Sanity check access
+          aws eks describe-cluster --name "$CLUSTER_NAME" --region "$AWS_REGION" >/dev/null
+          kubectl cluster-info || (echo "kubectl cannot reach cluster" && exit 1)
+
+      - name: Ensure Argo CD namespace and install (if missing)
+        run: |
+          kubectl get ns argocd >/dev/null 2>&1 || kubectl create namespace argocd
+          # Install Argo CD only if not present (server deployment missing)
+          if ! kubectl get deploy argocd-server -n argocd >/dev/null 2>&1; then
+            echo "Installing Argo CD..."
+            kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml --validate=false
+            echo "Waiting for Argo CD CRDs to be established..."
+            # Wait for CRDs by retrying an Application apply dry-run
+            for i in {1..20}; do
+              if kubectl api-resources | grep -q "applications.argoproj.io"; then
+                break
+              fi
+              echo "Waiting for Application CRD... ($i)"; sleep 6
+            done
+          else
+            echo "Argo CD already installed."
+          fi
 
       - name: Install Argo CD CLI
         run: |
@@ -53,7 +83,8 @@ jobs:
 
       - name: Apply Argo CD manifests
         run: |
-          kubectl apply -f domains/platform/argo/
+          # Apply root Application (and app-of-apps) with validation disabled to avoid openapi fetch race
+          kubectl apply -f domains/platform/argo/ --validate=false
 
       - name: Wait for Argo CD
         run: |
