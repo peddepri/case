@@ -14,7 +14,7 @@ on:
         default: full-validation
 
 env:
-  AWS_REGION: us-east-2
+  AWS_REGION: us-east-1
   CLUSTER_NAME: case-dev
   NAMESPACE: case
 
@@ -112,7 +112,7 @@ jobs:
           
           if [ -n "$MOBILE_POD" ]; then
             echo "Testing mobile pod: $MOBILE_POD"
-            kubectl exec $MOBILE_POD -n ${{ env.NAMESPACE }} -- curl -f http://localhost:19006/healthz || echo "Mobile check failed"
+            kubectl exec $MOBILE_POD -n ${{ env.NAMESPACE }} -- curl -f http://localhost:19006/health || echo "Mobile check failed"
           else
             echo "No mobile pods found"
           fi

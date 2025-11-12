@@ -1,0 +1,16 @@
+# Example variable values for the root infra module (copy to terraform.tfvars if you use this root directly)
+# These are NOT used by environment-specific deployments under environments/dev/
+
+region           = "us-east-1"
+project_name     = "case"
+eks_cluster_name = "case-cluster"
+dynamodb_table_name = "orders"
+# Supply Datadog API key via TF_VAR_dd_api_key or secrets manager instead of hardcoding.
+# dd_api_key      = ""
+dd_site          = "datadoghq.com"
+
+tags = {
+  Environment = "production"
+  Project     = "case"
+  ManagedBy   = "terraform"
+}

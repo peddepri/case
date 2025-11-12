@@ -25,6 +25,11 @@ print_error() {
 # Configuration (defaults)
 AWS_REGION_DEFAULT="us-east-1"
 AWS_ACCOUNT_ID="918859180133"
+GIT_SHA="$(git rev-parse --short HEAD 2>/dev/null || echo local)"
+DATE_TAG="$(date +%Y%m%d%H%M%S)"
+
+# Select which apps to build (space‑separated). Override: APPS="backend frontend" ./build-and-push-images.sh
+APPS_LIST=${APPS:-"backend frontend mobile"}
 
 # If a local env file with credentials exists, source it (do not commit real secrets)
 AWS_ENV_FILE="scripts/aws-config.env"
@@ -68,25 +73,46 @@ ecr_login() {
 build_and_push() {
     local app_name=$1
     local docker_context=$2
-    local image_tag=${3:-latest}
-    
-    print_status "Building and pushing ${app_name}..."
-    
-    # Build image
-    print_status "Building ${app_name} image..."
-    cd ${docker_context}
-    docker build -t ${app_name}:${image_tag} .
-    
-    # Tag for ECR
-    docker tag ${app_name}:${image_tag} ${ECR_REGISTRY}/case-${app_name}:${image_tag}
-    
-    # Push to ECR
-    print_status "Pushing ${app_name} to ECR..."
-    docker push ${ECR_REGISTRY}/case-${app_name}:${image_tag}
-    
-    print_status "${app_name} image pushed successfully!"
-    echo "Image URI: ${ECR_REGISTRY}/case-${app_name}:${image_tag}"
-    
+    local base_tag=${3:-latest}
+    local extra_tags=()
+
+    # Always tag latest + commit SHA; optionally date tag if USE_DATE_TAG=1
+    extra_tags+=("${base_tag}" "${GIT_SHA}")
+    if [[ "${USE_DATE_TAG:-1}" == "1" ]]; then
+        extra_tags+=("${DATE_TAG}")
+    fi
+
+    print_status "Building ${app_name} (tags: ${extra_tags[*]})"
+    cd "${docker_context}"
+
+    # Build once with a temporary local name
+    local local_image="case-${app_name}-build:${GIT_SHA}"
+    docker build -t "${local_image}" .
+
+    # Calculate local digest
+    local local_digest
+    local_digest=$(docker inspect --format='{{index .RepoDigests 0}}' "${local_image}" || true)
+
+    # Decide push per tag (skip if same digest already in registry)
+    for tag in "${extra_tags[@]}"; do
+        local remote_ref="${ECR_REGISTRY}/case-${app_name}:${tag}"
+        # Try to get remote digest
+        local remote_digest
+        remote_digest=$(aws ecr describe-images --repository-name "case-${app_name}" --image-ids imageTag="${tag}" --region "${AWS_REGION}" --query 'imageDetails[0].imageDigest' --output text 2>/dev/null || echo "NONE")
+        if [[ "${remote_digest}" != "NONE" && -n "${local_digest}" && "${remote_digest}" == $(echo "${local_digest}" | sed 's/.*@//') ]]; then
+            print_status "Skip push (unchanged digest) ${remote_ref}"
+        else
+            docker tag "${local_image}" "${remote_ref}"
+            print_status "Pushing ${remote_ref}"
+            docker push "${remote_ref}"
+        fi
+    done
+
+    # Show summary
+    print_status "Image summary for ${app_name}:"
+    for tag in "${extra_tags[@]}"; do
+        echo "  ${ECR_REGISTRY}/case-${app_name}:${tag}"
+    done
     cd - > /dev/null
 }
 
@@ -121,16 +147,21 @@ main() {
     ensure_repos
     ecr_login
 
-    build_and_push "backend" "domains/apps/app/backend" "latest"
-    build_and_push "frontend" "domains/apps/app/frontend" "latest"
-    build_and_push "mobile" "domains/apps/app/mobile" "latest"
+        for app in ${APPS_LIST}; do
+                case "$app" in
+                    backend)  build_and_push "backend"  "domains/apps/app/backend"  "latest";;
+                    frontend) build_and_push "frontend" "domains/apps/app/frontend" "latest";;
+                    mobile)   build_and_push "mobile"   "domains/apps/app/mobile"   "latest";;
+                    *) print_warning "Unknown app '$app' – skipping";;
+                esac
+        done
 
     print_status "All images built and pushed successfully!"
     echo ""
     print_status "Image URIs:"
-    echo "  Backend:  ${ECR_REGISTRY}/case-backend:latest"
-    echo "  Frontend: ${ECR_REGISTRY}/case-frontend:latest"
-    echo "  Mobile:   ${ECR_REGISTRY}/case-mobile:latest"
+    [[ "$APPS_LIST" == *backend* ]]  && echo "  Backend:  ${ECR_REGISTRY}/case-backend:latest / ${ECR_REGISTRY}/case-backend:${GIT_SHA}" || true
+    [[ "$APPS_LIST" == *frontend* ]] && echo "  Frontend: ${ECR_REGISTRY}/case-frontend:latest / ${ECR_REGISTRY}/case-frontend:${GIT_SHA}" || true
+    [[ "$APPS_LIST" == *mobile* ]]   && echo "  Mobile:   ${ECR_REGISTRY}/case-mobile:latest / ${ECR_REGISTRY}/case-mobile:${GIT_SHA}" || true
 }
 
 # Run main function

@@ -26,7 +26,7 @@ on:
       - 'domains/platform/**'
 
 env:
-  AWS_REGION: us-east-2
+  AWS_REGION: us-east-1
   TF_VERSION: 1.8.5
   KUBECTL_VERSION: v1.28.0
 
@@ -304,18 +304,18 @@ jobs:
           
           kill $PF_PID
 
-      - name: Validate mobile metrics endpoint
+      - name: Validate mobile health endpoint
         run: |
           echo "=== Mobile Metrics Check ==="
           kubectl port-forward service/mobile 8082:19006 -n case &
           PF_PID=$!
           sleep 10
           
-          # Test mobile metrics endpoint
-          if curl -f http://localhost:8082/healthz; then
-            echo "Mobile metrics endpoint check passed"
+          # Test mobile health endpoint (server.js exposes /health)
+          if curl -f http://localhost:8082/health; then
+            echo "Mobile health endpoint check passed"
           else
-            echo "Mobile metrics endpoint check failed"
+            echo "Mobile health endpoint check failed"
             exit 1
           fi
           

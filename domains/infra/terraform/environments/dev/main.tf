@@ -18,11 +18,11 @@ terraform {
     }
   }
 
+  # Remote state (optional – adjust & uncomment if/when backend bucket is created)
   # backend "s3" {
-  #   bucket = "case-terraform-state-dev"
-  #   key    = "dev/terraform.tfstate"
-  #   region = "us-east-2"
-  #   
+  #   bucket         = "case-terraform-state-dev"
+  #   key            = "dev/terraform.tfstate"
+  #   region         = var.aws_region  # aligned to single region source of truth
   #   dynamodb_table = "case-terraform-locks"
   #   encrypt        = true
   # }

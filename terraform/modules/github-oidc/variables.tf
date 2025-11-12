@@ -19,7 +19,7 @@ variable "repo_name" {
 variable "aws_region" {
   description = "AWS region for resource scoping"
   type        = string
-  default     = "us-east-2"
+  default     = "us-east-1"
 }
 
 variable "managed_policy_arns" {

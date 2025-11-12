@@ -3,7 +3,7 @@
 set -e
 
 # Configurações
-AWS_REGION="us-east-2"
+AWS_REGION="us-east-1"
 CLUSTER_NAME="case-dev"
 NAMESPACE="case"
 

@@ -35,12 +35,12 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::918859180133:role/GitHubActionsRole
-          aws-region: us-east-2
+          aws-region: us-east-1
           audience: sts.amazonaws.com
 
       - name: Update kubeconfig
         run: |
-          aws eks update-kubeconfig --name ${{ vars.EKS_CLUSTER_NAME }} --region us-east-2
+          aws eks update-kubeconfig --name ${{ vars.EKS_CLUSTER_NAME }} --region us-east-1
 
       - name: Install Argo CD CLI
         run: |
