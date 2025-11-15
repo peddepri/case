@@ -1,0 +1,187 @@
+# Grafana Configuration
+
+replicas: 2
+
+image:
+  repository: grafana/grafana
+  tag: 10.2.0
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+  requests:
+    cpu: 500m
+    memory: 1Gi
+
+persistence:
+  enabled: true
+  size: 10Gi
+  storageClassName: gp3
+
+adminUser: admin
+adminPassword: ${admin_password}
+
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      # Victoria Metrics as Prometheus datasource
+      - name: Victoria Metrics
+        type: prometheus
+        access: proxy
+        url: ${victoria_metrics_url}
+        isDefault: true
+        editable: false
+        jsonData:
+          timeInterval: 30s
+          httpMethod: POST
+      
+      # CloudWatch datasource
+      - name: CloudWatch
+        type: cloudwatch
+        access: proxy
+        editable: false
+        jsonData:
+          authType: default
+          defaultRegion: us-east-1
+
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: 'default'
+        orgId: 1
+        folder: ''
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/default
+      
+      - name: 'observability'
+        orgId: 1
+        folder: 'Observability'
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/observability
+      
+      - name: 'chargeback'
+        orgId: 1
+        folder: 'Chargeback'
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/chargeback
+
+dashboards:
+  default:
+    kubernetes-cluster:
+      gnetId: 7249
+      revision: 1
+      datasource: Victoria Metrics
+    
+    kubernetes-pods:
+      gnetId: 6417
+      revision: 1
+      datasource: Victoria Metrics
+  
+  observability:
+    otel-collector:
+      gnetId: 15983
+      revision: 1
+      datasource: Victoria Metrics
+    
+    victoria-metrics:
+      gnetId: 11176
+      revision: 1
+      datasource: Victoria Metrics
+
+grafana.ini:
+  server:
+    root_url: "%(protocol)s://%(domain)s:%(http_port)s/grafana"
+    serve_from_sub_path: true
+  
+  auth:
+    disable_login_form: false
+  
+  auth.anonymous:
+    enabled: false
+  
+  analytics:
+    reporting_enabled: false
+    check_for_updates: false
+  
+  users:
+    auto_assign_org: true
+    auto_assign_org_role: Viewer
+  
+  log:
+    mode: console
+    level: info
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  ingressClassName: alb
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+  hosts:
+    - grafana.example.com
+  path: /
+  pathType: Prefix
+
+plugins:
+  - grafana-piechart-panel
+  - grafana-worldmap-panel
+  - grafana-clock-panel
+  - camptocamp-prometheus-alertmanager-datasource
+
+notifiers:
+  notifiers.yaml:
+    notifiers:
+      - name: slack
+        type: slack
+        uid: slack
+        org_id: 1
+        is_default: true
+        send_reminder: true
+        settings:
+          url: https://hooks.slack.com/services/YOUR/WEBHOOK/URL
+          recipient: '#observability-alerts'
+
+sidecar:
+  dashboards:
+    enabled: true
+    label: grafana_dashboard
+    folder: /tmp/dashboards
+  
+  datasources:
+    enabled: true
+    label: grafana_datasource
+
+serviceMonitor:
+  enabled: true
+  namespace: monitoring
+  interval: 30s
+
+# RBAC
+rbac:
+  create: true
+  pspEnabled: false
+
+# Service Account
+serviceAccount:
+  create: true
+  name: grafana
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/grafana-role

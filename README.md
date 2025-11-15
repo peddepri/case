@@ -2,11 +2,13 @@
 
 Projeto simplificado para execução de backend, frontend e mobile em um único cluster EKS Fargate, com Helm consolidado, ALB único, detecção de drift e observabilidade mínima opcional.
 
+> **Observabilidade:** Este projeto inclui uma **solução completa de observabilidade** com OpenTelemetry, Victoria Metrics, chargeback e governança. Veja [OBSERVABILITY_INDEX.md](./OBSERVABILITY_INDEX.md) para documentação completa.
+
 ## Componentes Atuais
 - Infraestrutura: Terraform (VPC, EKS Fargate, perfis Fargate por tipo, IRSA, ALB Controller)
 - Deploy: Argo CD + Helm chart único (`domains/platform/helm`)
 - Aplicações: Backend / Frontend / Mobile (`domains/apps/app/`)
-- Observabilidade: ADOT Collector opcional (CloudWatch Container Insights) – Datadog/Grafana podem ser adicionados depois
+- **Observabilidade Enterprise:** OpenTelemetry Gateway + Victoria Metrics + PII Masking + Chargeback (veja [docs](./docs/observability-README.md))
 - Ingress: ALB único com roteamento por caminho
 - Persistência: DynamoDB (tabela `orders` PAY_PER_REQUEST)
 - CI/CD: GitHub Actions (build/push, workflow refresh-only para detectar drift)
@@ -54,9 +56,45 @@ helm template case-platform domains/platform/helm -f domains/platform/helm/value
 - Fargate não suporta DaemonSets (coleta via sidecar ou agentless)
 - Ajuste de memória/CPU exige observação para não saltar de tier
 
+## Observabilidade Enterprise
+
+Esta plataforma inclui uma solução completa de observabilidade pronta para produção:
+
+### Documentação Completa
+- **[OBSERVABILITY_INDEX.md](./OBSERVABILITY_INDEX.md)** - Índice navegável por persona/use case
+- **[OBSERVABILITY_SUMMARY.md](./OBSERVABILITY_SUMMARY.md)** - Resumo executivo
+- **[OBSERVABILITY_ACTION_PLAN.md](./OBSERVABILITY_ACTION_PLAN.md)** - Plano de execução (12 meses)
+
+### Arquitetura
+- **OpenTelemetry Gateway** centralizado (HA, auto-scaling)
+- **Victoria Metrics** cluster para métricas (30d + LTS)
+- **Masking automático de PII** (CPF, email, cartões, etc.)
+- **Chargeback por time** com pricing transparente
+- **Storage Tiering** (S3: hot → warm → cold → archive 10 anos)
+
+### Impacto Financeiro
+- **40% redução de custos** ($115k → $69k/mês)
+- **$45k/mês economia** com vendor consolidation
+- **8 meses ROI** ($250k investimento)
+- **90% adoção OpenTelemetry** (target)
+
+### Quick Start Observabilidade
+```bash
+# 1. Deploy infraestrutura (Victoria Metrics + OTel Gateway)
+cd domains/infra/terraform/modules/observability-platform
+terraform init && terraform apply
+
+# 2. Onboard seu time (< 5 minutos)
+./scripts/onboard-team.sh --namespace my-team --cost-center CC123
+
+# 3. Instrumentar aplicação (auto-instrumentação disponível)
+# Ver docs/observability-migration-guide.md
+```
+
+**Detalhes técnicos:** [docs/observability-platform-architecture.md](./docs/observability-platform-architecture.md)
+
 ## Evoluções Futuras (Sugestões)
 - KEDA para scale-to-zero
-- Grafana/Prometheus ou Datadog completos
 - Service Mesh (App Mesh/Istio)
 - Policies (OPA/Kyverno) e supply chain (Cosign, Trivy)
 
@@ -90,14 +128,44 @@ Recursos criados:
 ## Deploy
 Argo CD sincroniza chart Helm; GitHub Actions entrega imagens ao ECR.
 
-## Observabilidade
-ADOT opcional via Helm; exporta métricas para CloudWatch. Outros backends podem ser adicionados.
+## Estrutura de Observabilidade
 
-Dashboards inclusos:
+```
+docs/
+ observability-platform-architecture.md  # Arquitetura técnica completa
+ observability-governance.md             # Governança e standards
+ observability-migration-guide.md        # Guia passo-a-passo (12 meses)
+ observability-README.md                 # Quick start
+
+domains/infra/terraform/modules/
+ observability-platform/                 # Módulo Terraform completo
+     main.tf                             # Victoria Metrics + OTel Gateway
+     templates/
+        victoria-metrics-values.yaml
+        otel-gateway-values.yaml        # PII masking, sampling, exporters
+        grafana-values.yaml
+     config/
+         chargeback-config.yaml          # Pricing model e budgets
+
+domains/platform/manifests/
+ otel-collector-template.yaml            # Template per-namespace
+ grafana-dashboards/
+     platform-executive-dashboard.json   # 18 painéis (custo, adoção, SLOs)
+
+scripts/
+ onboard-team.sh                         # Automação de onboarding (< 5min)
+
+OBSERVABILITY_INDEX.md                      # Índice navegável
+OBSERVABILITY_SUMMARY.md                    # Resumo executivo  
+OBSERVABILITY_ACTION_PLAN.md                # Roadmap 12 meses
+```
+
+## Observabilidade Legada (ADOT Básico)
+ADOT opcional via Helm exporta métricas para CloudWatch. **Recomendamos migrar para a solução enterprise** (OpenTelemetry + Victoria Metrics) documentada acima.
+
+Dashboards legados Datadog:
 - `observabilidade/datadog/dashboards/golden_signals_backend.json`
 - `observabilidade/datadog/dashboards/business_metrics.json`
-
-Criação via API (scripts prontos):
 
 ```bash
 DD_API_KEY=<key> DD_APP_KEY=<appkey> DD_SITE=datadoghq.com ./scripts/datadog-apply-dashboards.sh

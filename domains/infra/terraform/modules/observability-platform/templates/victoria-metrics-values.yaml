@@ -1,0 +1,60 @@
+# Victoria Metrics Cluster Configuration
+
+mode: cluster
+
+vmselect:
+  enabled: true
+  replicaCount: 2
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+  cacheMountPath: /cache
+  persistentVolume:
+    enabled: true
+    size: 10Gi
+
+vminsert:
+  enabled: true
+  replicaCount: 2
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+
+vmstorage:
+  enabled: true
+  replicaCount: ${replicas}
+  retentionPeriod: ${retention_period}
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+  persistentVolume:
+    enabled: true
+    size: ${storage_size}
+    storageClass: gp3
+  
+  # Long-term storage settings
+  vmbackup:
+    enabled: true
+    destination: s3://victoria-metrics-backup
+    snapshotCreateURL: http://localhost:8482/snapshot/create
+
+# Service Monitor for self-monitoring
+serviceMonitor:
+  enabled: true
+  namespace: monitoring
+  
+# Grafana integration
+grafana:
+  enabled: false  # We deploy Grafana separately

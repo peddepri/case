@@ -1,0 +1,299 @@
+# Chargeback Configuration
+# Platform Observability Cost Allocation
+
+version: "1.0"
+
+# Global Settings
+global:
+  currency: USD
+  billing_period: monthly
+  allocation_method: proportional  # proportional, fixed, hybrid
+  enable_showback: true  # Show costs before actual chargeback
+  showback_period_months: 3
+
+# Pricing Model
+pricing:
+  # Logs pricing
+  logs:
+    ingress_per_gb: 0.10
+    storage_hot_per_gb_month: 0.15      # OpenSearch 7 days
+    storage_warm_per_gb_month: 0.03     # S3 Standard 90 days
+    storage_cold_per_gb_month: 0.01     # S3 Glacier 1 year
+    storage_archive_per_gb_month: 0.004 # S3 Deep Archive 10 years
+    query_per_gb: 0.005
+  
+  # Metrics pricing
+  metrics:
+    per_timeseries_month: 0.001
+    per_datapoint: 0.000001
+    storage_per_gb_month: 0.02
+    query_per_1k: 0.0001
+  
+  # Traces pricing
+  traces:
+    per_million_spans: 2.00
+    per_gb_storage: 0.20
+    per_gb_ingress: 0.15
+  
+  # Infrastructure costs (prorated)
+  infrastructure:
+    victoria_metrics_cluster_month: 500
+    opensearch_cluster_month: 1500
+    kafka_cluster_month: 800
+    otel_gateway_month: 300
+    grafana_month: 100
+
+# Vendor Costs
+vendors:
+  dynatrace:
+    fixed_cost_month: 50000
+    allocation_method: proportional  # Based on cluster count
+    clusters_using: 90  # 60% of 150 clusters
+  
+  newrelic:
+    fixed_cost_month: 15000
+    allocation_method: proportional
+    clusters_using: 15  # 10% of 150 clusters
+  
+  # Internal platform costs are absorbed by pricing model above
+
+# Teams Configuration
+teams:
+  - name: team-payments
+    namespace: payments
+    cost_center: CC-1234
+    business_unit: finance
+    environment: production
+    criticality: high
+    budget_monthly: 5000
+    alert_threshold: 0.9  # Alert at 90% of budget
+    vendor: internal
+    
+  - name: team-checkout
+    namespace: checkout
+    cost_center: CC-1235
+    business_unit: finance
+    environment: production
+    criticality: high
+    budget_monthly: 4000
+    alert_threshold: 0.85
+    vendor: dynatrace
+  
+  - name: team-logistics
+    namespace: logistics
+    cost_center: CC-5678
+    business_unit: operations
+    environment: production
+    criticality: medium
+    budget_monthly: 3000
+    alert_threshold: 0.9
+    vendor: internal
+  
+  - name: team-inventory
+    namespace: inventory
+    cost_center: CC-5679
+    business_unit: operations
+    environment: production
+    criticality: medium
+    budget_monthly: 2500
+    alert_threshold: 0.9
+    vendor: newrelic
+  
+  - name: team-marketing
+    namespace: marketing
+    cost_center: CC-9999
+    business_unit: marketing
+    environment: production
+    criticality: low
+    budget_monthly: 1000
+    alert_threshold: 0.95
+    vendor: internal
+  
+  # Development teams (lower budgets)
+  - name: team-dev-platform
+    namespace: dev-platform
+    cost_center: CC-0001
+    business_unit: engineering
+    environment: development
+    criticality: low
+    budget_monthly: 500
+    alert_threshold: 1.0
+    vendor: internal
+
+# Cost Allocation Rules
+allocation_rules:
+  # Shared infrastructure costs
+  shared_infrastructure:
+    method: proportional
+    basis: total_telemetry_volume
+    components:
+      - otel_gateway
+      - kafka_cluster
+      - grafana
+  
+  # Storage costs
+  storage:
+    method: direct
+    basis: actual_usage
+    tiering_automatic: true
+  
+  # Vendor costs (Dynatrace/NewRelic)
+  vendor_licenses:
+    dynatrace:
+      method: proportional
+      basis: cluster_count
+      allocation_to_teams: true
+    
+    newrelic:
+      method: proportional
+      basis: cluster_count
+      allocation_to_teams: true
+
+# Tagging Strategy
+required_tags:
+  - team
+  - cost_center
+  - business_unit
+  - environment
+  - criticality
+
+# Tag Enforcement
+tag_enforcement:
+  enabled: true
+  default_team: unallocated
+  default_cost_center: CC-0000
+  alert_on_missing_tags: true
+  block_on_missing_tags: false  # Set true after migration complete
+
+# Optimization Recommendations
+optimization:
+  enabled: true
+  
+  rules:
+    # High cost without corresponding usage
+    - name: high_cost_low_value
+      condition: cost > budget * 0.8 AND query_count < 100
+      recommendation: "Consider reducing log verbosity or sampling rate"
+      severity: medium
+    
+    # Underutilized hot storage
+    - name: cold_data_in_hot_storage
+      condition: query_age > 7d AND storage_tier == hot
+      recommendation: "Move to warm/cold storage to reduce costs"
+      severity: high
+    
+    # Excessive trace sampling
+    - name: high_trace_volume
+      condition: trace_sampling_rate > 50% AND trace_cost > metrics_cost
+      recommendation: "Reduce trace sampling to 10% for non-critical services"
+      severity: medium
+    
+    # Wrong vendor for use case
+    - name: vendor_optimization
+      condition: monthly_cost < 1000 AND vendor in [dynatrace, newrelic]
+      recommendation: "Consider migrating to internal platform"
+      potential_savings: 60%
+      severity: low
+
+# Reporting
+reporting:
+  # Daily cost snapshots
+  daily_snapshot:
+    enabled: true
+    retention_days: 90
+  
+  # Monthly reports
+  monthly_report:
+    enabled: true
+    recipients:
+      - finops@company.com
+      - platform-team@company.com
+    include:
+      - cost_breakdown_by_team
+      - cost_breakdown_by_vendor
+      - trending_analysis
+      - optimization_recommendations
+      - budget_vs_actual
+  
+  # Real-time dashboards
+  dashboards:
+    - name: executive_overview
+      url: /grafana/d/chargeback-executive
+      audience: leadership
+    
+    - name: team_costs
+      url: /grafana/d/chargeback-team
+      audience: team_leads
+    
+    - name: platform_health
+      url: /grafana/d/chargeback-platform
+      audience: platform_team
+
+# Alerts
+alerts:
+  # Budget alerts
+  - name: budget_exceeded
+    condition: actual_cost > budget * alert_threshold
+    severity: warning
+    notification:
+      - slack: "#finops"
+      - email: team_lead@company.com
+  
+  - name: budget_critical
+    condition: actual_cost > budget * 1.1
+    severity: critical
+    notification:
+      - slack: "#finops"
+      - email: team_lead@company.com
+      - pagerduty: escalation_policy
+  
+  # Anomaly alerts
+  - name: cost_spike
+    condition: daily_cost > avg_7d * 2
+    severity: warning
+    notification:
+      - slack: "#platform-observability"
+  
+  # Optimization alerts
+  - name: optimization_opportunity
+    condition: potential_savings > budget * 0.2
+    severity: info
+    notification:
+      - slack: "#finops"
+
+# Integration
+integration:
+  # Financial system
+  erp:
+    enabled: true
+    type: sap
+    export_schedule: monthly
+    export_format: csv
+  
+  # Service catalog
+  service_catalog:
+    enabled: true
+    sync_teams: true
+    sync_cost_centers: true
+  
+  # Slack
+  slack:
+    enabled: true
+    webhook_url: https://hooks.slack.com/services/YOUR/WEBHOOK
+    channels:
+      finops: "#finops"
+      platform: "#platform-observability"
+      alerts: "#observability-alerts"
+
+# Historical Data
+historical:
+  retention_months: 24
+  comparison_enabled: true
+  trending_analysis: true
+
+# Future: Predictive Analytics
+predictive:
+  enabled: false  # Enable in Phase 3
+  model: time_series_forecast
+  forecast_months: 3
+  confidence_interval: 0.95

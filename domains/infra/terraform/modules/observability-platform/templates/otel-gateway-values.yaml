@@ -1,0 +1,264 @@
+# OpenTelemetry Gateway Configuration
+# Centralized collector for all clusters
+
+mode: deployment
+
+replicaCount: 3
+
+image:
+  repository: otel/opentelemetry-collector-contrib
+  tag: 0.91.0
+
+serviceAccount:
+  create: false
+  name: ${service_account}
+
+resources:
+  limits:
+    cpu: 2000m
+    memory: 4Gi
+  requests:
+    cpu: 1000m
+    memory: 2Gi
+
+config:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
+  
+  processors:
+    # Memory management
+    memory_limiter:
+      check_interval: 1s
+      limit_mib: 3584  # 90% of 4Gi
+      spike_limit_mib: 512
+    
+    # Batching for efficiency
+    batch:
+      timeout: 10s
+      send_batch_size: 1024
+      send_batch_max_size: 2048
+    
+    # Resource detection
+    resourcedetection:
+      detectors: [env, system, ec2, eks]
+      timeout: 5s
+    
+    # K8s attributes enrichment
+    k8sattributes:
+      auth_type: serviceAccount
+      passthrough: false
+      extract:
+        metadata:
+          - k8s.namespace.name
+          - k8s.deployment.name
+          - k8s.pod.name
+          - k8s.pod.uid
+          - k8s.node.name
+        labels:
+          - tag_name: app
+            key: app
+            from: pod
+          - tag_name: team
+            key: team
+            from: namespace
+          - tag_name: cost_center
+            key: cost_center
+            from: namespace
+    
+    # PII Masking for compliance
+    transform/pii:
+      log_statements:
+        - context: log
+          statements:
+            # Email
+            - replace_pattern(body, "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b", "***EMAIL***")
+            # CPF
+            - replace_pattern(body, "\\b\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2}\\b", "***CPF***")
+            # CNPJ
+            - replace_pattern(body, "\\b\\d{2}\\.\\d{3}\\.\\d{3}/\\d{4}-\\d{2}\\b", "***CNPJ***")
+            # Credit Card
+            - replace_pattern(body, "\\b\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}\\b", "***CARD***")
+            # Phone
+            - replace_pattern(body, "\\b\\(?\\d{2}\\)?[\\s-]?\\d{4,5}[\\s-]?\\d{4}\\b", "***PHONE***")
+            # IP Private
+            - replace_pattern(body, "\\b10\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\b", "***IP***")
+            - replace_pattern(body, "\\b172\\.(1[6-9]|2[0-9]|3[0-1])\\.\\d{1,3}\\.\\d{1,3}\\b", "***IP***")
+            - replace_pattern(body, "\\b192\\.168\\.\\d{1,3}\\.\\d{1,3}\\b", "***IP***")
+      
+      trace_statements:
+        - context: span
+          statements:
+            # Redact sensitive headers
+            - set(attributes["http.request.header.authorization"], "***REDACTED***") where attributes["http.request.header.authorization"] != nil
+            - set(attributes["http.request.header.cookie"], "***REDACTED***") where attributes["http.request.header.cookie"] != nil
+            - set(attributes["http.request.header.x-api-key"], "***REDACTED***") where attributes["http.request.header.x-api-key"] != nil
+    
+    # Tail-based sampling for traces
+    tail_sampling:
+      policies:
+        # Always sample errors
+        - name: error-policy
+          type: status_code
+          status_code:
+            status_codes: [ERROR]
+        
+        # Always sample slow requests (>1s)
+        - name: latency-policy
+          type: latency
+          latency:
+            threshold_ms: 1000
+        
+        # Sample 10% of successful requests
+        - name: probabilistic-policy
+          type: probabilistic
+          probabilistic:
+            sampling_percentage: 10
+    
+    # Attributes processor for chargeback
+    attributes/chargeback:
+      actions:
+        - key: chargeback.team
+          from_attribute: k8s.namespace.labels.team
+          action: insert
+        - key: chargeback.cost_center
+          from_attribute: k8s.namespace.labels.cost_center
+          action: insert
+        - key: chargeback.business_unit
+          from_attribute: k8s.namespace.labels.business_unit
+          action: insert
+  
+  exporters:
+    # Victoria Metrics for internal metrics
+    prometheusremotewrite/victoria:
+      endpoint: ${victoria_metrics_url}
+      tls:
+        insecure: true
+      resource_to_telemetry_conversion:
+        enabled: true
+    
+    # Dynatrace (if enabled)
+    otlp/dynatrace:
+      endpoint: ${dynatrace_endpoint}
+      headers:
+        Authorization: "Api-Token ${dynatrace_token}"
+    
+    # NewRelic (if enabled)
+    otlp/newrelic:
+      endpoint: ${newrelic_endpoint}
+      headers:
+        api-key: "${newrelic_license_key}"
+    
+    # S3 for long-term storage (logs)
+    awss3/logs:
+      s3uploader:
+        region: ${region}
+        s3_bucket: ${s3_logs_bucket}
+        s3_prefix: logs/
+        compression: gzip
+    
+    # S3 for traces
+    awss3/traces:
+      s3uploader:
+        region: ${region}
+        s3_bucket: ${s3_traces_bucket}
+        s3_prefix: traces/
+        compression: gzip
+    
+    # CloudWatch for AWS-native monitoring
+    awscloudwatch:
+      region: ${region}
+      namespace: observability/metrics
+    
+    # Logging exporter for debugging
+    logging:
+      loglevel: info
+      sampling_initial: 5
+      sampling_thereafter: 200
+  
+  service:
+    pipelines:
+      # Metrics pipeline
+      metrics:
+        receivers: [otlp]
+        processors:
+          - memory_limiter
+          - resourcedetection
+          - k8sattributes
+          - attributes/chargeback
+          - batch
+        exporters:
+          - prometheusremotewrite/victoria
+          - awscloudwatch
+      
+      # Logs pipeline
+      logs:
+        receivers: [otlp]
+        processors:
+          - memory_limiter
+          - resourcedetection
+          - k8sattributes
+          - transform/pii
+          - attributes/chargeback
+          - batch
+        exporters:
+          - awss3/logs
+          - logging
+      
+      # Traces pipeline
+      traces:
+        receivers: [otlp]
+        processors:
+          - memory_limiter
+          - resourcedetection
+          - k8sattributes
+          - transform/pii
+          - tail_sampling
+          - attributes/chargeback
+          - batch
+        exporters:
+          - awss3/traces
+          - otlp/dynatrace
+          - otlp/newrelic
+
+service:
+  type: ClusterIP
+  ports:
+    otlp-grpc:
+      enabled: true
+      containerPort: 4317
+      servicePort: 4317
+      protocol: TCP
+    otlp-http:
+      enabled: true
+      containerPort: 4318
+      servicePort: 4318
+      protocol: TCP
+    metrics:
+      enabled: true
+      containerPort: 8888
+      servicePort: 8888
+      protocol: TCP
+
+# HPA for auto-scaling
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# Pod Disruption Budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+
+# Service Monitor for self-monitoring
+serviceMonitor:
+  enabled: true
+  namespace: observability
+  interval: 30s

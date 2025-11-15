@@ -18,14 +18,14 @@ terraform {
     }
   }
 
-  # Remote state (optional – adjust & uncomment if/when backend bucket is created)
-  # backend "s3" {
-  #   bucket         = "case-terraform-state-dev"
-  #   key            = "dev/terraform.tfstate"
-  #   region         = var.aws_region  # aligned to single region source of truth
-  #   dynamodb_table = "case-terraform-locks"
-  #   encrypt        = true
-  # }
+  # Remote state backend (provisioned via workflow bootstrap step)
+  backend "s3" {
+    bucket         = "case-tfstate-918859180133-dev"
+    key            = "dev/terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "case-terraform-locks-dev"
+    encrypt        = true
+  }
 }
 
 # AWS Provider
@@ -116,6 +116,8 @@ module "eks" {
 resource "aws_ecr_repository" "backend" {
   name                 = "${local.project}-backend"
   image_tag_mutability = "MUTABLE"
+  # Ensure repository can be destroyed even if images remain
+  force_delete         = true
 
   image_scanning_configuration {
     scan_on_push = true
@@ -127,6 +129,8 @@ resource "aws_ecr_repository" "backend" {
 resource "aws_ecr_repository" "frontend" {
   name                 = "${local.project}-frontend"
   image_tag_mutability = "MUTABLE"
+  # Ensure repository can be destroyed even if images remain
+  force_delete         = true
 
   image_scanning_configuration {
     scan_on_push = true
@@ -138,6 +142,8 @@ resource "aws_ecr_repository" "frontend" {
 resource "aws_ecr_repository" "mobile" {
   name                 = "${local.project}-mobile"
   image_tag_mutability = "MUTABLE"
+  # Ensure repository can be destroyed even if images remain
+  force_delete         = true
 
   image_scanning_configuration {
     scan_on_push = true

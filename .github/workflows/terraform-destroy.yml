@@ -196,23 +196,54 @@ jobs:
           
           echo " Local state cleanup completed"
 
-      - name: Cleanup S3 state backend (if exists)
+      - name: Cleanup ECR repositories (env-scoped)
         run: |
-          echo "🧹 Checking for S3 state backends..."
-          
-          # List S3 buckets with terraform state
-          aws s3 ls | grep "terraform-state-case" || echo "No terraform state buckets found"
-          
-          # If state buckets exist, list them for manual cleanup
-          for bucket in $(aws s3 ls | grep "terraform-state-case" | awk '{print $3}' || true); do
-            echo "  Found state bucket: $bucket"
-            echo "   Objects in bucket:"
-            aws s3 ls s3://$bucket --recursive || true
-            echo "   To delete: aws s3 rb s3://$bucket --force"
+          set -e
+          echo "🧹 Deleting ECR repositories for environment: ${{ github.event.inputs.environment }}"
+          REGION="${{ env.AWS_REGION }}"
+          for repo in case-backend case-frontend case-mobile; do
+            echo "Deleting ECR repo: $repo (if exists)"
+            if aws ecr describe-repositories --region "$REGION" --repository-names "$repo" >/dev/null 2>&1; then
+              aws ecr delete-repository --region "$REGION" --repository-name "$repo" --force || true
+              echo "Deleted (or forced) repo: $repo"
+            else
+              echo "Repo not found (ok): $repo"
+            fi
           done
 
+      - name: Cleanup S3/DynamoDB remote backend (env-scoped)
+        run: |
+          set -e
+          echo "🧹 Cleaning remote backend (S3 + DynamoDB) for environment: ${{ github.event.inputs.environment }}"
+          ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
+          ENV="${{ github.event.inputs.environment }}"
+          BUCKET="case-tfstate-${ACCOUNT_ID}-${ENV}"
+          TABLE="case-terraform-locks-${ENV}"
+
+          echo "Checking S3 bucket: $BUCKET"
+          if aws s3api head-bucket --bucket "$BUCKET" >/dev/null 2>&1; then
+            echo "Attempting to remove bucket $BUCKET (force)..."
+            if aws s3 rb "s3://$BUCKET" --force; then
+              echo "Bucket removed: $BUCKET"
+            else
+              echo "Warning: 'aws s3 rb --force' failed. The bucket may be versioned or protected. Skipping hard delete."
+            fi
+          else
+            echo "Bucket not found: $BUCKET (ok)"
+          fi
+
+          echo "Checking DynamoDB lock table: $TABLE"
+          if aws dynamodb describe-table --table-name "$TABLE" >/dev/null 2>&1; then
+            echo "Deleting DynamoDB table: $TABLE"
+            aws dynamodb delete-table --table-name "$TABLE"
+            aws dynamodb wait table-not-exists --table-name "$TABLE"
+            echo "DynamoDB table deleted: $TABLE"
+          else
+            echo "DynamoDB table not found: $TABLE (ok)"
+          fi
+
   summary:
-    needs: [validate-destroy]
+    needs: [validate-destroy, destroy-infrastructure, destroy-oidc, cleanup-state-files]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -228,15 +259,15 @@ jobs:
           echo "- Validation: ${{ needs.validate-destroy.result }}"
           
           if [[ "${{ github.event.inputs.destroy_scope }}" == "infrastructure-only" || "${{ github.event.inputs.destroy_scope }}" == "all-resources" ]]; then
-            echo "- Infrastructure Destroy: ${{ needs.destroy-infrastructure.result }}"
+            echo "- Infrastructure Destroy: ${{ needs['destroy-infrastructure'].result }}"
           fi
           
           if [[ "${{ github.event.inputs.destroy_scope }}" == "oidc-only" || "${{ github.event.inputs.destroy_scope }}" == "all-resources" ]]; then
-            echo "- OIDC Destroy: ${{ needs.destroy-oidc.result }}"
+            echo "- OIDC Destroy: ${{ needs['destroy-oidc'].result }}"
           fi
           
           if [[ "${{ github.event.inputs.destroy_scope }}" == "all-resources" ]]; then
-            echo "- Cleanup: ${{ needs.cleanup-state-files.result }}"
+            echo "- Cleanup: ${{ needs['cleanup-state-files'].result }}"
           fi
           
           echo ""

@@ -1,0 +1,375 @@
+# OpenTelemetry Collector Template for Application Teams
+# Deploy as sidecar or DaemonSet per namespace
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-config
+  namespace: NAMESPACE_PLACEHOLDER
+  labels:
+    app: otel-collector
+    team: TEAM_PLACEHOLDER
+data:
+  otel-config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+      
+      # Prometheus scraping for application metrics
+      prometheus:
+        config:
+          scrape_configs:
+            - job_name: 'app-metrics'
+              scrape_interval: 30s
+              kubernetes_sd_configs:
+                - role: pod
+                  namespaces:
+                    names:
+                      - NAMESPACE_PLACEHOLDER
+              relabel_configs:
+                - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+                  action: keep
+                  regex: true
+                - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+                  action: replace
+                  target_label: __metrics_path__
+                  regex: (.+)
+                - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+                  action: replace
+                  target_label: __address__
+                  regex: ([^:]+)(?::\d+)?;(\d+)
+                  replacement: $1:$2
+    
+    processors:
+      # Memory management
+      memory_limiter:
+        check_interval: 1s
+        limit_mib: 512
+        spike_limit_mib: 128
+      
+      # Batching
+      batch:
+        timeout: 10s
+        send_batch_size: 512
+      
+      # Resource detection
+      resourcedetection:
+        detectors: [env, system, docker, kubernetes]
+        timeout: 5s
+        override: false
+      
+      # Add team attributes for chargeback
+      resource:
+        attributes:
+          - key: team.name
+            value: TEAM_PLACEHOLDER
+            action: upsert
+          - key: cost.center
+            value: COST_CENTER_PLACEHOLDER
+            action: upsert
+          - key: business.unit
+            value: BUSINESS_UNIT_PLACEHOLDER
+            action: upsert
+          - key: environment
+            value: ENVIRONMENT_PLACEHOLDER
+            action: upsert
+      
+      # K8s attributes
+      k8sattributes:
+        auth_type: serviceAccount
+        passthrough: false
+        pod_association:
+          - sources:
+            - from: resource_attribute
+              name: k8s.pod.ip
+        extract:
+          metadata:
+            - k8s.namespace.name
+            - k8s.deployment.name
+            - k8s.statefulset.name
+            - k8s.daemonset.name
+            - k8s.pod.name
+            - k8s.pod.uid
+            - k8s.node.name
+            - k8s.container.name
+          labels:
+            - tag_name: app
+              key: app
+              from: pod
+            - tag_name: version
+              key: version
+              from: pod
+    
+    exporters:
+      # Send to central OTel Gateway
+      otlp:
+        endpoint: otel-gateway-opentelemetry-collector.observability.svc.cluster.local:4317
+        tls:
+          insecure: true
+        sending_queue:
+          enabled: true
+          num_consumers: 10
+          queue_size: 1000
+        retry_on_failure:
+          enabled: true
+          initial_interval: 5s
+          max_interval: 30s
+          max_elapsed_time: 300s
+      
+      # Local logging for debugging
+      logging:
+        loglevel: info
+        sampling_initial: 5
+        sampling_thereafter: 200
+    
+    extensions:
+      health_check:
+        endpoint: :13133
+      
+      pprof:
+        endpoint: :1777
+      
+      zpages:
+        endpoint: :55679
+    
+    service:
+      extensions: [health_check, pprof, zpages]
+      
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, resource, k8sattributes, batch]
+          exporters: [otlp]
+        
+        metrics:
+          receivers: [otlp, prometheus]
+          processors: [memory_limiter, resource, k8sattributes, batch]
+          exporters: [otlp]
+        
+        logs:
+          receivers: [otlp]
+          processors: [memory_limiter, resource, k8sattributes, batch]
+          exporters: [otlp]
+      
+      telemetry:
+        logs:
+          level: info
+        metrics:
+          level: detailed
+          address: :8888
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: otel-collector
+  namespace: NAMESPACE_PLACEHOLDER
+  labels:
+    app: otel-collector
+    team: TEAM_PLACEHOLDER
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: otel-collector-NAMESPACE_PLACEHOLDER
+  labels:
+    app: otel-collector
+    team: TEAM_PLACEHOLDER
+rules:
+  - apiGroups: [""]
+    resources:
+      - nodes
+      - nodes/proxy
+      - services
+      - endpoints
+      - pods
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources:
+      - configmaps
+    verbs: ["get"]
+  - apiGroups:
+      - apps
+    resources:
+      - replicasets
+    verbs: ["get", "list", "watch"]
+  - nonResourceURLs:
+      - /metrics
+    verbs: ["get"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: otel-collector-NAMESPACE_PLACEHOLDER
+  labels:
+    app: otel-collector
+    team: TEAM_PLACEHOLDER
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: otel-collector-NAMESPACE_PLACEHOLDER
+subjects:
+  - kind: ServiceAccount
+    name: otel-collector
+    namespace: NAMESPACE_PLACEHOLDER
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-collector
+  namespace: NAMESPACE_PLACEHOLDER
+  labels:
+    app: otel-collector
+    team: TEAM_PLACEHOLDER
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: otel-collector
+  template:
+    metadata:
+      labels:
+        app: otel-collector
+        team: TEAM_PLACEHOLDER
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8888"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: otel-collector
+      containers:
+        - name: otel-collector
+          image: otel/opentelemetry-collector-contrib:0.91.0
+          args:
+            - "--config=/conf/otel-config.yaml"
+          ports:
+            - name: otlp-grpc
+              containerPort: 4317
+              protocol: TCP
+            - name: otlp-http
+              containerPort: 4318
+              protocol: TCP
+            - name: metrics
+              containerPort: 8888
+              protocol: TCP
+            - name: health
+              containerPort: 13133
+              protocol: TCP
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+          volumeMounts:
+            - name: config
+              mountPath: /conf
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 13133
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 13133
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: config
+          configMap:
+            name: otel-collector-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector
+  namespace: NAMESPACE_PLACEHOLDER
+  labels:
+    app: otel-collector
+    team: TEAM_PLACEHOLDER
+spec:
+  type: ClusterIP
+  selector:
+    app: otel-collector
+  ports:
+    - name: otlp-grpc
+      port: 4317
+      targetPort: 4317
+      protocol: TCP
+    - name: otlp-http
+      port: 4318
+      targetPort: 4318
+      protocol: TCP
+    - name: metrics
+      port: 8888
+      targetPort: 8888
+      protocol: TCP
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: otel-collector
+  namespace: NAMESPACE_PLACEHOLDER
+  labels:
+    app: otel-collector
+    team: TEAM_PLACEHOLDER
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: otel-collector
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: otel-collector
+  namespace: NAMESPACE_PLACEHOLDER
+  labels:
+    app: otel-collector
+    team: TEAM_PLACEHOLDER
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: otel-collector

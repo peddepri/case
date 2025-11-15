@@ -1,0 +1,516 @@
+{
+  "dashboard": {
+    "title": "Platform Observability - Executive Overview",
+    "tags": ["observability", "executive", "platform"],
+    "timezone": "browser",
+    "editable": true,
+    "graphTooltip": 1,
+    "time": {
+      "from": "now-30d",
+      "to": "now"
+    },
+    "templating": {
+      "list": [
+        {
+          "name": "cluster",
+          "type": "query",
+          "datasource": "Victoria Metrics",
+          "query": "label_values(up, cluster)",
+          "multi": true,
+          "includeAll": true
+        },
+        {
+          "name": "team",
+          "type": "query",
+          "datasource": "Victoria Metrics",
+          "query": "label_values(up, team)",
+          "multi": true,
+          "includeAll": true
+        }
+      ]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+        "type": "stat",
+        "title": "Total Monthly Cost",
+        "targets": [
+          {
+            "expr": "sum(increase(observability_cost_usd_total[30d]))",
+            "legendFormat": "Total Cost"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 50000, "color": "yellow"},
+                {"value": 100000, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+        "type": "stat",
+        "title": "Cost Savings vs Baseline",
+        "targets": [
+          {
+            "expr": "(115000 - sum(increase(observability_cost_usd_total[30d]))) / 115000 * 100",
+            "legendFormat": "Savings %"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 20, "color": "yellow"},
+                {"value": 40, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 3,
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+        "type": "stat",
+        "title": "Platform Adoption",
+        "targets": [
+          {
+            "expr": "count(count by (cluster) (up{observability_platform=\"internal\"})) / 150 * 100",
+            "legendFormat": "Adoption %"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 50, "color": "yellow"},
+                {"value": 90, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+        "type": "stat",
+        "title": "Data Volume (30d)",
+        "targets": [
+          {
+            "expr": "sum(increase(logs_ingested_bytes_total[30d])) / 1e12",
+            "legendFormat": "Logs (TB)"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "decbytes",
+            "decimals": 2
+          }
+        }
+      },
+      {
+        "id": 5,
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+        "type": "graph",
+        "title": "Cost Trend by Team (30d)",
+        "targets": [
+          {
+            "expr": "sum by (team) (increase(observability_cost_usd_total{team=~\"$team\"}[1d]))",
+            "legendFormat": "{{team}}"
+          }
+        ],
+        "yaxes": [
+          {"format": "currencyUSD", "label": "Daily Cost"}
+        ],
+        "legend": {
+          "show": true,
+          "alignAsTable": true,
+          "avg": true,
+          "max": true,
+          "values": true
+        }
+      },
+      {
+        "id": 6,
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+        "type": "piechart",
+        "title": "Cost Distribution by Telemetry Type",
+        "targets": [
+          {
+            "expr": "sum by (type) (increase(observability_cost_usd_total{cluster=~\"$cluster\"}[30d]))",
+            "legendFormat": "{{type}}"
+          }
+        ],
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "values": ["value", "percent"]
+          }
+        }
+      },
+      {
+        "id": 7,
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 12},
+        "type": "table",
+        "title": "Top 10 Teams by Cost",
+        "targets": [
+          {
+            "expr": "topk(10, sum by (team) (increase(observability_cost_usd_total[30d])))",
+            "format": "table",
+            "instant": true
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {
+                "Time": true
+              },
+              "renameByName": {
+                "team": "Team",
+                "Value": "Cost (USD)"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "gridPos": {"h": 8, "w": 8, "x": 8, "y": 12},
+        "type": "table",
+        "title": "Budget vs Actual (Top Overages)",
+        "targets": [
+          {
+            "expr": "topk(10, (sum by (team) (increase(observability_cost_usd_total[30d])) - on(team) group_left observability_budget_usd) / on(team) group_left observability_budget_usd * 100)",
+            "format": "table",
+            "instant": true
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "renameByName": {
+                "team": "Team",
+                "Value": "Over Budget %"
+              }
+            }
+          }
+        ],
+        "fieldConfig": {
+          "overrides": [
+            {
+              "matcher": {"id": "byName", "options": "Over Budget %"},
+              "properties": [
+                {
+                  "id": "custom.displayMode",
+                  "value": "color-background"
+                },
+                {
+                  "id": "thresholds",
+                  "value": {
+                    "mode": "absolute",
+                    "steps": [
+                      {"value": -100, "color": "green"},
+                      {"value": 0, "color": "yellow"},
+                      {"value": 10, "color": "red"}
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": 9,
+        "gridPos": {"h": 8, "w": 8, "x": 16, "y": 12},
+        "type": "bargauge",
+        "title": "Platform Health Metrics",
+        "targets": [
+          {
+            "expr": "avg(rate(otel_collector_received_spans[5m])) / 1000",
+            "legendFormat": "Traces (k/s)"
+          },
+          {
+            "expr": "avg(rate(otel_collector_received_metric_points[5m])) / 1000",
+            "legendFormat": "Metrics (k/s)"
+          },
+          {
+            "expr": "avg(rate(otel_collector_received_log_records[5m])) / 1000",
+            "legendFormat": "Logs (k/s)"
+          }
+        ],
+        "options": {
+          "orientation": "horizontal",
+          "displayMode": "gradient"
+        }
+      },
+      {
+        "id": 10,
+        "gridPos": {"h": 6, "w": 12, "x": 0, "y": 20},
+        "type": "graph",
+        "title": "Data Loss Rate (%)",
+        "targets": [
+          {
+            "expr": "(sum(rate(otel_collector_dropped_spans[5m])) / sum(rate(otel_collector_received_spans[5m]))) * 100",
+            "legendFormat": "Traces Loss %"
+          },
+          {
+            "expr": "(sum(rate(otel_collector_dropped_metric_points[5m])) / sum(rate(otel_collector_received_metric_points[5m]))) * 100",
+            "legendFormat": "Metrics Loss %"
+          },
+          {
+            "expr": "(sum(rate(otel_collector_dropped_log_records[5m])) / sum(rate(otel_collector_received_log_records[5m]))) * 100",
+            "legendFormat": "Logs Loss %"
+          }
+        ],
+        "yaxes": [
+          {"format": "percent", "label": "Loss Rate"}
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [0.1], "type": "gt"},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "5m", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "1m",
+          "handler": 1,
+          "name": "Data Loss Rate Alert",
+          "noDataState": "no_data",
+          "notifications": [
+            {"uid": "slack-observability"}
+          ]
+        },
+        "thresholds": [
+          {"value": 0.1, "colorMode": "critical", "op": "gt", "fill": true, "line": true}
+        ]
+      },
+      {
+        "id": 11,
+        "gridPos": {"h": 6, "w": 12, "x": 12, "y": 20},
+        "type": "graph",
+        "title": "OTel Gateway Latency (P99)",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(otel_collector_processor_batch_batch_send_size_bucket[5m])) by (le, processor))",
+            "legendFormat": "{{processor}} P99"
+          }
+        ],
+        "yaxes": [
+          {"format": "ms", "label": "Latency"}
+        ],
+        "thresholds": [
+          {"value": 100, "colorMode": "critical", "op": "gt", "fill": true, "line": true}
+        ]
+      },
+      {
+        "id": 12,
+        "gridPos": {"h": 6, "w": 24, "x": 0, "y": 26},
+        "type": "table",
+        "title": "Cluster Status Overview",
+        "targets": [
+          {
+            "expr": "count by (cluster, observability_platform) (up{cluster=~\"$cluster\"})",
+            "format": "table",
+            "instant": true
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {
+                "Time": true,
+                "Value": true
+              },
+              "renameByName": {
+                "cluster": "Cluster",
+                "observability_platform": "Platform",
+                "__name__": "Status"
+              }
+            }
+          }
+        ],
+        "fieldConfig": {
+          "overrides": [
+            {
+              "matcher": {"id": "byName", "options": "Platform"},
+              "properties": [
+                {
+                  "id": "custom.displayMode",
+                  "value": "color-background"
+                },
+                {
+                  "id": "mappings",
+                  "value": [
+                    {"type": "value", "value": "internal", "text": "✅ Internal (OpenTelemetry)"},
+                    {"type": "value", "value": "dynatrace", "text": "⚠️ Dynatrace (Legacy)"},
+                    {"type": "value", "value": "newrelic", "text": "⚠️ NewRelic (Legacy)"}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": 13,
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 32},
+        "type": "graph",
+        "title": "Storage Tier Distribution (Logs)",
+        "targets": [
+          {
+            "expr": "sum by (tier) (logs_storage_bytes_total)",
+            "legendFormat": "{{tier}}"
+          }
+        ],
+        "yaxes": [
+          {"format": "bytes", "label": "Storage Size"}
+        ],
+        "stack": true
+      },
+      {
+        "id": 14,
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 32},
+        "type": "graph",
+        "title": "PII Masking Events",
+        "targets": [
+          {
+            "expr": "sum by (pattern) (increase(otel_transform_pii_masked_total[1h]))",
+            "legendFormat": "{{pattern}}"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Masked Events"}
+        ]
+      },
+      {
+        "id": 15,
+        "gridPos": {"h": 4, "w": 24, "x": 0, "y": 40},
+        "type": "row",
+        "title": "Migration Progress"
+      },
+      {
+        "id": 16,
+        "gridPos": {"h": 6, "w": 8, "x": 0, "y": 44},
+        "type": "gauge",
+        "title": "Overall Migration Progress",
+        "targets": [
+          {
+            "expr": "count(up{observability_platform=\"internal\"}) / 150 * 100",
+            "legendFormat": "Migrated %"
+          }
+        ],
+        "options": {
+          "showThresholdLabels": false,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 50, "color": "yellow"},
+                {"value": 90, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 17,
+        "gridPos": {"h": 6, "w": 8, "x": 8, "y": 44},
+        "type": "stat",
+        "title": "Clusters Remaining",
+        "targets": [
+          {
+            "expr": "150 - count(up{observability_platform=\"internal\"})",
+            "legendFormat": "To Migrate"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 50, "color": "yellow"},
+                {"value": 100, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 18,
+        "gridPos": {"h": 6, "w": 8, "x": 16, "y": 44},
+        "type": "stat",
+        "title": "Estimated Completion",
+        "targets": [
+          {
+            "expr": "(150 - count(up{observability_platform=\"internal\"})) / (count(up{observability_platform=\"internal\"}) / days_since_start) * 86400",
+            "legendFormat": "Days Remaining"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "days"
+          }
+        }
+      }
+    ],
+    "annotations": {
+      "list": [
+        {
+          "name": "Deployments",
+          "datasource": "Victoria Metrics",
+          "enable": true,
+          "expr": "changes(kube_deployment_status_observed_generation{namespace=\"observability\"}[5m]) > 0",
+          "tagKeys": "deployment",
+          "titleFormat": "Deployment: {{deployment}}",
+          "textFormat": "New version deployed"
+        },
+        {
+          "name": "Incidents",
+          "datasource": "Victoria Metrics",
+          "enable": true,
+          "expr": "ALERTS{alertstate=\"firing\",severity=\"critical\"}",
+          "tagKeys": "alertname",
+          "titleFormat": "Incident: {{alertname}}",
+          "textFormat": "{{description}}"
+        }
+      ]
+    },
+    "refresh": "30s",
+    "schemaVersion": 37,
+    "version": 1
+  }
+}
